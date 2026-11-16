@@ -29,7 +29,7 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 
 - **Framework**: [Next.js 15](https://nextjs.org/) (App Router) & [React 19](https://react.dev/)
 - **Linguagem**: [TypeScript 5](https://www.typescriptlang.org/)
-- **Banco de Dados & ORM**: **PostgreSQL** (`pg` pool) + [Drizzle ORM](https://orm.drizzle.team/) & Drizzle Kit (`drizzle/`)
+- **Banco de Dados & ORM**: **Supabase** (`@supabase/supabase-js`) / **PostgreSQL** (`pg` pool) + [Drizzle ORM](https://orm.drizzle.team/)
 - **Autenticação**: [Firebase Authentication](https://firebase.google.com/) (Client SDK + `firebase-admin`)
 - **Estilização**: [Tailwind CSS v4](https://tailwindcss.com/) + `tw-animate-css`
 - **Animações e Ícones**: [Motion](https://motion.dev/) (`motion/react`) & [Lucide React](https://lucide.dev/)
@@ -61,15 +61,21 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 ├── src/
 │   ├── db/
 │   │   ├── drizzle.config.ts      # Configuração do Drizzle Kit (admin)
+│   │   ├── gateway.ts             # Roteador automático (Supabase quando configurado, senão PostgreSQL local)
 │   │   ├── index.ts               # Pool PostgreSQL (Object Method) + instância Drizzle
-│   │   ├── repositories.ts        # Consultas e mutações tipadas com Drizzle ORM
+│   │   ├── repositories.ts        # Repositório Drizzle ORM (PostgreSQL)
 │   │   ├── schema.ts              # Definição das 8 tabelas PostgreSQL e relações
-│   │   └── users.ts               # Upsert de usuário e seed inicial atômico
+│   │   ├── supabase-repositories.ts # Repositório Supabase (@supabase/supabase-js)
+│   │   └── users.ts               # Upsert de usuário e seed inicial atômico (Drizzle)
 │   └── lib/
 │       ├── api-auth.ts            # Verificação de Bearer JWT do Firebase
-│       └── firebase-admin.ts      # Inicialização do Firebase Admin SDK
+│       ├── firebase-admin.ts      # Inicialização do Firebase Admin SDK
+│       └── supabase.ts            # Cliente server-side Supabase (service role)
+├── supabase/
+│   └── migrations/
+│       └── 20261116000000_initial_schema.sql # Migration SQL completa para Supabase + RLS
 ├── drizzle/
-│   └── 0000_shocking_hiroim.sql   # Migration SQL inicial (8 tabelas, FKs e índices)
+│   └── 0000_shocking_hiroim.sql   # Migration SQL Drizzle inicial
 ├── components/
 │   ├── views/                     # Os 8 módulos visuais do painel
 │   ├── FirebaseProvider.tsx       # Contexto de autenticação Firebase
@@ -90,9 +96,9 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 
 ---
 
-## Modelo de Dados e Migrations (PostgreSQL)
+## Modelo de Dados e Migrations (Supabase / PostgreSQL)
 
-As migrations SQL versionadas ficam em `drizzle/` e são geradas a partir de `src/db/schema.ts`:
+As migrations SQL versionadas ficam em `supabase/migrations/20261116000000_initial_schema.sql` (pronta para `supabase db push` ou SQL Editor do Supabase, já com RLS habilitado) e em `drizzle/`:
 
 - `users` — Perfil acadêmico, preferências, streak e flag `seeded` (`uid` único indexado)
 - `subjects` — Disciplinas, créditos, notas `p1`/`p2` e `hours_studied` (FK `owner_id -> users.uid`)
@@ -107,11 +113,11 @@ Todas as chaves estrangeiras possuem `ON DELETE CASCADE` e índices nas colunas 
 
 ---
 
-## Como Executar Localmente
+## Como Executar Localmente (com Supabase)
 
 ### 1. Pré-requisitos
 - **Node.js 20+**
-- Banco **PostgreSQL** (Cloud SQL ou instância compatível)
+- Um projeto no [Supabase](https://supabase.com/) (ou PostgreSQL compatível)
 - Projeto no [Firebase Console](https://console.firebase.google.com/) com **Authentication** ativado
 
 ### 2. Clonar e instalar dependências
@@ -122,15 +128,23 @@ cd <PASTA_DO_PROJETO>
 npm install
 ```
 
-### 3. Configurar variáveis e credenciais
+### 3. Aplicar a Migration no Supabase
 
-1. Copie `.env.example` para `.env.local` (ou `.env` para o Drizzle Kit) e preencha as credenciais do PostgreSQL:
+1. No painel do seu projeto Supabase, abra **SQL Editor** (ou use a Supabase CLI com `supabase db push`).
+2. Execute o conteúdo de `supabase/migrations/20261116000000_initial_schema.sql` para criar todas as tabelas, índices, chaves estrangeiras e ativar o RLS.
+
+### 4. Configurar variáveis e credenciais
+
+1. Copie `.env.example` para `.env.local` e preencha as chaves do seu projeto Supabase:
    ```bash
    cp .env.example .env.local
    ```
-   Variáveis esperadas:
-   - `SQL_HOST`, `SQL_DB_NAME`, `SQL_USER`, `SQL_PASSWORD` (usuário de leitura/escrita da aplicação)
-   - `SQL_ADMIN_USER`, `SQL_ADMIN_PASSWORD` (usuário administrativo usado pelas migrations do Drizzle Kit)
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL="https://SEU_PROJETO.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="SUA_ANON_KEY"
+   SUPABASE_SERVICE_ROLE_KEY="SUA_SERVICE_ROLE_KEY"
+   ```
+   > Quando `NEXT_PUBLIC_SUPABASE_URL` (ou `SUPABASE_URL`) e `SUPABASE_SERVICE_ROLE_KEY` estão definidos, todas as rotas `/api/*` usam o **Supabase** automaticamente. No ambiente do Google AI Studio, caso não estejam definidos, o gateway utiliza o PostgreSQL local provisionado via variáveis `SQL_*`.
 
 2. Configure `firebase-applet-config.json` na raiz do projeto com as credenciais web do seu projeto Firebase:
    ```json
@@ -143,18 +157,11 @@ npm install
      "appId": "SEU_APP_ID"
    }
    ```
-3. No **Firebase Console → Authentication → Sign-in method**, ative o provedor **Google** (e, opcionalmente, **E-mail/senha**).
+3. No **Firebase Console → Authentication → Sign-in method**, ative o provedor **Google** (e adicione o seu domínio de produção, como `focus-learn-project.vercel.app`, em **Authorized domains**).
 
-### 4. Executar migrations e iniciar
+### 5. Iniciar em desenvolvimento
 
 ```bash
-# Gerar nova migration SQL a partir de src/db/schema.ts (quando alterar o schema)
-npm run db:generate
-
-# Aplicar schema no PostgreSQL
-npm run db:push
-
-# Iniciar em desenvolvimento na porta 3000
 npm run dev
 ```
 

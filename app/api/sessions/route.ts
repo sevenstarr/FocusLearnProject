@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyRequestAuth } from '@/src/lib/api-auth.ts';
-import { getOrCreateUser } from '@/src/db/users.ts';
-import { createPomodoroSessionRow } from '@/src/db/repositories.ts';
+import { createPomodoroSessionRow, getOrCreateUser } from '@/src/db/gateway.ts';
 
 export async function POST(req: NextRequest) {
   const decoded = await verifyRequestAuth(req);

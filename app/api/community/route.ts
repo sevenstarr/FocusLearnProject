@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyRequestAuth } from '@/src/lib/api-auth.ts';
-import { getOrCreateUser } from '@/src/db/users.ts';
 import {
   createCommunityMessageRow,
+  getOrCreateUser,
   listCommunityMessages,
-} from '@/src/db/repositories.ts';
+} from '@/src/db/gateway.ts';
 import type { CommunityChannel } from '@/lib/types';
 
 const VALID_CHANNELS: CommunityChannel[] = ['calculo', 'algoritmos', 'geral'];

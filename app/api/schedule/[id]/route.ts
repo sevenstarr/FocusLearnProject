@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyRequestAuth } from '@/src/lib/api-auth.ts';
-import { deleteScheduleBlockRow, UUID_REGEX } from '@/src/db/repositories.ts';
+import { deleteScheduleBlockRow, UUID_REGEX } from '@/src/db/gateway.ts';
 
 export async function DELETE(
   req: NextRequest,

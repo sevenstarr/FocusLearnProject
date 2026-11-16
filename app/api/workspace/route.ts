@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyRequestAuth } from '@/src/lib/api-auth.ts';
-import { getOrCreateUser, seedStarterWorkspaceIfNeeded } from '@/src/db/users.ts';
-import { getWorkspaceData } from '@/src/db/repositories.ts';
+import {
+  getOrCreateUser,
+  getWorkspaceData,
+  seedStarterWorkspaceIfNeeded,
+} from '@/src/db/gateway.ts';
 
 export async function GET(req: NextRequest) {
   const decoded = await verifyRequestAuth(req);

@@ -4,7 +4,7 @@ import {
   deleteTaskRow,
   updateTaskRow,
   UUID_REGEX,
-} from '@/src/db/repositories.ts';
+} from '@/src/db/gateway.ts';
 
 export async function PATCH(
   req: NextRequest,

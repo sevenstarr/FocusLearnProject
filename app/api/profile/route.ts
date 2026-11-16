@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyRequestAuth } from '@/src/lib/api-auth.ts';
-import { getOrCreateUser, updateUserProfileRow } from '@/src/db/users.ts';
+import { getOrCreateUser, updateUserProfileRow } from '@/src/db/gateway.ts';
 
 export async function PATCH(req: NextRequest) {
   const decoded = await verifyRequestAuth(req);
