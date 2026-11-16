@@ -1,14 +1,17 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
   doublePrecision,
   index,
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   serial,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -43,7 +46,6 @@ export const subjects = pgTable(
     name: text('name').notNull(),
     professor: text('professor').notNull().default(''),
     schedule: text('schedule').notNull().default(''),
-    credits: integer('credits').notNull().default(4),
     p1: doublePrecision('p1').notNull().default(0),
     p2: doublePrecision('p2').notNull().default(0),
     hoursStudied: doublePrecision('hours_studied').notNull().default(0),
@@ -86,6 +88,50 @@ export const pomodoroSessions = pgTable(
   },
   (table) => [index('pomodoro_sessions_owner_idx').on(table.ownerId)]
 );
+
+export const studySessionRuns = pgTable('study_session_runs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  ownerId: text('owner_id').notNull().references(() => users.uid, { onDelete: 'cascade' }),
+  subjectId: text('subject_id').notNull().default('geral'),
+  subjectName: text('subject_name').notNull(),
+  mode: text('mode').notNull(),
+  status: text('status').notNull().default('running'),
+  accumulatedSeconds: integer('accumulated_seconds').notNull().default(0),
+  activeSince: timestamp('active_since', { withTimezone: true }),
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+}, (table) => [
+  check('study_session_runs_mode_check', sql`${table.mode} IN ('pomodoro25', 'ultra50')`),
+  check('study_session_runs_status_check', sql`${table.status} IN ('running', 'paused', 'completed', 'cancelled')`),
+  check('study_session_runs_accumulated_check', sql`${table.accumulatedSeconds} >= 0`),
+  uniqueIndex('study_session_runs_one_active_per_user').on(table.ownerId).where(sql`${table.status} IN ('running', 'paused')`),
+]);
+
+export const creditTransactions = pgTable('credit_transactions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  ownerId: text('owner_id').notNull().references(() => users.uid, { onDelete: 'cascade' }),
+  amount: integer('amount').notNull(),
+  type: text('type').notNull(),
+  sourceId: text('source_id').notNull().unique(),
+  description: text('description').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  check('credit_transactions_amount_check', sql`${table.amount} <> 0`),
+  check('credit_transactions_type_check', sql`${table.type} IN ('study', 'purchase')`),
+  index('credit_transactions_owner_date_idx').on(table.ownerId, table.createdAt),
+]);
+
+export const cosmeticOwnership = pgTable('cosmetic_ownership', {
+  ownerId: text('owner_id').notNull().references(() => users.uid, { onDelete: 'cascade' }),
+  itemId: text('item_id').notNull(),
+  category: text('category').notNull(),
+  equipped: boolean('equipped').notNull().default(false),
+  acquiredAt: timestamp('acquired_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  primaryKey({ name: 'cosmetic_ownership_pk', columns: [table.ownerId, table.itemId] }),
+  check('cosmetic_ownership_category_check', sql`${table.category} IN ('theme', 'avatar')`),
+  uniqueIndex('cosmetic_ownership_one_equipped_per_category').on(table.ownerId, table.category).where(sql`${table.equipped} = true`),
+]);
 
 export const scheduleBlocks = pgTable(
   'schedule_blocks',

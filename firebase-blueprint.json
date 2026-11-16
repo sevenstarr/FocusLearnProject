@@ -111,9 +111,6 @@
           "type": "string",
           "maxLength": 80
         },
-        "credits": {
-          "type": "number"
-        },
         "p1": {
           "type": "number"
         },
@@ -142,7 +139,6 @@
         "name",
         "professor",
         "schedule",
-        "credits",
         "p1",
         "p2",
         "hoursStudied",

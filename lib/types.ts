@@ -8,6 +8,7 @@ export type NavSection =
   | 'estatisticas-metas'
   | 'anotacoes'
   | 'comunidade'
+  | 'loja'
   | 'configuracoes-ajuda';
 
 export interface UserProfile {
@@ -34,7 +35,6 @@ export interface Subject {
   name: string;
   professor: string;
   schedule: string;
-  credits: number;
   p1: number;
   p2: number;
   hoursStudied: number;
@@ -60,6 +60,37 @@ export interface PomodoroSession {
   durationMinutes: number;
   dateKey: string;
   createdAtMs: number;
+}
+
+export type CosmeticCategory = 'theme' | 'avatar';
+export interface ShopItem {
+  id: string;
+  name: string;
+  description: string;
+  category: CosmeticCategory;
+  price: number;
+  swatch?: string;
+  emoji?: string;
+}
+export interface CreditTransaction {
+  id: string;
+  amount: number;
+  type: 'study' | 'purchase';
+  description: string;
+  createdAtMs: number;
+}
+export interface OwnedCosmetic {
+  itemId: string;
+  category: CosmeticCategory;
+  equipped: boolean;
+  acquiredAtMs: number;
+}
+export interface ShopState {
+  balance: number;
+  items: ShopItem[];
+  transactions: CreditTransaction[];
+  owned: OwnedCosmetic[];
+  activeSession: { id: string; mode: PomodoroMode; accumulatedSeconds: number; activeSinceMs: number | null } | null;
 }
 
 export type ScheduleType = 'aula' | 'revisao' | 'pausa' | 'prova';

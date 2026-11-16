@@ -66,11 +66,11 @@ service cloud.firestore {
 
     function isValidSubject(data) {
       return data.keys().hasAll([
-        'ownerId', 'code', 'name', 'professor', 'schedule', 'credits',
+        'ownerId', 'code', 'name', 'professor', 'schedule',
         'p1', 'p2', 'hoursStudied', 'status', 'createdAt', 'updatedAt'
       ])
       && data.keys().hasOnly([
-        'ownerId', 'code', 'name', 'professor', 'schedule', 'credits',
+        'ownerId', 'code', 'name', 'professor', 'schedule',
         'p1', 'p2', 'hoursStudied', 'status', 'createdAt', 'updatedAt'
       ])
       && data.ownerId is string && isValidId(data.ownerId) && data.ownerId == request.auth.uid
@@ -78,7 +78,6 @@ service cloud.firestore {
       && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
       && data.professor is string && data.professor.size() <= 100
       && data.schedule is string && data.schedule.size() <= 80
-      && data.credits is number && data.credits >= 0 && data.credits <= 40
       && data.p1 is number && data.p1 >= 0 && data.p1 <= 10
       && data.p2 is number && data.p2 >= 0 && data.p2 <= 10
       && data.hoursStudied is number && data.hoursStudied >= 0 && data.hoursStudied <= 5000
@@ -212,7 +211,7 @@ service cloud.firestore {
           && incoming().updatedAt == request.time
           && (
             incoming().diff(existing()).affectedKeys().hasOnly([
-              'code', 'name', 'professor', 'schedule', 'credits', 'p1', 'p2', 'status', 'updatedAt'
+              'code', 'name', 'professor', 'schedule', 'p1', 'p2', 'status', 'updatedAt'
             ]) ||
             incoming().diff(existing()).affectedKeys().hasOnly(['hoursStudied', 'updatedAt'])
           );

@@ -53,7 +53,6 @@ function mapSubjectRow(row: typeof subjects.$inferSelect): Subject {
     name: row.name,
     professor: row.professor,
     schedule: row.schedule,
-    credits: row.credits,
     p1: row.p1,
     p2: row.p2,
     hoursStudied: row.hoursStudied,
@@ -200,7 +199,6 @@ export async function createSubject(
         name: input.name.trim().slice(0, 120),
         professor: input.professor.trim().slice(0, 100),
         schedule: input.schedule.trim().slice(0, 80),
-        credits: Math.max(0, Math.min(40, Math.round(Number(input.credits) || 4))),
         p1: Math.max(0, Math.min(10, Number(input.p1) || 0)),
         p2: Math.max(0, Math.min(10, Number(input.p2) || 0)),
         hoursStudied: Math.max(0, Math.min(5000, Number(input.hoursStudied) || 0)),
@@ -228,9 +226,6 @@ export async function updateSubjectRow(
     if (updates.name !== undefined) patch.name = updates.name.slice(0, 120);
     if (updates.professor !== undefined) patch.professor = updates.professor.slice(0, 100);
     if (updates.schedule !== undefined) patch.schedule = updates.schedule.slice(0, 80);
-    if (updates.credits !== undefined) {
-      patch.credits = Math.max(0, Math.min(40, Math.round(Number(updates.credits))));
-    }
     if (updates.p1 !== undefined) patch.p1 = Math.max(0, Math.min(10, Number(updates.p1)));
     if (updates.p2 !== undefined) patch.p2 = Math.max(0, Math.min(10, Number(updates.p2)));
     if (updates.status !== undefined) patch.status = updates.status;
@@ -315,63 +310,6 @@ export async function deleteTaskRow(uid: string, id: string): Promise<boolean> {
   } catch (error) {
     console.error('Database query failed (deleteTaskRow):', error);
     throw new Error('Failed to delete task.', { cause: error });
-  }
-}
-
-export async function createPomodoroSessionRow(
-  uid: string,
-  input: {
-    subjectId: string;
-    subjectName: string;
-    mode: PomodoroMode;
-    durationMinutes: number;
-    dateKey: string;
-  }
-): Promise<{ session: PomodoroSession; updatedSubject: Subject | null }> {
-  try {
-    return await db.transaction(async (tx) => {
-      const inserted = await tx
-        .insert(pomodoroSessions)
-        .values({
-          ownerId: uid,
-          subjectId: input.subjectId.slice(0, 128),
-          subjectName: input.subjectName.slice(0, 120),
-          mode: input.mode,
-          durationMinutes: Math.max(1, Math.min(240, Math.round(input.durationMinutes))),
-          dateKey: input.dateKey.slice(0, 20),
-        })
-        .returning();
-
-      let updatedSubject: Subject | null = null;
-      if (UUID_REGEX.test(input.subjectId)) {
-        const existing = await tx
-          .select()
-          .from(subjects)
-          .where(and(eq(subjects.id, input.subjectId), eq(subjects.ownerId, uid)));
-
-        if (existing[0]) {
-          const nextHours = Number(
-            (existing[0].hoursStudied + input.durationMinutes / 60).toFixed(2)
-          );
-          const updated = await tx
-            .update(subjects)
-            .set({ hoursStudied: nextHours, updatedAt: new Date() })
-            .where(and(eq(subjects.id, input.subjectId), eq(subjects.ownerId, uid)))
-            .returning();
-          if (updated[0]) {
-            updatedSubject = mapSubjectRow(updated[0]);
-          }
-        }
-      }
-
-      return {
-        session: mapSessionRow(inserted[0]),
-        updatedSubject,
-      };
-    });
-  } catch (error) {
-    console.error('Database query failed (createPomodoroSessionRow):', error);
-    throw new Error('Failed to log study session.', { cause: error });
   }
 }
 

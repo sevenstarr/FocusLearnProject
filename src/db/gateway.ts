@@ -9,7 +9,6 @@ import {
   createCommunityMessageRow as createCommunityDrizzle,
   createGoalRow as createGoalDrizzle,
   createNoteRow as createNoteDrizzle,
-  createPomodoroSessionRow as createSessionDrizzle,
   createScheduleBlockRow as createScheduleDrizzle,
   createSubject as createSubjectDrizzle,
   createTaskRow as createTaskDrizzle,
@@ -30,7 +29,6 @@ import {
   createCommunityMessageRowSupabase,
   createGoalRowSupabase,
   createNoteRowSupabase,
-  createPomodoroSessionRowSupabase,
   createScheduleBlockRowSupabase,
   createSubjectSupabase,
   createTaskRowSupabase,
@@ -52,7 +50,6 @@ import {
 } from './supabase-repositories.ts';
 import type {
   CommunityChannel,
-  PomodoroMode,
   ScheduleBlock,
   SemesterGoal,
   StudyNote,
@@ -127,21 +124,6 @@ export async function deleteTaskRow(uid: string, id: string) {
   return isSupabaseConfigured()
     ? deleteTaskRowSupabase(uid, id)
     : deleteTaskDrizzle(uid, id);
-}
-
-export async function createPomodoroSessionRow(
-  uid: string,
-  input: {
-    subjectId: string;
-    subjectName: string;
-    mode: PomodoroMode;
-    durationMinutes: number;
-    dateKey: string;
-  }
-) {
-  return isSupabaseConfigured()
-    ? createPomodoroSessionRowSupabase(uid, input)
-    : createSessionDrizzle(uid, input);
 }
 
 export async function createScheduleBlockRow(

@@ -35,7 +35,6 @@ export function SubjectsView() {
   const [name, setName] = useState('');
   const [professor, setProfessor] = useState('');
   const [schedule, setSchedule] = useState('');
-  const [credits, setCredits] = useState('4');
 
   const calcEval = useMemo(
     () => calculateUFCGrade(parseFloat(calcP1) || 0, parseFloat(calcP2) || 0),
@@ -57,7 +56,6 @@ export function SubjectsView() {
 
   const summary = useMemo(() => {
     const active = subjects.filter((s) => s.status === 'active');
-    const totalCredits = active.reduce((acc, s) => acc + s.credits, 0);
     const totalHours = subjects.reduce((acc, s) => acc + s.hoursStudied, 0);
     const avg =
       active.length > 0
@@ -68,7 +66,6 @@ export function SubjectsView() {
       return ev.neededPF !== null && ev.neededPF > 0;
     }).length;
     return {
-      totalCredits,
       totalHours: totalHours.toFixed(1),
       avg: avg.toFixed(1),
       finalExams,
@@ -83,7 +80,6 @@ export function SubjectsView() {
       name,
       professor: professor || 'A definir',
       schedule: schedule || 'Horário flexível',
-      credits: Math.max(1, Math.min(20, parseInt(credits, 10) || 4)),
       p1: 0,
       p2: 0,
       hoursStudied: 0,
@@ -93,7 +89,6 @@ export function SubjectsView() {
     setName('');
     setProfessor('');
     setSchedule('');
-    setCredits('4');
     setModalOpen(false);
   };
 
@@ -129,13 +124,7 @@ export function SubjectsView() {
       </div>
 
       {/* Summary Ribbon */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Créditos Ativos</p>
-          <p className="font-mono text-2xl font-bold text-slate-900 dark:text-white mt-1 tabular-nums">
-            {summary.totalCredits} <span className="text-xs font-normal text-slate-500">CR</span>
-          </p>
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Média Global</p>
           <p className="font-mono text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 tabular-nums">
@@ -296,7 +285,6 @@ export function SubjectsView() {
                         {sub.code}
                       </span>
                       <span aria-hidden="true">·</span>
-                      <span>{sub.credits} créditos</span>
                       <span aria-hidden="true">·</span>
                       <span>{sub.schedule}</span>
                     </div>
@@ -451,8 +439,8 @@ export function SubjectsView() {
             </div>
 
             <form onSubmit={(e) => void handleCreateSubject(e)} className="flex flex-col gap-3">
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-2">
+              <div>
+                <div>
                   <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                     Código
                   </label>
@@ -462,19 +450,6 @@ export function SubjectsView() {
                     onChange={(e) => setCode(e.target.value)}
                     placeholder="ES-401"
                     maxLength={24}
-                    className="w-full bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2 text-sm border border-slate-200 dark:border-slate-700"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                    Créditos
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="20"
-                    value={credits}
-                    onChange={(e) => setCredits(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2 text-sm border border-slate-200 dark:border-slate-700"
                   />
                 </div>

@@ -49,7 +49,6 @@ interface DbSubjectRow {
   name: string;
   professor: string;
   schedule: string;
-  credits: number;
   p1: number;
   p2: number;
   hours_studied: number;
@@ -146,7 +145,6 @@ function mapSubjectRow(row: DbSubjectRow): Subject {
     name: row.name,
     professor: row.professor,
     schedule: row.schedule,
-    credits: row.credits,
     p1: row.p1,
     p2: row.p2,
     hoursStudied: row.hours_studied,
@@ -384,7 +382,6 @@ export async function seedStarterWorkspaceIfNeededSupabase(uid: string) {
         name: s.name,
         professor: s.professor,
         schedule: s.schedule,
-        credits: s.credits,
         p1: s.p1,
         p2: s.p2,
         hours_studied: s.hoursStudied,
@@ -588,7 +585,6 @@ export async function createSubjectSupabase(
       name: input.name.trim().slice(0, 120),
       professor: input.professor.trim().slice(0, 100),
       schedule: input.schedule.trim().slice(0, 80),
-      credits: Math.max(0, Math.min(40, Math.round(Number(input.credits) || 4))),
       p1: Math.max(0, Math.min(10, Number(input.p1) || 0)),
       p2: Math.max(0, Math.min(10, Number(input.p2) || 0)),
       hours_studied: Math.max(0, Math.min(5000, Number(input.hoursStudied) || 0)),
@@ -614,9 +610,6 @@ export async function updateSubjectRowSupabase(
   if (updates.name !== undefined) patch.name = updates.name.slice(0, 120);
   if (updates.professor !== undefined) patch.professor = updates.professor.slice(0, 100);
   if (updates.schedule !== undefined) patch.schedule = updates.schedule.slice(0, 80);
-  if (updates.credits !== undefined) {
-    patch.credits = Math.max(0, Math.min(40, Math.round(Number(updates.credits))));
-  }
   if (updates.p1 !== undefined) patch.p1 = Math.max(0, Math.min(10, Number(updates.p1)));
   if (updates.p2 !== undefined) patch.p2 = Math.max(0, Math.min(10, Number(updates.p2)));
   if (updates.status !== undefined) patch.status = updates.status;
@@ -706,66 +699,6 @@ export async function deleteTaskRowSupabase(uid: string, id: string): Promise<bo
     throwSupabaseError('deleteTaskRow', 'Failed to delete task.', error);
   }
   return Boolean(data && data.length > 0);
-}
-
-export async function createPomodoroSessionRowSupabase(
-  uid: string,
-  input: {
-    subjectId: string;
-    subjectName: string;
-    mode: PomodoroMode;
-    durationMinutes: number;
-    dateKey: string;
-  }
-): Promise<{ session: PomodoroSession; updatedSubject: Subject | null }> {
-  const supabase = getSupabaseAdmin();
-  const durationMinutes = Math.max(1, Math.min(240, Math.round(input.durationMinutes)));
-
-  const { data: sessData, error: sessError } = await supabase
-    .from('pomodoro_sessions')
-    .insert({
-      owner_id: uid,
-      subject_id: input.subjectId.slice(0, 128),
-      subject_name: input.subjectName.slice(0, 120),
-      mode: input.mode,
-      duration_minutes: durationMinutes,
-      date_key: input.dateKey.slice(0, 20),
-    })
-    .select('*')
-    .single<DbSessionRow>();
-
-  if (sessError) {
-    throwSupabaseError('createPomodoroSessionRow', 'Failed to log study session.', sessError);
-  }
-
-  let updatedSubject: Subject | null = null;
-  if (UUID_REGEX.test(input.subjectId)) {
-    const { data: existingSub } = await supabase
-      .from('subjects')
-      .select('*')
-      .eq('id', input.subjectId)
-      .eq('owner_id', uid)
-      .maybeSingle<DbSubjectRow>();
-
-    if (existingSub) {
-      const nextHours = Number((existingSub.hours_studied + durationMinutes / 60).toFixed(2));
-      const { data: subUpdated } = await supabase
-        .from('subjects')
-        .update({ hours_studied: nextHours, updated_at: new Date().toISOString() })
-        .eq('id', input.subjectId)
-        .eq('owner_id', uid)
-        .select('*')
-        .maybeSingle<DbSubjectRow>();
-      if (subUpdated) {
-        updatedSubject = mapSubjectRow(subUpdated);
-      }
-    }
-  }
-
-  return {
-    session: mapSessionRow(sessData),
-    updatedSubject,
-  };
 }
 
 export async function createScheduleBlockRowSupabase(

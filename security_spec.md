@@ -1,6 +1,7 @@
 # FocusLearn Security Specification (Phase 0)
 
 ## 1. Data Invariants
+6. **Credit Ledger & Session Validation**: Credits exist only as server-written ledger entries. A reward requires an authenticated server-tracked focus run reaching its full duration; each account has at most one active run and earns at most 8 study credits in any rolling 24-hour window. Session completion, purchases, and equipment changes are atomic and scoped to the authenticated owner. Clients cannot directly write balances or rewards.
 1. **PII Isolation**: User profile documents (`/users/{userId}`) contain PII (`email`, `registration`). Only the authenticated verified owner (`request.auth.uid == userId`) can read, create, or update their profile. Blanket listing of `/users` is strictly denied (`allow list: if false`).
 2. **Ownership & Master Gate**: Every user subcollection (`/subjects`, `/tasks`, `/sessions`, `/schedule`, `/notes`, `/goals`) is owned exclusively by `userId`. All creates and updates must enforce `ownerId == request.auth.uid`, and `list` queries must enforce `resource.data.ownerId == request.auth.uid`.
 3. **Immutable Audit & Ownership Fields**: `ownerId`/`authorId` and `createdAt` can never be changed after creation. `createdAt` and `updatedAt` must strictly equal `request.time`.
