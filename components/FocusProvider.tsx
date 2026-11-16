@@ -59,6 +59,7 @@ interface FocusContextValue {
   equipShopItem: (itemId: string) => Promise<void>;
 
   profile: UserProfile;
+  markTutorialSeen: (section: NavSection) => Promise<void>;
   subjects: Subject[];
   tasks: QuickTask[];
   sessions: PomodoroSession[];
@@ -666,6 +667,26 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     showToast('Perfil atualizado', 'Suas informações acadêmicas foram salvas.');
   };
 
+  const markTutorialSeen = async (section: NavSection) => {
+    if (profile.tutorialsSeen?.[section]) return;
+    const tutorialsSeen = { ...(profile.tutorialsSeen || {}), [section]: true };
+    setProfile((prev) => ({ ...prev, tutorialsSeen }));
+    if (cloudSynced && user) {
+      try {
+        await authFetch('/api/profile', {
+          method: 'PATCH',
+          body: JSON.stringify({ tutorialsSeen }),
+        });
+      } catch (err) {
+        showToast(
+          'Erro ao salvar tutorial',
+          err instanceof Error ? err.message : 'Não foi possível salvar seu progresso.',
+          'error'
+        );
+      }
+    }
+  };
+
   const addSubject = async (input: Omit<Subject, 'id' | 'ownerId'>) => {
     const sanitized = {
       code: input.code.trim().slice(0, 24),
@@ -1182,6 +1203,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
         buyShopItem,
         equipShopItem,
         profile,
+        markTutorialSeen,
         subjects,
         tasks,
         sessions,

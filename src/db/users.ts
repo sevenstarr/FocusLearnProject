@@ -42,6 +42,7 @@ export async function getOrCreateUser(uid: string, email: string, name?: string)
         streak: defaults.streak,
         recordStreak: defaults.recordStreak,
         theme: defaults.theme,
+        tutorialsSeen: {},
         seeded: false,
       })
       .onConflictDoUpdate({
@@ -204,6 +205,9 @@ export async function updateUserProfileRow(uid: string, updates: Partial<UserPro
     }
     if (updates.theme === 'light' || updates.theme === 'dark') {
       patch.theme = updates.theme;
+    }
+    if (updates.tutorialsSeen !== undefined) {
+      patch.tutorialsSeen = updates.tutorialsSeen;
     }
 
     const updated = await db

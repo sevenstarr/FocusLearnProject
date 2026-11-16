@@ -42,6 +42,7 @@ function mapUserRow(row: typeof users.$inferSelect): UserProfile {
     streak: row.streak,
     recordStreak: row.recordStreak,
     theme: row.theme === 'dark' ? 'dark' : 'light',
+    tutorialsSeen: row.tutorialsSeen || {},
   };
 }
 

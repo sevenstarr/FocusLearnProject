@@ -78,6 +78,7 @@ export function createDefaultProfile(
     streak: 0,
     recordStreak: 0,
     theme: 'light',
+    tutorialsSeen: {},
   };
 }
 

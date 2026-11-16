@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -23,6 +23,7 @@ import {
   Target,
   ShoppingBag,
   Coins,
+  CircleHelp,
 } from 'lucide-react';
 import { useFocus } from '@/components/FocusProvider';
 import { useAuth } from '@/components/AuthProvider';
@@ -41,6 +42,7 @@ import { NotesView } from '@/components/views/NotesView';
 import { CommunityView } from '@/components/views/CommunityView';
 import { SettingsProfileView } from '@/components/views/SettingsProfileView';
 import { ShopView } from '@/components/views/ShopView';
+import { ModuleTutorialModal } from '@/components/ModuleTutorialModal';
 
 const NAV_ITEMS: {
   id: NavSection;
@@ -72,12 +74,25 @@ export function FocusLearnShell() {
     toggleTheme,
     cloudSynced,
     shop,
+    loadingData,
+    markTutorialSeen,
   } = useFocus();
   const { user } = useAuth();
   const equippedAvatar = shop.owned.find((item) => item.category === 'avatar' && item.equipped);
   const equippedAvatarEmoji = shop.items.find((item) => item.id === equippedAvatar?.itemId)?.emoji;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [tutorialSection, setTutorialSection] = useState<NavSection | null>(null);
+
+  useEffect(() => {
+    if (loadingData || profile.tutorialsSeen?.[activeSection]) return;
+    setTutorialSection(activeSection);
+  }, [activeSection, loadingData, profile.tutorialsSeen]);
+
+  const closeTutorial = useCallback(() => {
+    if (tutorialSection) void markTutorialSeen(tutorialSection);
+    setTutorialSection(null);
+  }, [markTutorialSeen, tutorialSection]);
 
   const todayMinutes = useMemo(() => {
     const key = getDateKey();
@@ -121,6 +136,13 @@ export function FocusLearnShell() {
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <ToastBanner />
       <ZenModeModal />
+      {tutorialSection && (
+        <ModuleTutorialModal
+          key={tutorialSection}
+          section={tutorialSection}
+          onClose={closeTutorial}
+        />
+      )}
 
       {/* Mobile Drawer Backdrop */}
       {drawerOpen && (
@@ -319,6 +341,15 @@ export function FocusLearnShell() {
 
         <div className="flex items-center gap-4 shrink-0">
           {cloudSynced && <button type="button" onClick={() => navigate('loja')} className="inline-flex items-center gap-1 rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200" aria-label="Abrir loja e ver saldo"><Coins className="h-4 w-4" />{shop.balance}</button>}
+          <button
+            type="button"
+            onClick={() => setTutorialSection(activeSection)}
+            aria-label={`Abrir tutorial: ${NAV_ITEMS.find((item) => item.id === activeSection)?.label || 'Configurações e perfil'}`}
+            title="Ajuda deste módulo"
+            className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            <CircleHelp className="w-4 h-4" />
+          </button>
           <div className="hidden md:flex items-center gap-3 text-xs font-medium text-slate-600 dark:text-slate-300 tabular-nums">
             <span className="inline-flex items-center gap-1">
               <Flame className="w-3.5 h-3.5 text-amber-500" />

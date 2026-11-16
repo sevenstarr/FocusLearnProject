@@ -25,6 +25,7 @@ export interface UserProfile {
   streak: number;
   recordStreak: number;
   theme: ThemeMode;
+  tutorialsSeen: Partial<Record<NavSection, boolean>>;
   photoURL?: string;
 }
 
