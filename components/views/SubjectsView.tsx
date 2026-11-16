@@ -27,8 +27,8 @@ export function SubjectsView() {
   } = useFocus();
 
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('all');
-  const [calcP1, setCalcP1] = useState<string>('8.0');
-  const [calcP2, setCalcP2] = useState<string>('6.5');
+  const [calcP1, setCalcP1] = useState<string>('');
+  const [calcP2, setCalcP2] = useState<string>('');
 
   const [modalOpen, setModalOpen] = useState(false);
   const [code, setCode] = useState('');
@@ -178,6 +178,7 @@ export function SubjectsView() {
               min="0"
               max="10"
               step="0.1"
+              placeholder="0.0"
               value={calcP1}
               onChange={(e) => setCalcP1(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2 text-sm font-mono tabular-nums border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
@@ -196,6 +197,7 @@ export function SubjectsView() {
               min="0"
               max="10"
               step="0.1"
+              placeholder="0.0"
               value={calcP2}
               onChange={(e) => setCalcP2(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2 text-sm font-mono tabular-nums border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30"

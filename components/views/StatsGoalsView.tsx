@@ -12,7 +12,7 @@ export function StatsGoalsView() {
   const [category, setCategory] = useState('Carga Horária');
   const [targetValue, setTargetValue] = useState('40');
   const [unit, setUnit] = useState('h');
-  const [deadline, setDeadline] = useState('2026-12-20');
+  const [deadline, setDeadline] = useState('');
 
   const subjectHours = useMemo(() => {
     const maxH = Math.max(1, ...subjects.map((s) => s.hoursStudied));
@@ -124,6 +124,11 @@ export function StatsGoalsView() {
           </span>
         </div>
 
+        {goals.length === 0 ? (
+          <p className="text-xs text-slate-500 dark:text-slate-400 py-6 text-center">
+            Nenhuma meta cadastrada ainda. Clique em &ldquo;Nova Meta&rdquo; para criar seu primeiro objetivo.
+          </p>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {goals.map((g) => {
             const pct = Math.min(100, Math.round((g.currentValue / g.targetValue) * 100));
@@ -197,6 +202,7 @@ export function StatsGoalsView() {
             );
           })}
         </div>
+        )}
       </section>
 
       {/* New Goal Modal */}

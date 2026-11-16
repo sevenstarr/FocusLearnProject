@@ -59,7 +59,7 @@ export function CommunityView() {
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {activeChannelMeta.topic} ·{' '}
-              {cloudSynced ? 'Sincronizado em tempo real' : 'Modo demonstração local'}
+              {cloudSynced ? 'Sincronizado em tempo real' : 'Modo local neste dispositivo'}
             </p>
           </div>
         </div>

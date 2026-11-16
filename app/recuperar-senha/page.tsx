@@ -18,7 +18,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useFocus } from '@/components/FocusProvider';
 import { ToastBanner } from '@/components/ToastBanner';
 
-type RecoveryTab = 'recovery' | 'auth-error' | 'success';
+type RecoveryTab = 'recovery' | 'success';
 
 export default function RecuperarSenhaPage() {
   const { sendPasswordReset } = useAuth();
@@ -26,7 +26,7 @@ export default function RecuperarSenhaPage() {
 
   const [tab, setTab] = useState<RecoveryTab>('recovery');
   const [email, setEmail] = useState('');
-  const [sentEmail, setSentEmail] = useState('estudante@universidade.br');
+  const [sentEmail, setSentEmail] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -97,48 +97,6 @@ export default function RecuperarSenhaPage() {
 
       <main className="flex-1 flex flex-col justify-center items-center px-4 sm:px-6 py-6">
         <div className="w-full max-w-6xl">
-          {/* Interactive State Selector */}
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
-            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 px-2">
-              Estados do Fluxo de Recuperação
-            </span>
-            <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setTab('recovery')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  tab === 'recovery'
-                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400'
-                }`}
-              >
-                Solicitar Redefinição
-              </button>
-              <button
-                type="button"
-                onClick={() => setTab('auth-error')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  tab === 'auth-error'
-                    ? 'bg-white dark:bg-slate-900 text-red-600 dark:text-red-400 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400'
-                }`}
-              >
-                Simulação: Senha Incorreta
-              </button>
-              <button
-                type="button"
-                onClick={() => setTab('success')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  tab === 'success'
-                    ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400'
-                }`}
-              >
-                Simulação: E-mail Enviado
-              </button>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             {/* Left Main Card */}
             <section className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-10 flex flex-col justify-between">
@@ -208,51 +166,6 @@ export default function RecuperarSenhaPage() {
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </form>
-                </div>
-              )}
-
-              {tab === 'auth-error' && (
-                <div className="flex flex-col gap-4">
-                  <div
-                    role="alert"
-                    className="p-4 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-red-800 dark:text-red-200 flex items-start gap-3"
-                  >
-                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                    <div className="text-xs">
-                      <p className="font-bold text-sm">E-mail ou senha incorretos</p>
-                      <p className="mt-1 leading-relaxed">
-                        Exemplo de feedback acessível quando credenciais inválidas são enviadas.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                    <div>
-                      <p className="text-xs font-semibold mb-1">E-mail</p>
-                      <input
-                        readOnly
-                        value="carla.santos@universidade.edu.br"
-                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-red-600 dark:text-red-400 mb-1">
-                        Senha Incorreta
-                      </p>
-                      <input
-                        readOnly
-                        type="password"
-                        value="SenhaAntiga123!"
-                        className="w-full px-3 py-2 rounded-lg bg-red-50/40 dark:bg-red-950/20 border-2 border-red-500 text-sm"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setTab('recovery')}
-                      className="w-full py-2.5 px-4 rounded-xl bg-slate-900 dark:bg-slate-700 text-white text-xs font-semibold cursor-pointer"
-                    >
-                      Recuperar senha deste e-mail
-                    </button>
-                  </div>
                 </div>
               )}
 

@@ -159,7 +159,7 @@ export function FocusLearnShell() {
                 {profile.name}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                {profile.course}
+                {profile.course || 'FocusLearn'}
               </p>
             </div>
           </div>

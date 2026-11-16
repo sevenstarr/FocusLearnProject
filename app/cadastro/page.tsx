@@ -23,7 +23,6 @@ import {
 import { useAuth } from '@/components/AuthProvider';
 import { useFocus } from '@/components/FocusProvider';
 import { ToastBanner } from '@/components/ToastBanner';
-import { UserAvatar } from '@/components/UserAvatar';
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -88,7 +87,7 @@ export default function CadastroPage() {
       await updateUserProfile({
         name: fullName.trim(),
         email: email.trim(),
-        course: course || 'Engenharia de Software',
+        course: course || '',
       });
       showToast('Conta criada!', res.message, 'success');
       router.push('/');
@@ -202,7 +201,7 @@ export default function CadastroPage() {
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Ex.: Lucas Andrade Silva"
+                      placeholder="Seu nome completo"
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm min-h-[44px]"
                     />
                   </div>
@@ -450,18 +449,9 @@ export default function CadastroPage() {
             </div>
 
             <div className="pt-6 mt-6 border-t border-white/15">
-              <div className="p-4 rounded-xl bg-white/10 space-y-2.5">
-                <div className="flex items-center gap-3">
-                  <UserAvatar name="Lucas Andrade" sizeClass="w-10 h-10 text-xs" />
-                  <div>
-                    <p className="text-sm font-bold">Lucas Andrade</p>
-                    <p className="text-xs text-emerald-300 font-medium">Medicina · USP Pinheiros</p>
-                  </div>
-                </div>
-                <p className="text-xs text-blue-100 italic leading-relaxed">
-                  “O FocusLearn organizou minha carga semanal de estudos e reduziu o esgotamento antes das provas finais.”
-                </p>
-              </div>
+              <p className="text-xs text-blue-100 leading-relaxed">
+                Seus dados acadêmicos ficam protegidos e sincronizados com sua conta no Supabase Auth.
+              </p>
             </div>
           </aside>
         </div>

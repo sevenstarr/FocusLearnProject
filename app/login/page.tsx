@@ -11,14 +11,12 @@ import {
   ArrowRight,
   Sun,
   Moon,
-  Timer,
   AlertCircle,
-  CheckCircle2,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { useFocus } from '@/components/FocusProvider';
 import { ToastBanner } from '@/components/ToastBanner';
-import { UserAvatar } from '@/components/UserAvatar';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -260,32 +258,19 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <div className="bg-white/10 border border-white/15 rounded-2xl p-5 my-6">
-              <div className="flex items-center justify-between text-xs text-blue-100 mb-3">
-                <span>Fluxo Integrado</span>
-                <span className="inline-flex items-center gap-1 text-emerald-300 font-semibold">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Sincronizado
-                </span>
+            <div className="bg-white/10 border border-white/15 rounded-2xl p-5 my-6 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-blue-100">
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span>Sincronização em Nuvem</span>
               </div>
-              <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-                  <Timer className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold">Cálculo Diferencial e Integral</p>
-                  <p className="text-xs text-blue-100/80">Blocos Pomodoro + caderno de fórmulas</p>
-                </div>
-              </div>
+              <p className="text-xs text-blue-100/90 leading-relaxed">
+                Disciplinas, sessões Pomodoro, metas semestrais e cadernos salvos automaticamente na sua conta.
+              </p>
             </div>
 
-            <div className="flex items-center gap-3 pt-4 border-t border-white/15">
-              <div className="flex -space-x-2">
-                <UserAvatar name="Mariana Silva" sizeClass="w-8 h-8 text-[10px]" />
-                <UserAvatar name="Lucas Andrade" sizeClass="w-8 h-8 text-[10px]" />
-              </div>
+            <div className="pt-4 border-t border-white/15">
               <p className="text-xs text-blue-100">
-                Autenticação segura via Supabase Auth (Google OAuth & E-mail) com sincronização em nuvem.
+                Autenticação segura via Supabase Auth (Google OAuth &amp; E-mail) com sincronização em nuvem.
               </p>
             </div>
           </aside>

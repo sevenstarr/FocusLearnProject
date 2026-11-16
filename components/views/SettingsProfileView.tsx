@@ -70,10 +70,10 @@ export function SettingsProfileView() {
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{profile.name}</h1>
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              {profile.course} · {profile.university}
+              {profile.course || 'Curso não informado'} · {profile.university || 'Instituição não informada'}
             </p>
             <p className="font-mono text-xs text-blue-600 dark:text-blue-400 mt-1">
-              Matrícula: {profile.registration} ·{' '}
+              Matrícula: {profile.registration || '—'} ·{' '}
               {cloudSynced ? 'Sincronizado na nuvem' : 'Armazenamento local'}
             </p>
           </div>
@@ -120,13 +120,13 @@ export function SettingsProfileView() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-              E-mail Universitário
+              E-mail
             </label>
             <input
-              required
               type="email"
               value={email}
               onChange={(e) => setDraft((prev) => ({ ...prev, email: e.target.value }))}
+              placeholder="seu@email.com"
               maxLength={180}
               className="w-full bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2.5 text-sm border border-slate-200 dark:border-slate-700"
             />
@@ -136,9 +136,9 @@ export function SettingsProfileView() {
               Curso
             </label>
             <input
-              required
               value={course}
               onChange={(e) => setDraft((prev) => ({ ...prev, course: e.target.value }))}
+              placeholder="Seu curso ou objetivo"
               maxLength={120}
               className="w-full bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2.5 text-sm border border-slate-200 dark:border-slate-700"
             />
@@ -148,9 +148,9 @@ export function SettingsProfileView() {
               Universidade / Instituição
             </label>
             <input
-              required
               value={university}
               onChange={(e) => setDraft((prev) => ({ ...prev, university: e.target.value }))}
+              placeholder="Sua instituição"
               maxLength={140}
               className="w-full bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2.5 text-sm border border-slate-200 dark:border-slate-700"
             />
@@ -160,9 +160,9 @@ export function SettingsProfileView() {
               Semestre Atual
             </label>
             <input
-              required
               value={semester}
               onChange={(e) => setDraft((prev) => ({ ...prev, semester: e.target.value }))}
+              placeholder="Ex.: 1º Semestre"
               maxLength={40}
               className="w-full bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2.5 text-sm border border-slate-200 dark:border-slate-700"
             />
@@ -172,9 +172,9 @@ export function SettingsProfileView() {
               Matrícula
             </label>
             <input
-              required
               value={registration}
               onChange={(e) => setDraft((prev) => ({ ...prev, registration: e.target.value }))}
+              placeholder="Número de matrícula (opcional)"
               maxLength={40}
               className="w-full bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2.5 text-sm border border-slate-200 dark:border-slate-700"
             />
@@ -248,7 +248,7 @@ export function SettingsProfileView() {
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:underline cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Restaurar Dados Locais</span>
+                <span>Limpar Dados Locais</span>
               </button>
             ) : (
               <span className="text-xs text-slate-500 dark:text-slate-400">

@@ -147,11 +147,19 @@ export function DashboardView() {
       <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex flex-col gap-2 max-w-2xl">
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
-            <span>{profile.semester}</span>
-            <span aria-hidden="true">·</span>
+            {profile.semester && (
+              <>
+                <span>{profile.semester}</span>
+                <span aria-hidden="true">·</span>
+              </>
+            )}
             <span className="capitalize">{todayFormatted}</span>
-            <span aria-hidden="true">·</span>
-            <span>{profile.course}</span>
+            {profile.course && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>{profile.course}</span>
+              </>
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-50 tracking-tight text-balance">
             Olá, {firstName}. Pronto para o próximo bloco de foco?

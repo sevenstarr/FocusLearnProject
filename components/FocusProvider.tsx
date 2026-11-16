@@ -36,7 +36,7 @@ export interface ToastState {
   tone: 'success' | 'error' | 'info';
 }
 
-const LOCAL_STORAGE_KEY = 'focuslearn_local_state_v2';
+const LOCAL_STORAGE_KEY = 'focuslearn_local_state_v3';
 
 const MODE_DURATIONS: Record<PomodoroMode, number> = {
   pomodoro25: 25 * 60,
@@ -158,7 +158,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
   const [timerMode, setTimerMode] = useState<PomodoroMode>('pomodoro25');
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(MODE_DURATIONS.pomodoro25);
   const [timerRunning, setTimerRunning] = useState(false);
-  const [selectedSubjectId, setSelectedSubjectId] = useState('sub-calc1');
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [zenMode, setZenMode] = useState(false);
 
   // Audio state
@@ -1040,7 +1040,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     setGoals(createStarterGoals(localUid));
     setCommunityMessages(DEMO_COMMUNITY_MESSAGES);
     setTheme('light');
-    showToast('Dados restaurados', 'Estado inicial restaurado neste dispositivo.', 'info');
+    showToast('Dados limpos', 'Os dados locais deste dispositivo foram zerados.', 'info');
   };
 
   return (

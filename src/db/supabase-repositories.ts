@@ -371,6 +371,10 @@ export async function seedStarterWorkspaceIfNeededSupabase(uid: string) {
   }
 
   const starterSubjects = createStarterSubjects(uid);
+  if (!starterSubjects.length) {
+    return;
+  }
+
   const { data: insertedSubjects, error: subErr } = await supabase
     .from('subjects')
     .insert(

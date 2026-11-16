@@ -74,6 +74,9 @@ export async function seedStarterWorkspaceIfNeeded(uid: string) {
       }
 
       const starterSubjects = createStarterSubjects(uid);
+      if (!starterSubjects.length) {
+        return;
+      }
       const insertedSubjects = await tx
         .insert(subjects)
         .values(
