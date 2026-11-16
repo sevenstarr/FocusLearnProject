@@ -136,7 +136,7 @@ npm install
 ### 3. Aplicar a Migration no Supabase
 
 1. No painel do seu projeto Supabase, abra **SQL Editor** (ou use a Supabase CLI com `supabase db push`).
-2. Execute em ordem `supabase/migrations/20261116000000_initial_schema.sql` e `supabase/migrations/20261116010000_focus_shop.sql`. A segunda migration remove o campo acadêmico antigo das disciplinas e cria o ledger, o inventário e as funções seguras da loja. Saldos começam em zero; dados antigos não geram créditos.
+2. Execute em ordem `supabase/migrations/20261116000000_initial_schema.sql`, `supabase/migrations/20261116010000_focus_shop.sql` e `supabase/migrations/20261116020000_tutorials_seen.sql`. A segunda migration remove o campo acadêmico antigo das disciplinas e cria o ledger, o inventário e as funções seguras da loja. A terceira adiciona o progresso dos tutoriais ao perfil para sincronização entre dispositivos.
 
 ### Créditos e loja de cosméticos
 
