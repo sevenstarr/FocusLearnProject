@@ -1,0 +1,6 @@
+{
+  "name": "FocusLearn",
+  "description": "Plataforma inteligente de estudos, produtividade acadêmica, cronômetro Pomodoro com som ambiente, planejador semanal, cadernos em Markdown e comunidade universitária.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

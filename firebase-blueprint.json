@@ -1,0 +1,462 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Perfil acadêmico privado e preferências de estudo do estudante.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 180
+        },
+        "course": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "university": {
+          "type": "string",
+          "maxLength": 140
+        },
+        "semester": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "registration": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "bio": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "dailyGoalHours": {
+          "type": "number"
+        },
+        "pomoMinutes": {
+          "type": "number"
+        },
+        "streak": {
+          "type": "number"
+        },
+        "recordStreak": {
+          "type": "number"
+        },
+        "theme": {
+          "type": "string",
+          "enum": ["light", "dark"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "email",
+        "course",
+        "university",
+        "semester",
+        "registration",
+        "bio",
+        "dailyGoalHours",
+        "pomoMinutes",
+        "streak",
+        "recordStreak",
+        "theme",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Subject": {
+      "title": "Subject",
+      "description": "Disciplina ou curso ativo do estudante com notas e horas.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "professor": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "schedule": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "credits": {
+          "type": "number"
+        },
+        "p1": {
+          "type": "number"
+        },
+        "p2": {
+          "type": "number"
+        },
+        "hoursStudied": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "completed", "archived"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "code",
+        "name",
+        "professor",
+        "schedule",
+        "credits",
+        "p1",
+        "p2",
+        "hoursStudied",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "QuickTask": {
+      "title": "QuickTask",
+      "description": "Micro-tarefa da sessão de estudos.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "subjectId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "title", "completed", "subjectId", "createdAt", "updatedAt"]
+    },
+    "PomodoroSession": {
+      "title": "PomodoroSession",
+      "description": "Registro concluído de sessão de foco Pomodoro.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "subjectId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "subjectName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["pomodoro25", "ultra50", "shortBreak", "longBreak"]
+        },
+        "durationMinutes": {
+          "type": "number"
+        },
+        "dateKey": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "subjectId", "subjectName", "mode", "durationMinutes", "dateKey", "createdAt"]
+    },
+    "ScheduleBlock": {
+      "title": "ScheduleBlock",
+      "description": "Bloco semanal de aula, revisão, pausa ou prova.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "dayIndex": {
+          "type": "number"
+        },
+        "startHour": {
+          "type": "number"
+        },
+        "endHour": {
+          "type": "number"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["aula", "revisao", "pausa", "prova"]
+        },
+        "subjectId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "subjectName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "title",
+        "dayIndex",
+        "startHour",
+        "endHour",
+        "type",
+        "subjectId",
+        "subjectName",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StudyNote": {
+      "title": "StudyNote",
+      "description": "Anotação ou resumo em Markdown associado a uma disciplina.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "subjectId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "subjectName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "tags": {
+          "type": "array"
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "title",
+        "subjectId",
+        "subjectName",
+        "tags",
+        "content",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SemesterGoal": {
+      "title": "SemesterGoal",
+      "description": "Meta semestral mensurável do estudante.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "currentValue": {
+          "type": "number"
+        },
+        "targetValue": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "maxLength": 24
+        },
+        "deadline": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "completed"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "title",
+        "category",
+        "currentValue",
+        "targetValue",
+        "unit",
+        "deadline",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CommunityMessage": {
+      "title": "CommunityMessage",
+      "description": "Mensagem pública na sala de estudos da comunidade (sem PII).",
+      "type": "object",
+      "properties": {
+        "authorId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "authorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "authorCourse": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "channel": {
+          "type": "string",
+          "enum": ["calculo", "algoritmos", "geral"]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["authorId", "authorName", "authorCourse", "channel", "text", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Perfil privado e configurações do estudante."
+    },
+    "/users/{userId}/subjects/{subjectId}": {
+      "schema": { "$ref": "#/entities/Subject" },
+      "description": "Disciplinas e notas do estudante."
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/QuickTask" },
+      "description": "Micro-tarefas rápidas da sessão de foco."
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/PomodoroSession" },
+      "description": "Histórico imutável de blocos Pomodoro concluídos."
+    },
+    "/users/{userId}/schedule/{blockId}": {
+      "schema": { "$ref": "#/entities/ScheduleBlock" },
+      "description": "Grade semanal de estudos do estudante."
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/StudyNote" },
+      "description": "Anotações e cadernos em Markdown do estudante."
+    },
+    "/users/{userId}/goals/{goalId}": {
+      "schema": { "$ref": "#/entities/SemesterGoal" },
+      "description": "Metas semestrais do estudante."
+    },
+    "/communityMessages/{messageId}": {
+      "schema": { "$ref": "#/entities/CommunityMessage" },
+      "description": "Mensagens públicas nas salas de estudo da comunidade."
+    }
+  }
+}

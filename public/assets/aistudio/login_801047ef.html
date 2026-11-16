@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Login - FocusLearn</title>
+  
+  <!-- Google Fonts: Inter & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+  
+  <!-- Tailwind CSS with custom Design System config -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#0058be",
+            "primary-container": "#2170e4",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#fefcff",
+            "primary-fixed": "#d8e2ff",
+            "primary-fixed-dim": "#adc6ff",
+            "on-primary-fixed": "#001a42",
+            "on-primary-fixed-variant": "#004395",
+            "secondary": "#006c49",
+            "secondary-container": "#6cf8bb",
+            "on-secondary": "#ffffff",
+            "on-secondary-container": "#00714d",
+            "secondary-fixed": "#6ffbbe",
+            "tertiary": "#825100",
+            "tertiary-container": "#a36700",
+            "surface": "#f9f9ff",
+            "on-surface": "#111c2d",
+            "surface-dim": "#cfdaf2",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f0f3ff",
+            "surface-container": "#e7eeff",
+            "surface-container-high": "#dee8ff",
+            "surface-container-highest": "#d8e3fb",
+            "on-surface-variant": "#424754",
+            "outline": "#727785",
+            "outline-variant": "#c2c6d6",
+            "error": "#ba1a1a",
+            "error-container": "#ffdad6",
+            "on-error": "#ffffff",
+            "on-error-container": "#93000a",
+            "background": "#f9f9ff"
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :focus-visible {
+      outline: 2px solid #0058be !important;
+      outline-offset: 2px !important;
+    }
+    html.dark {
+      background-color: #0b1120 !important;
+      color: #f8fafc !important;
+    }
+    html.dark body {
+      background-color: #0b1120 !important;
+      color: #f8fafc !important;
+    }
+    html.dark .bg-white {
+      background-color: #131d31 !important;
+      color: #f8fafc !important;
+    }
+    html.dark .bg-slate-50, html.dark .bg-surface-container-low {
+      background-color: #19253e !important;
+    }
+    html.dark .border-slate-100, html.dark .border-slate-200 {
+      border-color: #223253 !important;
+    }
+    html.dark .text-slate-900 {
+      color: #f8fafc !important;
+    }
+    html.dark .text-slate-700, html.dark .text-slate-600 {
+      color: #94a3b8 !important;
+    }
+    html.dark input {
+      background-color: #19253e !important;
+      color: #f8fafc !important;
+      border-color: #334155 !important;
+    }
+    html.dark input::placeholder {
+      color: #64748b !important;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased font-sans min-h-screen flex flex-col justify-between selection:bg-primary-fixed selection:text-on-primary-fixed transition-colors duration-200" id="body-root">
+
+  <!-- Toast Notification -->
+  <div id="login-toast" aria-live="polite" class="fixed top-6 right-6 z-50 transform translate-y-[-20px] opacity-0 pointer-events-none transition-all duration-300 ease-out flex items-center gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl shadow-xl">
+    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300 flex items-center justify-center shrink-0">
+      <span class="material-symbols-outlined text-[20px]" id="toast-icon">check_circle</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-xs font-semibold text-primary" id="toast-title">Notificação</span>
+      <span class="text-sm text-slate-700 dark:text-slate-200 font-medium" id="toast-message">Operação realizada</span>
+    </div>
+  </div>
+
+  <!-- Cabeçalho Acessível Simples -->
+  <header class="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
+    <a href="index.html#visao-geral" class="flex items-center gap-2.5 sm:gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg">
+      <div aria-hidden="true" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold shadow-md shadow-primary/20 transition-transform group-hover:scale-105">
+        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></path>
+        </svg>
+      </div>
+      <span class="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">Focus<span class="text-primary">Learn</span></span>
+    </a>
+
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Alternador de Tema Claro / Escuro -->
+      <button aria-label="Alternar modo escuro e claro" class="min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] p-2 sm:p-2.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center justify-center" id="theme-toggle" onclick="toggleDarkMode()" type="button">
+        <span class="material-symbols-outlined text-[20px]" id="theme-icon">dark_mode</span>
+      </button>
+      <a class="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary py-2 px-2.5 sm:px-3 rounded-lg transition-colors whitespace-nowrap" href="index.html#configuracoes-ajuda">
+        <span class="hidden xs:inline">Precisa de </span>ajuda?
+      </a>
+    </div>
+  </header>
+
+  <!-- Container Principal do Login -->
+  <main class="flex-1 flex items-center justify-center px-3 sm:px-6 py-4 sm:py-8">
+    <div class="w-full max-w-5xl bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700/60 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-0 lg:min-h-[640px]">
+      
+      <!-- Lado Esquerdo: Formulário de Autenticação -->
+      <section aria-labelledby="login-heading" class="lg:col-span-7 p-6 sm:p-10 lg:p-14 flex flex-col justify-between">
+        <div>
+          <!-- Badge Institucional -->
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-primary dark:text-blue-300 text-xs font-semibold uppercase tracking-wider mb-6 border border-blue-100 dark:border-blue-800">
+            <span aria-hidden="true" class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+            Espaço Acadêmico Seguro
+          </div>
+
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight" id="login-heading">
+            Bem-vindo(a) de volta! 👋
+          </h1>
+          <p class="mt-2 text-sm sm:text-base text-slate-600">
+            Acesse seu painel, acompanhe suas metas e retome seus blocos de foco.
+          </p>
+
+          <!-- Formulário -->
+          <form class="mt-8 space-y-5" id="form-login" onsubmit="handleLoginSubmit(event)">
+            <!-- Campo de E-mail -->
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1.5" for="email">
+                E-mail Institucional ou Pessoal
+              </label>
+              <div class="relative">
+                <div aria-hidden="true" class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                  </svg>
+                </div>
+                <input autocomplete="email" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium min-h-[44px]" id="email" name="email" placeholder="exemplo@universidade.edu.br" required type="email"/>
+              </div>
+            </div>
+
+            <!-- Campo de Senha -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-sm font-semibold text-slate-700" for="password">
+                  Senha
+                </label>
+                <a class="text-xs font-semibold text-primary hover:underline transition-colors" href="recuperar-senha.html">
+                  Esqueceu a senha?
+                </a>
+              </div>
+              <div class="relative">
+                <div aria-hidden="true" class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                  </svg>
+                </div>
+                <input autocomplete="current-password" class="w-full pl-11 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium min-h-[44px]" id="password" name="password" placeholder="••••••••••••" required type="password"/>
+                <button aria-label="Mostrar ou ocultar senha" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 transition-colors min-h-[44px]" id="toggle-password-btn" onclick="togglePasswordVisibility()" type="button">
+                  <svg aria-hidden="true" class="w-5 h-5" fill="none" id="eye-icon-show" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                  </svg>
+                  <svg aria-hidden="true" class="w-5 h-5 hidden" fill="none" id="eye-icon-hide" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Manter Conectado -->
+            <div class="flex items-center justify-between pt-1">
+              <label class="flex items-center gap-2.5 cursor-pointer">
+                <input class="w-4 h-4 rounded text-primary border-slate-300 focus:ring-primary cursor-pointer" id="remember-me" name="remember-me" type="checkbox" checked/>
+                <span class="text-xs sm:text-sm text-slate-600 font-medium">Lembrar deste dispositivo por 30 dias</span>
+              </label>
+            </div>
+
+            <!-- Botão de Login Primário -->
+            <button class="w-full min-h-[48px] py-3.5 px-4 bg-primary hover:bg-primary-container active:scale-[0.99] text-white font-semibold rounded-xl shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 cursor-pointer" type="submit" id="btn-submit-login">
+              <span>Entrar no FocusLearn</span>
+              <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+            </button>
+          </form>
+
+          <!-- Divisor -->
+          <div class="relative my-7">
+            <div aria-hidden="true" class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-slate-200"></div>
+            </div>
+            <div class="relative flex justify-center text-xs">
+              <span class="bg-white px-3 text-slate-500 font-medium uppercase tracking-wider">Ou acesse com</span>
+            </div>
+          </div>
+
+          <!-- Login Social / SSO Universitário -->
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="handleSSOLogin('Google Estudantil')" aria-label="Entrar com conta Google Estudantil" class="min-h-[44px] py-2.5 px-4 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 font-medium text-slate-700 text-sm rounded-xl transition-colors flex items-center justify-center gap-2.5" type="button">
+              <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"></path>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"></path>
+              </svg>
+              <span>Google</span>
+            </button>
+            <button onclick="handleSSOLogin('Portal CAFe / RNP')" aria-label="Entrar com Federação CAFe ou Instituição Acadêmica" class="min-h-[44px] py-2.5 px-4 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 font-medium text-slate-700 text-sm rounded-xl transition-colors flex items-center justify-center gap-2.5" type="button">
+              <svg aria-hidden="true" class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+              <span>Portal CAFe</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Rodapé do Card de Login -->
+        <p class="mt-8 text-center text-sm text-slate-600">
+          Não tem uma conta acadêmica? 
+          <a class="font-bold text-primary hover:underline transition-colors" href="cadastro.html">
+            Cadastre-se gratuitamente
+          </a>
+        </p>
+      </section>
+
+      <!-- Lado Direito: Banner Visual & Destaques de Produtividade -->
+      <aside aria-label="Benefícios do FocusLearn" class="hidden lg:flex lg:col-span-5 bg-gradient-to-br from-primary via-primary-container to-[#003882] p-12 flex-col justify-between text-white relative overflow-hidden">
+        <!-- Detalhes de Fundo Vetoriais Decorativos -->
+        <div aria-hidden="true" class="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
+        <div aria-hidden="true" class="absolute -left-20 -bottom-20 w-80 h-80 rounded-full bg-secondary-fixed/20 blur-3xl pointer-events-none"></div>
+
+        <!-- Topo do Banner -->
+        <div class="relative z-10">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-blue-100 text-xs font-medium mb-6 border border-white/20">
+            <svg aria-hidden="true" class="w-4 h-4 text-amber-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            Plataforma Nº 1 em Gestão de Estudos
+          </div>
+          <h2 class="text-3xl font-extrabold leading-tight tracking-tight">
+            Seu semestre sob controle, foco sem dispersão.
+          </h2>
+          <p class="mt-4 text-blue-100 text-sm leading-relaxed">
+            Junte-se a milhares de estudantes que utilizam metodologia Pomodoro inteligente, organização por ementas e gráficos de consistência para alcançar notas máximas.
+          </p>
+        </div>
+
+        <!-- Widget Flutuante Interativo de Destaque -->
+        <div class="relative z-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 my-8 shadow-inner">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-blue-200 uppercase tracking-wider">Última Sessão de Estudo</span>
+            <span class="text-xs bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-400/30">92% Eficiência</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <div aria-hidden="true" class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-white">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="text-base font-bold text-white">Cálculo Diferencial e Integral</p>
+              <p class="text-xs text-blue-100">4 blocos Pomodoro concluídos hoje</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prova Social no Rodapé -->
+        <div class="relative z-10 flex items-center gap-3 pt-4 border-t border-white/15">
+          <div class="flex -space-x-2">
+            <img alt="Mariana Silva" class="w-8 h-8 rounded-full border-2 border-primary object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_ru_TG-RXxypx8eZrKfepaWkdAl4KbrRFQcktQ1xwBn4wCW6g9PaRr8PXW7D_eahUT9lUS4N1J_hGuvWyyQ_UyMsDIaps3AXrZyxMERRYXeSpcbEguC_azKCNPmTb4BfHm0xTZzlScK7OhqG9mTdAhE87alI0N5opgu3jZkkwOuzm0bdE5zaamvAt-0Bv_YXSEAV8JNrTecr7bx-I2fieViTS9Pdp7m0UyYGfX3nT"/>
+            <img alt="Lucas Andrade" class="w-8 h-8 rounded-full border-2 border-primary object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1IE3YCSYWZd8JeeMgajCGu-8o9-yWqnVIWoC9DQciD9gN56wo_K9DV-B9oDy7mFxgXKOGL-kW0tshYg-Ck2evLJWdu0Ucw_blMjk37C_2PRmL3yi-MD-zERA63mN2n3enazS3F_fRKusdRDG_ZZp7SKp_dupHN6RyN3lfiPi_eb8p7GH2WzV4mljnS0Gv1RtKRUqeLWDg8FePNamXQQrBa3xF6kFn_uvQ1dzJR3BL"/>
+          </div>
+          <p class="text-xs text-blue-100 font-medium">
+            Mais de <strong class="text-white font-bold">12.000 horas</strong> de foco registradas esta semana.
+          </p>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- Rodapé Institucional -->
+  <footer class="w-full max-w-7xl mx-auto px-6 py-6 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <p>© 2025 FocusLearn Inc. Em conformidade com diretrizes WCAG 2.1 AA.</p>
+    <div class="flex items-center gap-6">
+      <a class="hover:text-primary transition-colors" href="index.html#configuracoes-ajuda">Termos de Serviço</a>
+      <a class="hover:text-primary transition-colors" href="index.html#configuracoes-ajuda">Privacidade & LGPD</a>
+      <a class="hover:text-primary transition-colors" href="index.html#configuracoes-ajuda">Acessibilidade</a>
+    </div>
+  </footer>
+
+  <!-- Scripts Interativos -->
+  <script>
+    function togglePasswordVisibility() {
+      const pwdInput = document.getElementById('password');
+      const showIcon = document.getElementById('eye-icon-show');
+      const hideIcon = document.getElementById('eye-icon-hide');
+      
+      if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        showIcon.classList.add('hidden');
+        hideIcon.classList.remove('hidden');
+      } else {
+        pwdInput.type = 'password';
+        showIcon.classList.remove('hidden');
+        hideIcon.classList.add('hidden');
+      }
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      const icon = document.getElementById('theme-icon');
+      icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+      
+      try {
+        const settings = JSON.parse(localStorage.getItem('focuslearn_settings') || '{}');
+        settings.theme = isDark ? 'dark' : 'light';
+        localStorage.setItem('focuslearn_settings', JSON.stringify(settings));
+      } catch (e) {}
+    }
+
+    function initTheme() {
+      let isDark = false;
+      try {
+        const settings = JSON.parse(localStorage.getItem('focuslearn_settings') || '{}');
+        if (settings.theme === 'dark') isDark = true;
+      } catch (e) {}
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        const icon = document.getElementById('theme-icon');
+        if (icon) icon.textContent = 'light_mode';
+      }
+    }
+
+    function showToast(title, msg, icon = 'check_circle') {
+      const toast = document.getElementById('login-toast');
+      document.getElementById('toast-title').textContent = title;
+      document.getElementById('toast-message').textContent = msg;
+      document.getElementById('toast-icon').textContent = icon;
+      toast.classList.remove('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+      }, 3500);
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const pwd = document.getElementById('password').value;
+
+      if (!email || !pwd) {
+        showToast('Campos obrigatórios', 'Por favor preencha email e senha.', 'error');
+        return;
+      }
+
+      // Check existing user in localStorage
+      let userData = null;
+      try {
+        userData = JSON.parse(localStorage.getItem('focuslearn_user'));
+      } catch (err) {}
+
+      if (!userData) {
+        userData = {
+          name: 'Mariana de Almeida Silva',
+          email: email,
+          course: 'Engenharia de Software',
+          university: 'Universidade Federal (UFC)',
+          semester: '5º Semestre',
+          registration: '2022.1.ES-0492',
+          cr: 8.8,
+          streak: 14,
+          dailyGoalHours: 5.0,
+          pomoMinutes: 25,
+          soundEnabled: true,
+          theme: 'light'
+        };
+      } else {
+        userData.email = email;
+      }
+      localStorage.setItem('focuslearn_user', JSON.stringify(userData));
+      localStorage.setItem('focuslearn_auth', JSON.stringify({ loggedIn: true, email: email, timestamp: Date.now() }));
+
+      showToast('Sucesso!', 'Login efetuado com sucesso. Redirecionando...');
+      setTimeout(() => {
+        window.location.href = 'index.html#visao-geral';
+      }, 1200);
+    }
+
+    function handleSSOLogin(provider) {
+      showToast('Autenticando via ' + provider, 'Conectando ao serviço institucional...', 'sync');
+      setTimeout(() => {
+        let userData = null;
+        try { userData = JSON.parse(localStorage.getItem('focuslearn_user')); } catch (e) {}
+        if (!userData) {
+          userData = {
+            name: 'Estudante Universitário',
+            email: 'estudante@universidade.edu.br',
+            course: 'Engenharia / TI',
+            university: 'Portal CAFe / RNP',
+            semester: '1º Semestre',
+            registration: '2025.1-ACAD',
+            cr: 9.0,
+            streak: 1,
+            dailyGoalHours: 4.0,
+            pomoMinutes: 25
+          };
+          localStorage.setItem('focuslearn_user', JSON.stringify(userData));
+        }
+        localStorage.setItem('focuslearn_auth', JSON.stringify({ loggedIn: true, provider: provider, timestamp: Date.now() }));
+        window.location.href = 'index.html#visao-geral';
+      }, 1400);
+    }
+
+    // Pre-populate if already in localStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      try {
+        const u = JSON.parse(localStorage.getItem('focuslearn_user'));
+        if (u && u.email) {
+          const emailInput = document.getElementById('email');
+          if (emailInput && !emailInput.value) emailInput.value = u.email;
+        }
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>

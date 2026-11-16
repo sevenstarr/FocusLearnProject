@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusLearn — Plataforma Inteligente de Estudos & Produtividade Acadêmica</title>
+  
+  <!-- Google Fonts: Inter & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS with custom Design System config -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#0058be",
+            "primary-container": "#2170e4",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#fefcff",
+            "primary-fixed": "#d8e2ff",
+            "primary-fixed-dim": "#adc6ff",
+            "on-primary-fixed": "#001a42",
+            "on-primary-fixed-variant": "#004395",
+            "secondary": "#006c49",
+            "secondary-container": "#6cf8bb",
+            "on-secondary": "#ffffff",
+            "on-secondary-container": "#00714d",
+            "secondary-fixed": "#6ffbbe",
+            "tertiary": "#825100",
+            "tertiary-container": "#a36700",
+            "on-tertiary": "#ffffff",
+            "on-tertiary-container": "#fffbff",
+            "tertiary-fixed": "#ffddb8",
+            "on-tertiary-fixed": "#2a1700",
+            "surface": "#f9f9ff",
+            "on-surface": "#111c2d",
+            "surface-dim": "#cfdaf2",
+            "surface-bright": "#f9f9ff",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f0f3ff",
+            "surface-container": "#e7eeff",
+            "surface-container-high": "#dee8ff",
+            "surface-container-highest": "#d8e3fb",
+            "on-surface-variant": "#424754",
+            "outline": "#727785",
+            "outline-variant": "#c2c6d6",
+            "error": "#ba1a1a",
+            "error-container": "#ffdad6",
+            "on-error": "#ffffff",
+            "on-error-container": "#93000a",
+            "background": "#f9f9ff"
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "md": "0.75rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+            "timer-display": ["Inter", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  
+  <style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+      }
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c2c6d6;
+      border-radius: 4px;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #424754;
+    }
+
+    /* CSS Variables for Light / Dark Mode */
+    :root {
+      --color-surface: #f9f9ff;
+      --color-surface-container-lowest: #ffffff;
+      --color-surface-container-low: #f0f3ff;
+      --color-surface-container: #e7eeff;
+      --color-surface-container-high: #dee8ff;
+      --color-surface-container-highest: #d8e3fb;
+      --color-on-surface: #111c2d;
+      --color-on-surface-variant: #424754;
+      --color-outline: #727785;
+      --color-outline-variant: #c2c6d6;
+      --color-primary: #0058be;
+      --color-primary-container: #2170e4;
+      --color-on-primary: #ffffff;
+    }
+
+    html.dark {
+      color-scheme: dark;
+      --color-surface: #0b1120;
+      --color-surface-container-lowest: #131d31;
+      --color-surface-container-low: #19253e;
+      --color-surface-container: #223253;
+      --color-surface-container-high: #2b3d64;
+      --color-surface-container-highest: #374d7c;
+      --color-on-surface: #f8fafc;
+      --color-on-surface-variant: #94a3b8;
+      --color-outline: #64748b;
+      --color-outline-variant: #334155;
+      --color-primary: #3b82f6;
+      --color-primary-container: #2563eb;
+      --color-on-primary: #ffffff;
+    }
+
+    /* Smooth transitions for theme toggle */
+    html, body, aside, header, nav, div, article, section, button, input, select, textarea {
+      transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Dark Mode Deep Overrides */
+    html.dark, html.dark body {
+      background-color: #0b1120 !important;
+      color: #f8fafc !important;
+    }
+
+    html.dark .bg-surface {
+      background-color: #0b1120 !important;
+    }
+
+    html.dark .bg-surface-container-lowest {
+      background-color: #131d31 !important;
+      color: #f8fafc;
+    }
+
+    html.dark .bg-surface-container-low {
+      background-color: #19253e !important;
+    }
+
+    html.dark .bg-surface-container {
+      background-color: #223253 !important;
+    }
+
+    html.dark .bg-surface-container-high {
+      background-color: #2b3d64 !important;
+    }
+
+    html.dark .bg-surface-container-highest {
+      background-color: #374d7c !important;
+    }
+
+    html.dark .text-on-surface {
+      color: #f8fafc !important;
+    }
+
+    html.dark .text-on-surface-variant {
+      color: #94a3b8 !important;
+    }
+
+    html.dark .text-outline {
+      color: #64748b !important;
+    }
+
+    html.dark .border-surface-container,
+    html.dark .border-surface-container\/60 {
+      border-color: rgba(51, 65, 85, 0.7) !important;
+    }
+
+    html.dark .border-surface-container-high {
+      border-color: #334155 !important;
+    }
+
+    html.dark .border-outline-variant\/30,
+    html.dark .border-outline-variant\/40 {
+      border-color: rgba(51, 65, 85, 0.5) !important;
+    }
+
+    html.dark aside {
+      background-color: #131d31 !important;
+      border-color: #1e293b !important;
+    }
+
+    html.dark header {
+      background-color: rgba(11, 17, 32, 0.95) !important;
+      border-bottom-color: rgba(51, 65, 85, 0.7) !important;
+    }
+
+    html.dark nav.lg\:hidden {
+      background-color: rgba(19, 29, 49, 0.95) !important;
+      border-top-color: #1e293b !important;
+    }
+
+    html.dark input, 
+    html.dark textarea, 
+    html.dark select {
+      background-color: #19253e !important;
+      color: #f8fafc !important;
+      border-color: #334155 !important;
+    }
+
+    html.dark input::placeholder,
+    html.dark textarea::placeholder {
+      color: #64748b !important;
+    }
+
+    html.dark #navigation-toast {
+      background-color: #1e293b !important;
+      border-color: #334155 !important;
+      color: #f8fafc !important;
+    }
+
+    html.dark #zen-mode-overlay {
+      background-color: #070d19 !important;
+    }
+
+    html.dark .bg-gradient-to-r.from-primary-fixed\/40 {
+      background: linear-gradient(to right, rgba(30, 58, 138, 0.3), #131d31, rgba(6, 78, 59, 0.2)) !important;
+    }
+
+    html.dark .bg-gradient-to-r.from-primary\/10 {
+      background: linear-gradient(to right, rgba(37, 99, 235, 0.15), #19253e, rgba(16, 185, 129, 0.1)) !important;
+    }
+
+    html.dark .bg-primary-fixed {
+      background-color: rgba(30, 58, 138, 0.5) !important;
+      color: #93c5fd !important;
+    }
+
+    html.dark .bg-tertiary-fixed {
+      background-color: rgba(180, 83, 9, 0.3) !important;
+      color: #fcd34d !important;
+    }
+
+    html.dark .bg-secondary-container {
+      background-color: rgba(6, 78, 59, 0.5) !important;
+      color: #6ee7b7 !important;
+    }
+
+    html.dark .bg-error-container {
+      background-color: rgba(127, 29, 29, 0.4) !important;
+      color: #fca5a5 !important;
+    }
+
+    @media print {
+      aside, nav, header, button:not(.print-allow) {
+        display: none !important;
+      }
+      main, .print-container {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- ==================== TOAST NOTIFICATION ==================== -->
+  <div id="navigation-toast" aria-live="polite" class="fixed top-20 right-6 z-50 transform translate-y-[-20px] opacity-0 pointer-events-none transition-all duration-300 ease-out flex items-center gap-3 bg-surface-container-lowest border border-surface-container-high px-4 py-3 rounded-xl shadow-xl">
+    <div class="w-8 h-8 rounded-lg bg-primary-container/20 text-primary flex items-center justify-center shrink-0">
+      <span class="material-symbols-outlined text-[20px]" id="toast-icon">check_circle</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-xs font-semibold text-primary" id="toast-title">Notificação</span>
+      <span class="text-sm text-on-surface font-medium" id="toast-message">Ação concluída com sucesso!</span>
+    </div>
+  </div>
+
+  <!-- ==================== MOBILE DRAWER & OVERLAY ==================== -->
+  <div id="mobile-drawer-overlay" class="fixed inset-0 bg-on-surface/40 backdrop-blur-xs z-50 transition-opacity duration-300 opacity-0 pointer-events-none lg:hidden"></div>
+  <aside id="mobile-drawer" class="fixed left-0 top-0 h-screen w-72 max-w-[85vw] bg-surface-container-lowest shadow-2xl z-50 flex flex-col justify-between py-6 transition-transform duration-300 -translate-x-full lg:hidden">
+    <div class="flex flex-col">
+      <div class="px-6 flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3 cursor-pointer" data-path="visao-geral">
+          <div class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-lg shadow-sm">FL</div>
+          <span class="text-xl text-primary font-bold tracking-tight">FocusLearn</span>
+        </div>
+        <button id="btn-close-drawer" class="p-2 rounded-xl text-on-surface-variant hover:bg-surface-container" aria-label="Fechar menu">
+          <span class="material-symbols-outlined text-[24px]">close</span>
+        </button>
+      </div>
+
+      <!-- User preview in mobile drawer -->
+      <div class="px-6 pb-4 border-b border-surface-container mb-4 flex items-center gap-3">
+        <img class="user-avatar-display w-10 h-10 rounded-full object-cover ring-2 ring-primary/20" src="" alt="Avatar">
+        <div class="flex flex-col text-left">
+          <span class="user-name-display text-sm font-semibold text-on-surface">Mariana Silva</span>
+          <span class="user-course-display text-xs text-on-surface-variant">Eng. de Software</span>
+        </div>
+      </div>
+
+      <!-- Navigation links in mobile drawer -->
+      <nav class="px-4 flex flex-col gap-1.5">
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl bg-primary-container text-on-primary-container font-medium text-sm transition-colors cursor-pointer" data-path="visao-geral" href="#visao-geral">
+          <span class="material-symbols-outlined text-[20px]">dashboard</span>
+          <span>Visão Geral</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-sm cursor-pointer" data-path="materias-cursos" href="#materias-cursos">
+          <span class="material-symbols-outlined text-[20px]">school</span>
+          <span>Matérias & Cursos</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-sm cursor-pointer" data-path="cronometro-pomodoro" href="#cronometro-pomodoro">
+          <span class="material-symbols-outlined text-[20px]">timer</span>
+          <span>Cronômetro Pomodoro</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-sm cursor-pointer" data-path="planejador-semanal" href="#planejador-semanal">
+          <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+          <span>Planejador Semanal</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-sm cursor-pointer" data-path="estatisticas-metas" href="#estatisticas-metas">
+          <span class="material-symbols-outlined text-[20px]">query_stats</span>
+          <span>Estatísticas & Metas</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-sm cursor-pointer" data-path="anotacoes" href="#anotacoes">
+          <span class="material-symbols-outlined text-[20px]">note_alt</span>
+          <span>Anotações & Cadernos</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-sm cursor-pointer" data-path="comunidade" href="#comunidade">
+          <span class="material-symbols-outlined text-[20px]">forum</span>
+          <span>Comunidade & Chat</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="px-4 flex flex-col gap-1 border-t border-surface-container pt-3">
+      <button type="button" class="btn-theme-toggle flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-sm">
+        <div class="flex items-center gap-3">
+          <span class="theme-toggle-icon material-symbols-outlined text-[20px]">dark_mode</span>
+          <span class="theme-toggle-label">Modo Escuro</span>
+        </div>
+        <span class="text-xs bg-surface-container px-2 py-0.5 rounded-full font-semibold">Alternar</span>
+      </button>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-sm cursor-pointer" data-path="login" href="#login">
+        <span class="material-symbols-outlined text-[20px]">login</span>
+        <span>Login / Entrar</span>
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-sm cursor-pointer" data-path="cadastro" href="#cadastro">
+        <span class="material-symbols-outlined text-[20px]">how_to_reg</span>
+        <span>Criar Nova Conta</span>
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-sm cursor-pointer" data-path="configuracoes-ajuda" href="#configuracoes-ajuda">
+        <span class="material-symbols-outlined text-[20px]">settings</span>
+        <span>Configurações & Perfil</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ==================== DESKTOP PERSISTENT SIDEBAR ==================== -->
+  <aside class="hidden lg:flex fixed left-0 top-0 h-screen w-64 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex-col justify-between py-6 select-none border-r border-surface-container/60">
+    <div class="flex flex-col">
+      <!-- Brand Logo -->
+      <div class="px-6 flex items-center gap-3 mb-8 cursor-pointer" data-path="visao-geral">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container text-on-primary flex items-center justify-center font-bold text-lg shadow-sm">FL</div>
+        <span class="text-2xl text-primary font-bold tracking-tight">FocusLearn</span>
+      </div>
+
+      <!-- Desktop Sidebar Links -->
+      <nav id="desktop-sidebar-nav" class="px-4 flex flex-col gap-1.5">
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl bg-primary-container text-on-primary-container font-medium text-sm shadow-xs transition-all duration-200 cursor-pointer" data-path="visao-geral" href="#visao-geral">
+          <span class="material-symbols-outlined text-[20px]">dashboard</span>
+          <span>Visão Geral</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-200 text-sm cursor-pointer" data-path="materias-cursos" href="#materias-cursos">
+          <span class="material-symbols-outlined text-[20px]">school</span>
+          <span>Matérias & Cursos</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-200 text-sm cursor-pointer" data-path="cronometro-pomodoro" href="#cronometro-pomodoro">
+          <span class="material-symbols-outlined text-[20px]">timer</span>
+          <span>Cronômetro Pomodoro</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-200 text-sm cursor-pointer" data-path="planejador-semanal" href="#planejador-semanal">
+          <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+          <span>Planejador Semanal</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-200 text-sm cursor-pointer" data-path="estatisticas-metas" href="#estatisticas-metas">
+          <span class="material-symbols-outlined text-[20px]">query_stats</span>
+          <span>Estatísticas & Metas</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-200 text-sm cursor-pointer" data-path="anotacoes" href="#anotacoes">
+          <span class="material-symbols-outlined text-[20px]">note_alt</span>
+          <span>Anotações & Cadernos</span>
+        </a>
+        <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-200 text-sm cursor-pointer" data-path="comunidade" href="#comunidade">
+          <span class="material-symbols-outlined text-[20px]">forum</span>
+          <span>Comunidade & Chat</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="px-4 flex flex-col gap-1">
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-200 text-sm cursor-pointer" data-path="login" href="#login">
+        <span class="material-symbols-outlined text-[20px]">login</span>
+        <span>Login / Entrar</span>
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-200 text-sm cursor-pointer" data-path="cadastro" href="#cadastro">
+        <span class="material-symbols-outlined text-[20px]">how_to_reg</span>
+        <span>Criar Nova Conta</span>
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all duration-200 text-sm cursor-pointer" data-path="configuracoes-ajuda" href="#configuracoes-ajuda">
+        <span class="material-symbols-outlined text-[20px]">settings</span>
+        <span>Configurações & Perfil</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ==================== TOP HEADER BAR ==================== -->
+  <header class="fixed top-0 left-0 lg:left-64 right-0 h-16 bg-surface/95 backdrop-blur-xl border-b border-surface-container/60 shadow-[0_1px_8px_rgba(0,0,0,0.03)] z-40 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3">
+    <!-- Left: Drawer Toggle (Mobile) + Search Bar -->
+    <div class="flex items-center gap-2 sm:gap-3 flex-1 max-w-xl">
+      <button id="btn-open-drawer" class="lg:hidden p-2 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors flex items-center justify-center shrink-0 min-h-[44px] min-w-[44px]" aria-label="Abrir Menu">
+        <span class="material-symbols-outlined text-[24px]">menu</span>
+      </button>
+
+      <!-- Global Search -->
+      <div class="relative w-full max-w-xs sm:max-w-sm hidden sm:flex items-center">
+        <span class="material-symbols-outlined absolute left-3 text-outline text-[20px] pointer-events-none">search</span>
+        <input id="global-search-input" class="w-full bg-surface-container-lowest rounded-xl pl-10 pr-4 py-2 text-on-surface placeholder:text-outline text-sm border border-outline-variant/30 shadow-[0_1px_3px_rgba(15,23,42,0.03)] focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="Buscar matérias, anotações ou tarefas..." type="text">
+      </div>
+    </div>
+
+    <!-- Right Header Badges & Actions -->
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <!-- Streak Badge -->
+      <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed text-xs font-semibold shadow-xs">
+        <span>🔥</span>
+        <span class="user-streak-display">14 Dias seguidos</span>
+      </div>
+
+      <!-- Today Goal Badge -->
+      <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high text-primary text-xs font-semibold shadow-xs">
+        <span>🎯</span>
+        <span id="dash-today-hours-badge">3.5h / 5h hoje</span>
+      </div>
+
+      <!-- Theme Toggle -->
+      <button id="btn-theme-toggle" class="btn-theme-toggle p-2 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex items-center justify-center min-h-[40px] min-w-[40px]" title="Alternar tema claro/escuro" aria-label="Alternar tema">
+        <span class="theme-toggle-icon material-symbols-outlined text-[22px]">dark_mode</span>
+      </button>
+
+      <!-- User Profile Pill -->
+      <div class="flex items-center gap-2.5 pl-1 sm:pl-2 cursor-pointer min-h-[40px]" data-path="configuracoes-ajuda" title="Ver perfil e configurações">
+        <img class="user-avatar-display w-8 h-8 rounded-full object-cover ring-2 ring-primary/20" src="" alt="Avatar">
+        <div class="hidden xl:flex flex-col text-left">
+          <span class="user-name-display text-sm font-semibold text-on-surface leading-tight">Mariana Silva</span>
+          <span class="user-course-display text-xs text-on-surface-variant leading-none">Engenharia de Software</span>
+        </div>
+      </div>
+
+      <!-- Auth Switcher Pill / Sair -->
+      <a class="nav-item flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors text-xs font-semibold cursor-pointer shrink-0" data-path="login" title="Acessar com outra conta ou entrar">
+        <span class="material-symbols-outlined text-[18px]">logout</span>
+        <span class="hidden sm:inline">Sair / Entrar</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
+  <main class="lg:pl-64 flex-1 pt-16 pb-20 lg:pb-8 flex flex-col">
+
+    <!-- ==================== VIEW 1: VISÃO GERAL (DASHBOARD) ==================== -->
+    <section id="view-visao-geral" class="w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 max-w-7xl mx-auto">
+      <!-- Welcome Banner -->
+      <div class="bg-gradient-to-r from-primary/10 via-surface-container-low to-secondary/10 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-surface-container/60 shadow-xs">
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-semibold">Semestre 2024.1 Ativo</span>
+            <span class="text-xs text-on-surface-variant">• Quarta-feira, 30 de Maio</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">Olá, <span class="user-name-display text-primary">Mariana</span>! 🚀</h1>
+          <p class="text-sm text-on-surface-variant">Pronta para focar? Você está no ritmo ideal para bater sua meta semanal de 30 horas.</p>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <button class="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-semibold text-sm shadow-md transition-all flex items-center gap-2" data-path="cronometro-pomodoro">
+            <span class="material-symbols-outlined text-[20px]">timer</span>
+            <span>Iniciar Pomodoro</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Top 4 KPIs -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-surface-container-lowest p-5 rounded-xl shadow-xs border border-surface-container/60 hover:shadow-md transition-shadow flex flex-col justify-between">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="text-xs uppercase tracking-wider text-outline font-semibold">Tempo Total</span>
+              <h3 class="text-sm font-semibold text-on-surface mt-1">Horas Estudadas Hoje</h3>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-primary-container/20 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[22px]">pace</span>
+            </div>
+          </div>
+          <div class="mt-4">
+            <div class="flex items-baseline gap-2">
+              <span id="dash-today-hours" class="text-3xl font-bold text-on-surface">3h 45m</span>
+              <span class="text-xs text-outline">/ 5h</span>
+            </div>
+            <div class="w-full bg-surface-container rounded-full h-2 mt-3 overflow-hidden">
+              <div class="bg-primary h-full rounded-full transition-all duration-500" style="width: 75%"></div>
+            </div>
+            <div class="flex items-center justify-between mt-2.5 text-xs">
+              <span class="text-secondary font-semibold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[15px]">trending_up</span> +45 min vs. ontem
+              </span>
+              <span class="text-on-surface-variant font-medium">75% atingido</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-surface-container-lowest p-5 rounded-xl shadow-xs border border-surface-container/60 hover:shadow-md transition-shadow flex flex-col justify-between">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="text-xs uppercase tracking-wider text-outline font-semibold">Consistência</span>
+              <h3 class="text-sm font-semibold text-on-surface mt-1">Sequência de Foco</h3>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-tertiary-fixed text-tertiary flex items-center justify-center text-xl">🔥</div>
+          </div>
+          <div class="mt-4">
+            <div class="flex items-baseline gap-2">
+              <span class="text-3xl font-bold text-on-surface user-streak-display">14 dias</span>
+            </div>
+            <div class="flex items-center gap-1.5 mt-3">
+              <span class="h-2 flex-1 rounded-full bg-secondary"></span>
+              <span class="h-2 flex-1 rounded-full bg-secondary"></span>
+              <span class="h-2 flex-1 rounded-full bg-secondary"></span>
+              <span class="h-2 flex-1 rounded-full bg-secondary"></span>
+              <span class="h-2 flex-1 rounded-full bg-secondary"></span>
+              <span class="h-2 flex-1 rounded-full bg-secondary"></span>
+              <span class="h-2 flex-1 rounded-full bg-secondary-container"></span>
+            </div>
+            <div class="flex items-center justify-between mt-2.5 text-xs">
+              <span class="px-2 py-0.5 rounded-full bg-tertiary text-on-tertiary font-semibold">Top 5% estudantes</span>
+              <span class="text-outline">Recorde: 21 dias</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-surface-container-lowest p-5 rounded-xl shadow-xs border border-surface-container/60 hover:shadow-md transition-shadow flex flex-col justify-between">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="text-xs uppercase tracking-wider text-outline font-semibold">Pomodoros</span>
+              <h3 class="text-sm font-semibold text-on-surface mt-1">Sessões Concluídas</h3>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-secondary-container/20 text-secondary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[22px]">timer_3</span>
+            </div>
+          </div>
+          <div class="mt-4">
+            <div class="flex items-baseline gap-2">
+              <span id="dash-today-sessions" class="text-3xl font-bold text-on-surface">5</span>
+              <span class="text-xs text-outline">blocos hoje</span>
+            </div>
+            <div class="flex items-center gap-2 mt-3">
+              <div class="w-4 h-4 rounded-full bg-secondary flex items-center justify-center text-on-secondary text-[10px] font-bold">✓</div>
+              <div class="w-4 h-4 rounded-full bg-secondary flex items-center justify-center text-on-secondary text-[10px] font-bold">✓</div>
+              <div class="w-4 h-4 rounded-full bg-secondary flex items-center justify-center text-on-secondary text-[10px] font-bold">✓</div>
+              <div class="w-4 h-4 rounded-full bg-secondary flex items-center justify-center text-on-secondary text-[10px] font-bold">✓</div>
+              <div class="w-4 h-4 rounded-full bg-secondary flex items-center justify-center text-on-secondary text-[10px] font-bold">✓</div>
+              <div class="w-4 h-4 rounded-full bg-surface-container"></div>
+            </div>
+            <div class="flex items-center justify-between mt-2.5 text-xs">
+              <span class="text-on-surface-variant font-medium">Meta diária: 6 blocos</span>
+              <span class="text-secondary font-semibold">83%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-surface-container-lowest p-5 rounded-xl shadow-xs border border-surface-container/60 hover:shadow-md transition-shadow flex flex-col justify-between">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="text-xs uppercase tracking-wider text-outline font-semibold">Qualidade</span>
+              <h3 class="text-sm font-semibold text-on-surface mt-1">Eficiência de Foco</h3>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-primary-fixed text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[22px]">psychology</span>
+            </div>
+          </div>
+          <div class="mt-4">
+            <div class="flex items-baseline gap-2">
+              <span class="text-3xl font-bold text-secondary">92%</span>
+              <span class="text-xs text-outline">produtivo</span>
+            </div>
+            <div class="w-full bg-surface-container rounded-full h-2 mt-3 overflow-hidden flex">
+              <div class="bg-secondary h-full" style="width: 92%"></div>
+              <div class="bg-outline-variant h-full" style="width: 8%"></div>
+            </div>
+            <div class="flex items-center justify-between mt-2.5 text-xs">
+              <span class="text-secondary font-semibold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">shield</span> 0 distrações
+              </span>
+              <span class="text-outline">Zona de Alto Foco</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Multi-column Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Left: Activity Heatmap & Weekly Bars (8 cols) -->
+        <div class="lg:col-span-8 flex flex-col gap-6">
+          <!-- Heatmap de Atividade -->
+          <div class="bg-surface-container-lowest rounded-xl p-6 shadow-xs border border-surface-container/60">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-surface-container">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-[22px]">calendar_view_month</span>
+                  <h2 class="text-lg font-bold text-on-surface">Frequência de Estudos Mensal</h2>
+                </div>
+                <p class="text-xs text-outline mt-0.5">Visão consolidada dos ciclos diários e carga horária</p>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs text-outline">
+                <span>Menos</span>
+                <span class="w-3 h-3 rounded-xs bg-surface-container-high"></span>
+                <span class="w-3 h-3 rounded-xs bg-primary-fixed"></span>
+                <span class="w-3 h-3 rounded-xs bg-primary-container"></span>
+                <span class="w-3 h-3 rounded-xs bg-secondary"></span>
+                <span>Mais (4h+)</span>
+              </div>
+            </div>
+
+            <!-- Heatmap 30 days grid -->
+            <div class="mt-4 p-4 bg-surface-container-low rounded-xl">
+              <div class="grid grid-cols-10 sm:grid-cols-15 gap-1.5">
+                <div class="h-7 rounded-xs bg-primary-fixed flex items-center justify-center text-xs text-primary font-medium hover:scale-110 transition-transform cursor-pointer" title="01 Mai: 1.5h">1</div>
+                <div class="h-7 rounded-xs bg-primary-container text-on-primary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="02 Mai: 3.2h">2</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="03 Mai: 4.5h">3</div>
+                <div class="h-7 rounded-xs bg-surface-container-high text-outline text-xs flex items-center justify-center hover:scale-110 transition-transform cursor-pointer" title="04 Mai: 0h">4</div>
+                <div class="h-7 rounded-xs bg-primary-fixed text-primary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="05 Mai: 2.0h">5</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="06 Mai: 5.0h">6</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="07 Mai: 4.8h">7</div>
+                <div class="h-7 rounded-xs bg-primary-container text-on-primary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="08 Mai: 3.5h">8</div>
+                <div class="h-7 rounded-xs bg-primary-container text-on-primary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="09 Mai: 3.8h">9</div>
+                <div class="h-7 rounded-xs bg-primary-fixed text-primary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="10 Mai: 1.8h">10</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="11 Mai: 4.2h">11</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="12 Mai: 4.6h">12</div>
+                <div class="h-7 rounded-xs bg-primary-container text-on-primary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="13 Mai: 3.0h">13</div>
+                <div class="h-7 rounded-xs bg-surface-container-high text-outline text-xs flex items-center justify-center hover:scale-110 transition-transform cursor-pointer" title="14 Mai: 0.5h">14</div>
+                <div class="h-7 rounded-xs bg-primary-container text-on-primary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="15 Mai: 3.4h">15</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="16 Mai: 4.9h">16</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="17 Mai: 4.1h">17</div>
+                <div class="h-7 rounded-xs bg-primary-fixed text-primary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="18 Mai: 2.0h">18</div>
+                <div class="h-7 rounded-xs bg-primary-container text-on-primary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="19 Mai: 3.9h">19</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="20 Mai: 4.4h">20</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="21 Mai: 5.2h">21</div>
+                <div class="h-7 rounded-xs bg-primary-container text-on-primary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="22 Mai: 3.7h">22</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="23 Mai: 4.5h">23</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="24 Mai: 4.0h">24</div>
+                <div class="h-7 rounded-xs bg-primary-container text-on-primary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="25 Mai: 3.6h">25</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="26 Mai: 4.8h">26</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="27 Mai: 5.1h">27</div>
+                <div class="h-7 rounded-xs bg-secondary text-on-secondary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="28 Mai: 4.5h">28</div>
+                <div class="h-7 rounded-xs bg-primary-container text-on-primary text-xs flex items-center justify-center font-medium hover:scale-110 transition-transform cursor-pointer" title="29 Mai: 3.8h">29</div>
+                <div class="h-7 rounded-xs bg-tertiary text-on-tertiary text-xs font-bold flex items-center justify-center shadow-xs cursor-pointer ring-2 ring-tertiary" title="Hoje: 3h 45m">30</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Distribution Bars -->
+          <div class="bg-surface-container-lowest rounded-xl p-6 shadow-xs border border-surface-container/60">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <span class="text-xs uppercase tracking-wider text-outline font-semibold">Carga Semanal de Estudos</span>
+                <div class="flex items-center gap-3 mt-1">
+                  <span class="text-xl font-bold text-on-surface">105h Totais no Mês</span>
+                  <span class="text-xs text-secondary bg-secondary-container/20 px-2 py-0.5 rounded-full font-semibold">Média: 4.1h/dia</span>
+                </div>
+              </div>
+              <span class="text-xs text-secondary font-semibold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">verified</span> Meta Semanal Superada
+              </span>
+            </div>
+
+            <div class="grid grid-cols-4 gap-3 sm:gap-4 pt-2">
+              <div class="flex flex-col items-center gap-1.5">
+                <div class="w-full bg-surface-container rounded-t-lg h-28 relative flex items-end justify-center p-2 group">
+                  <div class="w-full bg-primary/80 group-hover:bg-primary transition-all rounded-t-md flex items-center justify-center pb-2 text-on-primary text-xs font-bold" style="height: 77%;">24h</div>
+                </div>
+                <span class="text-xs font-semibold text-on-surface">Semana 1</span>
+                <span class="text-[10px] text-outline">Meta: 20h</span>
+              </div>
+              <div class="flex flex-col items-center gap-1.5">
+                <div class="w-full bg-surface-container rounded-t-lg h-28 relative flex items-end justify-center p-2 group">
+                  <div class="w-full bg-primary/80 group-hover:bg-primary transition-all rounded-t-md flex items-center justify-center pb-2 text-on-primary text-xs font-bold" style="height: 90%;">28h</div>
+                </div>
+                <span class="text-xs font-semibold text-on-surface">Semana 2</span>
+                <span class="text-[10px] text-outline">Meta: 25h</span>
+              </div>
+              <div class="flex flex-col items-center gap-1.5">
+                <div class="w-full bg-surface-container rounded-t-lg h-28 relative flex items-end justify-center p-2 group">
+                  <div class="w-full bg-primary-container group-hover:bg-primary transition-all rounded-t-md flex items-center justify-center pb-2 text-on-primary text-xs font-bold" style="height: 70%;">22h</div>
+                </div>
+                <span class="text-xs font-semibold text-on-surface">Semana 3</span>
+                <span class="text-[10px] text-outline">Meta: 20h</span>
+              </div>
+              <div class="flex flex-col items-center gap-1.5">
+                <div class="w-full bg-surface-container rounded-t-lg h-28 relative flex items-end justify-center p-2 group">
+                  <div class="w-full bg-secondary group-hover:opacity-90 transition-all rounded-t-md flex items-center justify-center pb-2 text-on-secondary text-xs font-bold shadow-xs" style="height: 100%;">31h</div>
+                </div>
+                <span class="text-xs font-semibold text-on-surface">Semana 4</span>
+                <span class="text-[10px] text-secondary font-bold">Recorde 🏆</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Widgets (4 cols) -->
+        <div class="lg:col-span-4 flex flex-col gap-6">
+          <!-- Mini Pomodoro Widget -->
+          <div class="bg-surface-container-lowest rounded-xl p-5 shadow-xs border border-surface-container/60 flex flex-col items-center text-center">
+            <div class="w-full flex items-center justify-between mb-3">
+              <span class="text-xs uppercase tracking-wider text-outline font-semibold">Pomodoro Rápido</span>
+              <span class="px-2.5 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-xs font-semibold flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-ping"></span> Bloco Ativo
+              </span>
+            </div>
+
+            <!-- Mini Modes -->
+            <div class="w-full grid grid-cols-2 gap-1.5 bg-surface-container-low p-1 rounded-xl mb-4">
+              <button class="py-1.5 text-xs rounded-lg bg-surface-container-lowest text-primary font-semibold shadow-xs" data-pomo-mode="25">Pomodoro 25m</button>
+              <button class="py-1.5 text-xs rounded-lg text-on-surface-variant hover:text-on-surface" data-pomo-mode="50">Foco 50m</button>
+            </div>
+
+            <!-- Clock Display with SVG Ring -->
+            <div class="relative w-36 h-36 flex items-center justify-center mb-3">
+              <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle class="text-surface-container" cx="50" cy="50" fill="transparent" r="44" stroke="currentColor" stroke-width="6"></circle>
+                <circle id="timer-progress-ring-widget" class="text-primary transition-all duration-1000" cx="50" cy="50" fill="transparent" r="44" stroke="currentColor" stroke-dasharray="276.46" stroke-dashoffset="30" stroke-linecap="round" stroke-width="6"></circle>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="pomo-display text-3xl font-extrabold text-on-surface tracking-tight">25:00</span>
+                <span class="text-[10px] text-outline uppercase tracking-wider mt-0.5">Tempo Restante</span>
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center gap-2 w-full">
+              <button class="pomo-reset-btn p-2.5 rounded-xl bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-colors" title="Reiniciar">
+                <span class="material-symbols-outlined text-[18px]">replay</span>
+              </button>
+              <button class="pomo-toggle-btn flex-1 py-2.5 px-3 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-semibold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5">
+                <span class="pomo-icon material-symbols-outlined text-[18px]">play_arrow</span>
+                <span class="pomo-text">Iniciar Foco</span>
+              </button>
+              <button class="pomo-complete-btn p-2.5 rounded-xl bg-secondary text-on-secondary hover:opacity-90 transition-opacity" title="Concluir">
+                <span class="material-symbols-outlined text-[18px]">done_all</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tarefas Rápidas da Sessão -->
+          <div class="bg-surface-container-lowest rounded-xl p-5 shadow-xs border border-surface-container/60 flex flex-col">
+            <div class="flex items-center justify-between pb-3 border-b border-surface-container">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-outline text-[18px]">checklist</span>
+                <span class="text-sm font-semibold text-on-surface">Tarefas Rápidas</span>
+              </div>
+            </div>
+
+            <!-- Tasks Feed -->
+            <div id="dashboard-tasks-container" class="flex flex-col gap-1.5 py-3 min-h-[120px]">
+              <!-- Injected dynamically -->
+            </div>
+
+            <!-- Add Task Input -->
+            <div class="flex items-center gap-2 pt-2 border-t border-surface-container/60">
+              <input id="quick-task-input" class="w-full bg-surface-container-low rounded-lg px-3 py-2 text-xs text-on-surface placeholder:text-outline border border-outline-variant/30 focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Adicionar nova micro-tarefa..." type="text">
+              <button id="btn-add-quick-task" class="px-3 py-2 bg-primary text-on-primary rounded-lg text-xs font-semibold hover:bg-primary-container transition-colors shrink-0">
+                + Adicionar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: MATÉRIAS & CURSOS ==================== -->
+    <section id="view-materias-cursos" class="hidden w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 max-w-7xl mx-auto">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-1.5 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
+            <span class="material-symbols-outlined text-[16px]">school</span>
+            <span>Semestre Letivo 2024.1</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">Matérias & Cursos</h1>
+          <p class="text-sm text-on-surface-variant mt-1">Gerencie suas disciplinas ativas, ementas, notas e calcule sua aprovação.</p>
+        </div>
+        <button id="btn-open-modal-materia" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-on-primary font-semibold text-sm shadow-md transition-all shrink-0">
+          <span class="material-symbols-outlined text-[18px]">add_circle</span>
+          <span>Nova Matéria</span>
+        </button>
+      </div>
+
+      <!-- Quick Metrics Ribbon -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-surface-container-lowest p-4 rounded-xl shadow-xs flex items-center justify-between border border-surface-container">
+          <div>
+            <p class="text-xs text-on-surface-variant font-medium">Créditos Atuais</p>
+            <p class="text-2xl font-bold text-on-surface mt-0.5">24 <span class="text-xs text-on-surface-variant font-normal">CR</span></p>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined text-[20px]">auto_stories</span>
+          </div>
+        </div>
+        <div class="bg-surface-container-lowest p-4 rounded-xl shadow-xs flex items-center justify-between border border-surface-container">
+          <div>
+            <p class="text-xs text-on-surface-variant font-medium">Média Global</p>
+            <p class="text-2xl font-bold text-secondary mt-0.5">8.3 <span class="text-xs text-secondary font-normal">/ 10</span></p>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center text-secondary">
+            <span class="material-symbols-outlined text-[20px]">trending_up</span>
+          </div>
+        </div>
+        <div class="bg-surface-container-lowest p-4 rounded-xl shadow-xs flex items-center justify-between border border-surface-container">
+          <div>
+            <p class="text-xs text-on-surface-variant font-medium">Provas no Semestre</p>
+            <p class="text-2xl font-bold text-tertiary mt-0.5">2 <span class="text-xs text-on-surface-variant font-normal">esta semana</span></p>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center text-tertiary">
+            <span class="material-symbols-outlined text-[20px]">notification_important</span>
+          </div>
+        </div>
+        <div class="bg-surface-container-lowest p-4 rounded-xl shadow-xs flex items-center justify-between border border-surface-container">
+          <div>
+            <p class="text-xs text-on-surface-variant font-medium">Horas de Estudo</p>
+            <p class="text-2xl font-bold text-primary mt-0.5">38.5h <span class="text-xs text-on-surface-variant font-normal">este mês</span></p>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined text-[20px]">hourglass_top</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calculadora de Aprovação Interativa -->
+      <div class="bg-gradient-to-r from-primary-fixed/40 via-surface-container-lowest to-secondary-container/30 rounded-2xl p-5 border border-primary/20 shadow-xs">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="material-symbols-outlined text-primary text-[20px]">calculate</span>
+          <h2 class="text-base font-bold text-on-surface">Calculadora de Média & Aprovação (Regra UFC / Federal)</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nota P1 (0 a 10)</label>
+            <input id="calc-nota-p1" class="w-full bg-surface-container-lowest rounded-lg p-2 text-sm border border-outline-variant/40" type="number" step="0.1" min="0" max="10" value="8.0">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nota P2 (0 a 10)</label>
+            <input id="calc-nota-p2" class="w-full bg-surface-container-lowest rounded-lg p-2 text-sm border border-outline-variant/40" type="number" step="0.1" min="0" max="10" value="6.5">
+          </div>
+          <div class="text-center sm:text-left">
+            <span class="block text-xs font-semibold text-on-surface-variant mb-1">Média Parcial</span>
+            <span id="calc-media-result" class="text-2xl font-bold text-primary">7.3</span>
+          </div>
+          <div class="text-center sm:text-left">
+            <span class="block text-xs font-semibold text-on-surface-variant mb-1">Nota Necessária na PF</span>
+            <span id="calc-pf-result" class="text-sm font-bold text-secondary">0.0 (Aprovado direto)</span>
+          </div>
+          <div>
+            <span id="calc-status-result" class="inline-block px-3 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold text-center w-full">
+              Aprovado Direto 🎉
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards Grid of Subjects -->
+      <div id="subjects-cards-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: CRONÔMETRO POMODORO ==================== -->
+    <section id="view-cronometro-pomodoro" class="hidden w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 max-w-7xl mx-auto">
+      <!-- Title & Controls -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary text-xs font-semibold">
+              <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse mr-1.5"></span>
+              Sessão Ativa • Ciclo 3 de 4
+            </span>
+            <span class="text-xs text-outline uppercase tracking-wider font-semibold">Módulo de Produtividade</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">Cronômetro Pomodoro & Foco Imersivo</h1>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <!-- Subject Selector -->
+          <div class="bg-surface-container-lowest shadow-sm rounded-xl px-3 py-1.5 flex items-center border border-surface-container">
+            <span class="material-symbols-outlined text-primary text-[20px] mr-2">menu_book</span>
+            <div class="flex flex-col">
+              <span class="text-[10px] text-outline font-semibold">Matéria em Estudo</span>
+              <select id="subject-selector" class="bg-transparent text-sm font-semibold text-on-surface focus:outline-none cursor-pointer border-none p-0 pr-4">
+                <!-- Injected dynamically -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Zen Mode Trigger -->
+          <button id="zen-mode-toggle" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-variant text-primary font-semibold text-sm shadow-sm transition-all">
+            <span class="material-symbols-outlined text-[20px]">fullscreen</span>
+            <span>Modo Zen</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Pomodoro Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Big Clock and Ambient Sounds (8 cols) -->
+        <div class="lg:col-span-8 flex flex-col gap-6">
+          <div class="bg-surface-container-lowest rounded-2xl shadow-sm p-6 sm:p-8 relative overflow-hidden border border-surface-container flex flex-col items-center">
+            <!-- Mode Tabs -->
+            <div class="flex items-center gap-1.5 p-1.5 bg-surface-container-low rounded-xl max-w-xl mx-auto mb-6 overflow-x-auto w-full justify-between">
+              <button class="mode-tab flex-1 py-2 px-2.5 rounded-lg text-xs font-bold transition-all text-center bg-primary text-on-primary shadow-sm" data-duration="1500" data-pomo-mode="25">Pomodoro (25m)</button>
+              <button class="mode-tab flex-1 py-2 px-2.5 rounded-lg text-xs font-medium transition-all text-center text-on-surface-variant hover:text-on-surface" data-duration="3000" data-pomo-mode="50">Ultra Foco (50m)</button>
+              <button class="mode-tab flex-1 py-2 px-2.5 rounded-lg text-xs font-medium transition-all text-center text-on-surface-variant hover:text-on-surface" data-duration="300" data-pomo-mode="5">Pausa Curta (5m)</button>
+              <button class="mode-tab flex-1 py-2 px-2.5 rounded-lg text-xs font-medium transition-all text-center text-on-surface-variant hover:text-on-surface" data-duration="900" data-pomo-mode="15">Pausa Longa (15m)</button>
+            </div>
+
+            <!-- Big Circular Timer -->
+            <div class="relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center my-4">
+              <svg class="w-full h-full -rotate-90 transform drop-shadow-md" viewBox="0 0 280 280">
+                <circle class="text-surface-container" cx="140" cy="140" fill="transparent" r="120" stroke="currentColor" stroke-width="12"></circle>
+                <circle id="timer-progress-ring" class="transition-all duration-1000 ease-linear text-primary" cx="140" cy="140" fill="transparent" r="120" stroke="currentColor" stroke-dasharray="753.98" stroke-dashoffset="0" stroke-linecap="round" stroke-width="12"></circle>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-2">
+                <span class="text-xs uppercase tracking-widest text-outline font-semibold mb-1">Tempo Restante</span>
+                <span class="pomo-display text-5xl sm:text-6xl font-extrabold text-on-surface tracking-tight tabular-nums select-none">25:00</span>
+                <div class="flex items-center gap-1.5 mt-2 bg-surface-container px-3 py-1 rounded-full">
+                  <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                  <span class="text-xs text-on-surface font-semibold">Ciclo 3 de 4</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center gap-3 mt-4 flex-wrap justify-center w-full max-w-md">
+              <button class="pomo-reset-btn w-12 h-12 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-all shadow-sm active:scale-95" title="Reiniciar Ciclo">
+                <span class="material-symbols-outlined text-[22px]">replay</span>
+              </button>
+              <button class="pomo-toggle-btn flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-bold text-base shadow-md transition-all active:scale-95 flex-1 min-w-[160px]">
+                <span class="pomo-icon material-symbols-outlined text-[24px]">play_arrow</span>
+                <span class="pomo-text">Iniciar Foco</span>
+              </button>
+              <button class="pomo-skip-btn w-12 h-12 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-all shadow-sm active:scale-95" title="Pular Bloco">
+                <span class="material-symbols-outlined text-[22px]">skip_next</span>
+              </button>
+              <button class="pomo-complete-btn px-4 py-3 rounded-xl bg-secondary-container text-on-secondary-container font-semibold text-sm flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 w-full sm:w-auto">
+                <span class="material-symbols-outlined text-[20px]">task_alt</span>
+                <span>Concluir Sessão</span>
+              </button>
+            </div>
+
+            <!-- Ambient Sound Synthesizer (Web Audio API) -->
+            <div class="mt-8 pt-4 bg-surface-container-low rounded-xl p-4 w-full">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-[22px]">headphones</span>
+                  <span class="text-sm font-bold text-on-surface">Som Ambiente & Foco Acústico (Gerado em Tempo Real)</span>
+                </div>
+                <div class="flex items-center gap-2 bg-surface-container-lowest px-3 py-1 rounded-full shadow-xs self-start sm:self-auto">
+                  <span class="material-symbols-outlined text-secondary text-[16px] animate-pulse">graphic_eq</span>
+                  <span id="current-ambient-label" class="text-xs font-semibold text-on-surface">Chuva Suave</span>
+                </div>
+              </div>
+
+              <!-- Sound Choices -->
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                <button class="sound-card active-sound flex items-center gap-2 p-2.5 rounded-lg bg-primary-container text-on-primary-container shadow-xs transition-all text-left" data-sound="rain">
+                  <span class="material-symbols-outlined text-[20px]">water_drop</span>
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-xs font-bold truncate">Chuva Suave</span>
+                    <span class="text-[10px] opacity-80">Relaxante</span>
+                  </div>
+                </button>
+                <button class="sound-card flex items-center gap-2 p-2.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant transition-all text-left" data-sound="lofi">
+                  <span class="material-symbols-outlined text-[20px]">coffee</span>
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-xs font-bold truncate">Cafeteria Lo-Fi</span>
+                    <span class="text-[10px] text-outline">Sons de fundo</span>
+                  </div>
+                </button>
+                <button class="sound-card flex items-center gap-2 p-2.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant transition-all text-left" data-sound="white-noise">
+                  <span class="material-symbols-outlined text-[20px]">air</span>
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-xs font-bold truncate">Ruído Branco</span>
+                    <span class="text-[10px] text-outline">Bloqueio total</span>
+                  </div>
+                </button>
+                <button class="sound-card flex items-center gap-2 p-2.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant transition-all text-left" data-sound="library">
+                  <span class="material-symbols-outlined text-[20px]">local_library</span>
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-xs font-bold truncate">Biblioteca</span>
+                    <span class="text-[10px] text-outline">Silêncio calmo</span>
+                  </div>
+                </button>
+              </div>
+
+              <!-- Volume Slider -->
+              <div class="flex items-center justify-between gap-3 pt-2">
+                <div class="flex items-center gap-2 flex-1 max-w-xs">
+                  <span class="material-symbols-outlined text-outline text-[18px]">volume_down</span>
+                  <input id="ambient-volume" class="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary" type="range" min="0" max="100" value="65">
+                  <span class="material-symbols-outlined text-outline text-[18px]">volume_up</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <span class="w-1 bg-secondary rounded-full animate-bounce h-2" style="animation-duration: 600ms;"></span>
+                  <span class="w-1 bg-secondary rounded-full animate-bounce h-4" style="animation-duration: 800ms;"></span>
+                  <span class="w-1 bg-secondary rounded-full animate-bounce h-3" style="animation-duration: 500ms;"></span>
+                  <span class="text-xs text-outline ml-1">Áudio Ativo</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Session History Log (4 cols) -->
+        <div class="lg:col-span-4 flex flex-col gap-6">
+          <div class="bg-surface-container-lowest rounded-2xl shadow-sm p-6 border border-surface-container flex flex-col">
+            <div class="flex items-center justify-between pb-3 border-b border-surface-container mb-4">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[22px]">history</span>
+                <h2 class="text-base font-bold text-on-surface">Histórico de Sessões</h2>
+              </div>
+              <span class="text-xs text-outline font-semibold">Hoje</span>
+            </div>
+
+            <!-- Injected dynamically -->
+            <div id="pomo-history-list" class="flex flex-col gap-2.5">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 4: PLANEJADOR SEMANAL ==================== -->
+    <section id="view-planejador-semanal" class="hidden w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 max-w-7xl mx-auto">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">Planejador Semanal</h1>
+          <p class="text-sm text-on-surface-variant mt-1">Organize seus horários de aula, blocos de revisão e provas.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex items-center bg-surface-container-lowest p-1 rounded-xl shadow-xs border border-surface-container">
+            <button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button>
+            <span class="text-xs font-semibold px-2">27 Mai - 02 Jun, 2024</span>
+            <button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
+          </div>
+          <button id="btn-open-modal-sessao" class="px-4 py-2.5 bg-primary text-on-primary rounded-xl font-semibold text-sm flex items-center gap-2 hover:bg-primary-container shadow-xs">
+            <span class="material-symbols-outlined text-[20px]">add</span>
+            <span>Nova Sessão</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Weekly Schedule Grid Canvas -->
+      <div class="bg-surface-container-lowest rounded-2xl shadow-sm p-4 border border-surface-container overflow-hidden">
+        <!-- Week Header -->
+        <div class="grid grid-cols-[54px_repeat(7,1fr)] md:grid-cols-[60px_repeat(7,1fr)] text-center pb-2 bg-surface-container-lowest sticky top-0 z-20 font-semibold text-xs border-b border-surface-container">
+          <div class="text-outline flex items-end justify-center pb-1">Hora</div>
+          <div class="p-2 rounded-lg bg-surface-container-low">SEG 27</div>
+          <div class="p-2 rounded-lg bg-surface-container-low">TER 28</div>
+          <div class="p-2 rounded-lg bg-primary text-on-primary shadow-xs">QUA 29 (Hoje)</div>
+          <div class="p-2 rounded-lg bg-surface-container-low">QUI 30</div>
+          <div class="p-2 rounded-lg bg-surface-container-low">SEX 31</div>
+          <div class="p-2 rounded-lg bg-surface-container-low">SÁB 01</div>
+          <div class="p-2 rounded-lg bg-surface-container-low">DOM 02</div>
+        </div>
+
+        <!-- Hourly rows -->
+        <div id="calendar-canvas-body" class="overflow-x-auto">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 5: ESTATÍSTICAS & METAS ==================== -->
+    <section id="view-estatisticas-metas" class="hidden w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 max-w-7xl mx-auto">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">Estatísticas & Metas</h1>
+          <p class="text-sm text-on-surface-variant mt-1">Acompanhe seu desempenho acadêmico, horas líquidas e taxa de conclusão.</p>
+        </div>
+        <button onclick="window.print()" class="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-semibold text-sm shadow-xs transition-all flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">download</span>
+          <span>Exportar Relatório PDF</span>
+        </button>
+      </div>
+
+      <!-- Metas Ativas -->
+      <div class="bg-surface-container-lowest rounded-2xl shadow-sm p-6 border border-surface-container">
+        <div class="flex items-center justify-between pb-4 border-b border-surface-container mb-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[22px]">flag</span>
+            <h2 class="text-base font-bold text-on-surface">Metas Semestrais Ativas</h2>
+          </div>
+        </div>
+        <div id="stats-goals-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 6: ANOTAÇÕES & CADERNOS ==================== -->
+    <section id="view-anotacoes" class="hidden w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 max-w-7xl mx-auto">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">Anotações & Cadernos</h1>
+          <p class="text-sm text-on-surface-variant mt-1">Resumos, fórmulas, mapas mentais e cadernos sincronizados.</p>
+        </div>
+        <button id="btn-open-modal-nota" class="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-semibold text-sm shadow-xs flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">add_circle</span>
+          <span>Nova Nota</span>
+        </button>
+      </div>
+
+      <!-- 2 Columns: List (4 cols) & Reader/Editor (8 cols) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div id="notes-list-feed" class="lg:col-span-5 flex flex-col gap-3">
+          <!-- Injected dynamically -->
+        </div>
+
+        <div class="lg:col-span-7 bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-surface-container flex flex-col gap-4">
+          <div class="flex items-center justify-between pb-3 border-b border-surface-container">
+            <span id="note-reader-subject" class="px-3 py-1 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase">Cálculo Diferencial</span>
+          </div>
+          <h2 id="note-reader-title" class="text-2xl font-bold text-on-surface">Título da Nota</h2>
+          <div id="note-reader-content" class="text-on-surface font-normal text-sm leading-relaxed prose max-w-none">
+            Selecione uma nota ao lado para visualizar seu conteúdo.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 7: COMUNIDADE & CHAT ==================== -->
+    <section id="view-comunidade" class="hidden w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 max-w-7xl mx-auto">
+      <div class="bg-surface-container-lowest rounded-2xl shadow-sm p-4 sm:p-5 flex items-center justify-between border border-surface-container">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-[24px]">forum</span>
+          </div>
+          <div>
+            <h1 class="text-base sm:text-lg font-bold text-on-surface">Cálculo Diferencial e Integral — Grupo #04</h1>
+            <span class="text-xs text-secondary font-semibold flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span> 18 colegas online agora
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Feed -->
+      <div class="bg-surface-container-lowest rounded-2xl shadow-sm p-4 sm:p-6 border border-surface-container flex flex-col gap-4">
+        <div id="chat-messages-feed" class="flex flex-col gap-4 max-h-[500px] overflow-y-auto pr-2">
+          <!-- Injected dynamically -->
+        </div>
+
+        <!-- Chat Input -->
+        <div class="flex items-center gap-2 pt-3 border-t border-surface-container">
+          <input id="chat-message-input" class="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm text-on-surface placeholder:text-outline border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="Escreva uma dúvida ou mensagem para a turma..." type="text">
+          <button id="btn-send-chat" class="px-5 py-3 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-semibold text-sm shadow-xs transition-all flex items-center gap-1.5 shrink-0">
+            <span class="material-symbols-outlined text-[18px]">send</span>
+            <span>Enviar</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 8: CONFIGURAÇÕES & PERFIL ==================== -->
+    <section id="view-configuracoes-ajuda" class="hidden w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 max-w-4xl mx-auto">
+      <div class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-surface-container flex flex-col sm:flex-row items-center gap-5">
+        <img class="user-avatar-display w-20 h-20 rounded-full object-cover ring-4 ring-primary/20" src="" alt="Avatar">
+        <div class="flex flex-col text-center sm:text-left">
+          <h1 class="user-name-display text-2xl font-bold text-on-surface">Mariana de Almeida Silva</h1>
+          <p class="user-course-display text-sm text-on-surface-variant">Engenharia de Software • Universidade Federal (UFC)</p>
+          <span class="mt-2 text-xs text-primary font-mono bg-primary-fixed/40 px-2.5 py-1 rounded-md self-center sm:self-start">Matrícula: 2022.1.ES-0492</span>
+        </div>
+      </div>
+
+      <!-- Form Settings -->
+      <div class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-surface-container">
+        <h2 class="text-lg font-bold text-on-surface mb-4 pb-2 border-b border-surface-container">Editar Perfil & Preferências</h2>
+        <form id="form-perfil-config" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nome Completo</label>
+            <input id="cfg-nome" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" type="text" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">E-mail Universitário</label>
+            <input id="cfg-email" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" type="email" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Curso</label>
+            <input id="cfg-curso" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" type="text" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Universidade / Instituição</label>
+            <input id="cfg-uni" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" type="text" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Semestre Atual</label>
+            <input id="cfg-semestre" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" type="text" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Matrícula</label>
+            <input id="cfg-matricula" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" type="text" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Meta Diária de Estudo (Horas)</label>
+            <input id="cfg-meta-horas" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" type="number" step="0.5" min="1" max="16" required>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Biografia Acadêmica</label>
+            <textarea id="cfg-bio" rows="2" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30"></textarea>
+          </div>
+          <div class="sm:col-span-2 pt-2">
+            <label class="block text-xs font-semibold text-on-surface-variant mb-2">Tema da Plataforma</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button type="button" id="btn-set-theme-light" class="theme-choice-btn flex items-center justify-center gap-2 p-3 rounded-xl border border-outline-variant/40 hover:border-primary transition-all font-semibold text-sm">
+                <span class="material-symbols-outlined text-[20px] text-amber-500">light_mode</span>
+                <span>Modo Claro</span>
+              </button>
+              <button type="button" id="btn-set-theme-dark" class="theme-choice-btn flex items-center justify-center gap-2 p-3 rounded-xl border border-outline-variant/40 hover:border-primary transition-all font-semibold text-sm">
+                <span class="material-symbols-outlined text-[20px] text-blue-400">dark_mode</span>
+                <span>Modo Escuro</span>
+              </button>
+            </div>
+          </div>
+          <div class="sm:col-span-2 flex items-center justify-between pt-4 border-t border-surface-container">
+            <button type="button" onclick="FocusStore.resetAll(); location.reload();" class="text-xs text-error font-semibold hover:underline">
+              Restaurar Dados Originais
+            </button>
+            <button type="submit" class="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-semibold text-sm shadow-md transition-all">
+              Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Central de Autenticação & Sessão -->
+      <div class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-surface-container">
+        <h2 class="text-lg font-bold text-on-surface mb-1">Sessão & Acesso Acadêmico</h2>
+        <p class="text-sm text-on-surface-variant mb-5">Gerencie seu acesso, troque de conta universitária ou encerre a sessão neste dispositivo.</p>
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="button" class="nav-item px-5 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer" data-path="login">
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+            <span>Trocar de Conta / Login</span>
+          </button>
+          <button type="button" class="nav-item px-5 py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer" data-path="cadastro">
+            <span class="material-symbols-outlined text-[18px]">how_to_reg</span>
+            <span>Cadastrar Outro Estudante</span>
+          </button>
+          <button type="button" class="nav-item px-5 py-2.5 rounded-xl border border-outline-variant/40 hover:bg-surface-container text-on-surface font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer" data-path="recuperar-senha">
+            <span class="material-symbols-outlined text-[18px]">lock_reset</span>
+            <span>Simulador de Recuperação de Senha</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 9: LOGIN ==================== -->
+    <section id="view-login" class="hidden w-full min-h-screen flex flex-col justify-between py-6 px-4 sm:px-6">
+      <!-- Header do Login SPA -->
+      <header class="w-full max-w-7xl mx-auto py-2 flex items-center justify-between">
+        <div class="flex items-center gap-3 cursor-pointer" data-path="visao-geral">
+          <div aria-hidden="true" class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold shadow-md shadow-primary/20">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></path>
+            </svg>
+          </div>
+          <span class="text-xl font-bold tracking-tight text-on-surface">Focus<span class="text-primary">Learn</span></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button aria-label="Alternar tema" class="btn-theme-toggle p-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors inline-flex items-center justify-center">
+            <span class="theme-toggle-icon material-symbols-outlined text-[20px]">dark_mode</span>
+          </button>
+          <a class="text-sm font-medium text-on-surface-variant hover:text-primary py-2 px-3 rounded-lg transition-colors cursor-pointer" data-path="visao-geral">
+            Ir ao Painel Principal
+          </a>
+        </div>
+      </header>
+
+      <!-- Main Login Content -->
+      <div class="flex-1 flex items-center justify-center py-6">
+        <div class="w-full max-w-5xl bg-surface-container-lowest rounded-3xl shadow-xl border border-surface-container/60 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px]">
+          <!-- Left: Login Form -->
+          <div class="lg:col-span-7 p-8 sm:p-12 lg:p-14 flex flex-col justify-between">
+            <div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container text-primary text-xs font-semibold uppercase tracking-wider mb-6 border border-surface-container-high">
+                <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                Espaço Acadêmico Seguro
+              </div>
+              <h1 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
+                Bem-vindo(a) de volta! 👋
+              </h1>
+              <p class="mt-2 text-sm sm:text-base text-on-surface-variant">
+                Acesse seu painel, acompanhe suas metas e retome seus blocos de foco.
+              </p>
+
+              <form class="mt-8 space-y-5" id="form-spa-login">
+                <div>
+                  <label class="block text-sm font-semibold text-on-surface mb-1.5" for="spa-login-email">
+                    E-mail Institucional ou Pessoal
+                  </label>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+                      <span class="material-symbols-outlined text-[20px]">alternate_email</span>
+                    </div>
+                    <input autocomplete="email" class="w-full pl-11 pr-4 py-3 bg-surface-container-low border border-outline-variant/30 rounded-xl text-on-surface placeholder:text-outline focus:bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium min-h-[44px]" id="spa-login-email" name="email" placeholder="exemplo@universidade.edu.br" required type="email"/>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-sm font-semibold text-on-surface" for="spa-login-password">
+                      Senha
+                    </label>
+                    <a class="text-xs font-semibold text-primary hover:underline transition-colors cursor-pointer" data-path="recuperar-senha">
+                      Esqueceu a senha?
+                    </a>
+                  </div>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+                      <span class="material-symbols-outlined text-[20px]">lock</span>
+                    </div>
+                    <input autocomplete="current-password" class="w-full pl-11 pr-12 py-3 bg-surface-container-low border border-outline-variant/30 rounded-xl text-on-surface placeholder:text-outline focus:bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium min-h-[44px]" id="spa-login-password" name="password" placeholder="••••••••••••" required type="password"/>
+                    <button aria-label="Mostrar ou ocultar senha" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-outline hover:text-on-surface transition-colors min-h-[44px]" id="btn-spa-login-toggle-pwd" type="button">
+                      <span class="material-symbols-outlined text-[20px]" id="spa-login-pwd-icon">visibility</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-1">
+                  <label class="flex items-center gap-2.5 cursor-pointer">
+                    <input class="w-4 h-4 rounded text-primary border-outline-variant/40 focus:ring-primary cursor-pointer accent-primary" id="spa-login-remember" type="checkbox" checked/>
+                    <span class="text-xs sm:text-sm text-on-surface-variant font-medium">Lembrar deste dispositivo por 30 dias</span>
+                  </label>
+                </div>
+
+                <button class="w-full min-h-[48px] py-3.5 px-4 bg-primary hover:bg-primary-container active:scale-[0.99] text-on-primary font-semibold rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer" type="submit">
+                  <span>Entrar no FocusLearn</span>
+                  <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </button>
+              </form>
+
+              <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                  <div class="w-full border-t border-surface-container"></div>
+                </div>
+                <div class="relative flex justify-center text-xs">
+                  <span class="bg-surface-container-lowest px-3 text-on-surface-variant font-medium uppercase tracking-wider">Ou acesse com</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <button onclick="AppUI.handleSSOFake('Google Estudantil')" class="min-h-[44px] py-2.5 px-4 border border-surface-container hover:bg-surface-container-low font-medium text-on-surface text-sm rounded-xl transition-colors flex items-center justify-center gap-2" type="button">
+                  <span class="font-bold text-red-500">G</span>
+                  <span>Google</span>
+                </button>
+                <button onclick="AppUI.handleSSOFake('Portal CAFe / RNP')" class="min-h-[44px] py-2.5 px-4 border border-surface-container hover:bg-surface-container-low font-medium text-on-surface text-sm rounded-xl transition-colors flex items-center justify-center gap-2" type="button">
+                  <span class="material-symbols-outlined text-[18px] text-primary">account_balance</span>
+                  <span>Portal CAFe</span>
+                </button>
+              </div>
+            </div>
+
+            <p class="mt-8 text-center text-sm text-on-surface-variant">
+              Não tem uma conta acadêmica? 
+              <a class="font-bold text-primary hover:underline transition-colors cursor-pointer" data-path="cadastro">
+                Cadastre-se gratuitamente
+              </a>
+            </p>
+          </div>
+
+          <!-- Right: Visual Banner -->
+          <aside class="hidden lg:flex lg:col-span-5 bg-gradient-to-br from-primary via-primary-container to-[#003882] p-12 flex-col justify-between text-white relative overflow-hidden">
+            <div class="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-20 -bottom-20 w-80 h-80 rounded-full bg-secondary-fixed/20 blur-3xl pointer-events-none"></div>
+            <div class="relative z-10">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-blue-100 text-xs font-medium mb-6 border border-white/20">
+                <span>⭐</span>
+                Plataforma Nº 1 em Gestão de Estudos
+              </div>
+              <h2 class="text-3xl font-extrabold leading-tight tracking-tight">
+                Seu semestre sob controle, foco sem dispersão.
+              </h2>
+              <p class="mt-4 text-blue-100 text-sm leading-relaxed">
+                Junte-se a milhares de estudantes que utilizam metodologia Pomodoro inteligente, organização por ementas e gráficos de consistência para alcançar notas máximas.
+              </p>
+            </div>
+
+            <div class="relative z-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 my-6 shadow-inner">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-blue-200 uppercase tracking-wider">Última Sessão de Estudo</span>
+                <span class="text-xs bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-400/30">92% Eficiência</span>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-white">
+                  <span class="material-symbols-outlined text-[24px]">timer</span>
+                </div>
+                <div>
+                  <p class="text-base font-bold text-white">Cálculo Diferencial e Integral</p>
+                  <p class="text-xs text-blue-100">4 blocos Pomodoro concluídos hoje</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="relative z-10 flex items-center gap-3 pt-4 border-t border-white/15">
+              <p class="text-xs text-blue-100 font-medium">
+                Mais de <strong class="text-white font-bold">12.000 horas</strong> de foco registradas esta semana.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <footer class="w-full max-w-7xl mx-auto py-3 text-center text-xs text-on-surface-variant flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p>© 2025 FocusLearn Inc. Em conformidade com diretrizes WCAG 2.1 AA.</p>
+        <div class="flex items-center gap-6">
+          <a class="hover:text-primary transition-colors cursor-pointer" data-path="configuracoes-ajuda">Termos de Serviço</a>
+          <a class="hover:text-primary transition-colors cursor-pointer" data-path="configuracoes-ajuda">Privacidade & LGPD</a>
+          <a class="hover:text-primary transition-colors cursor-pointer" data-path="configuracoes-ajuda">Acessibilidade</a>
+        </div>
+      </footer>
+    </section>
+
+    <!-- ==================== VIEW 10: CADASTRO ==================== -->
+    <section id="view-cadastro" class="hidden w-full min-h-screen flex flex-col justify-between py-6 px-4 sm:px-6">
+      <!-- Header do Cadastro SPA -->
+      <header class="w-full max-w-7xl mx-auto py-2 flex items-center justify-between">
+        <div class="flex items-center gap-3 cursor-pointer" data-path="visao-geral">
+          <div aria-hidden="true" class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold shadow-md shadow-primary/20">
+            <span class="material-symbols-outlined text-[22px]">school</span>
+          </div>
+          <span class="text-xl font-bold tracking-tight text-on-surface">Focus<span class="text-primary">Learn</span></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <a class="text-xs font-semibold text-primary hover:underline px-3 py-1.5 rounded-lg bg-surface-container cursor-pointer" data-path="login">
+            Já tem conta? Entrar
+          </a>
+          <button aria-label="Alternar tema" class="btn-theme-toggle p-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors inline-flex items-center justify-center">
+            <span class="theme-toggle-icon material-symbols-outlined text-[20px]">dark_mode</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Cadastro Content -->
+      <div class="flex-1 flex items-center justify-center py-6">
+        <div class="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          <!-- Coluna Esquerda: Formulário de Cadastro -->
+          <div class="lg:col-span-7 bg-surface-container-lowest rounded-2xl shadow-xl border border-surface-container/60 p-6 sm:p-10 flex flex-col justify-between">
+            <div>
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-primary font-semibold text-xs uppercase tracking-wide">
+                  <span class="material-symbols-outlined text-[14px]">how_to_reg</span>
+                  NOVA CONTA ACADÊMICA
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-semibold text-xs">
+                  <span class="material-symbols-outlined text-[14px]">school</span>
+                  Universitário / Pré-Vestibular
+                </span>
+              </div>
+
+              <div class="space-y-2 mb-6">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
+                  Crie sua conta no FocusLearn 🚀
+                </h1>
+                <p class="text-sm sm:text-base text-on-surface-variant">
+                  Comece a organizar suas matérias, cronometrar ciclos de estudo e alcançar suas melhores notas.
+                </p>
+              </div>
+
+              <form class="space-y-4" id="form-spa-signup">
+                <div>
+                  <label class="block text-sm font-semibold text-on-surface mb-1.5" for="spa-signup-name">
+                    Nome Completo <span aria-hidden="true" class="text-error">*</span>
+                  </label>
+                  <div class="relative flex items-center">
+                    <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant pointer-events-none text-[20px]">person</span>
+                    <input class="w-full bg-surface-container-low pl-11 pr-4 py-3 rounded-xl text-sm font-medium text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary border border-outline-variant/30 min-h-[44px]" id="spa-signup-name" placeholder="Ex.: Lucas Andrade Silva" required type="text"/>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-sm font-semibold text-on-surface" for="spa-signup-email">
+                      E-mail Institucional ou Pessoal <span aria-hidden="true" class="text-error">*</span>
+                    </label>
+                    <span class="text-xs font-semibold text-secondary flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[14px]">verified</span>
+                      Vantagem para e-mail .edu
+                    </span>
+                  </div>
+                  <div class="relative flex items-center">
+                    <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant pointer-events-none text-[20px]">alternate_email</span>
+                    <input class="w-full bg-surface-container-low pl-11 pr-4 py-3 rounded-xl text-sm font-medium text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary border border-outline-variant/30 min-h-[44px]" id="spa-signup-email" placeholder="nome.sobrenome@universidade.edu.br" required type="email"/>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-semibold text-on-surface mb-1.5" for="spa-signup-course">
+                    Curso / Área de Estudo <span aria-hidden="true" class="text-error">*</span>
+                  </label>
+                  <div class="relative flex items-center">
+                    <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant pointer-events-none text-[20px]">menu_book</span>
+                    <select class="w-full bg-surface-container-low pl-11 pr-10 py-3 rounded-xl text-sm font-medium text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary border border-outline-variant/30 appearance-none min-h-[44px]" id="spa-signup-course" required>
+                      <option disabled selected value="">Selecione seu curso ou objetivo acadêmico</option>
+                      <option value="Engenharia de Software / TI">Engenharia de Software / TI</option>
+                      <option value="Medicina">Medicina</option>
+                      <option value="Direito">Direito</option>
+                      <option value="Administração & Negócios">Administração & Negócios</option>
+                      <option value="Psicologia">Psicologia</option>
+                      <option value="Pré-Vestibular / ENEM">Pré-Vestibular / ENEM</option>
+                      <option value="Concursos Públicos">Concursos Públicos</option>
+                      <option value="Outra Graduação / Pós">Outra Graduação / Pós-Graduação</option>
+                    </select>
+                    <span class="material-symbols-outlined absolute right-3.5 text-on-surface-variant pointer-events-none text-[20px]">unfold_more</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-semibold text-on-surface mb-1.5" for="spa-signup-password">
+                    Senha Segura <span aria-hidden="true" class="text-error">*</span>
+                  </label>
+                  <div class="relative flex items-center">
+                    <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant pointer-events-none text-[20px]">lock</span>
+                    <input class="w-full bg-surface-container-low pl-11 pr-12 py-3 rounded-xl text-sm font-medium text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary border border-outline-variant/30 min-h-[44px]" id="spa-signup-password" placeholder="Crie uma senha forte" required type="password"/>
+                    <button aria-label="Mostrar senha" class="absolute right-2 p-2 text-on-surface-variant" id="btn-spa-signup-toggle-pwd" type="button">
+                      <span class="material-symbols-outlined text-[20px]" id="spa-signup-pwd-icon">visibility</span>
+                    </button>
+                  </div>
+
+                  <div class="mt-2 space-y-1">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs text-on-surface-variant">Nível de segurança:</span>
+                      <span class="text-xs font-semibold text-outline" id="spa-signup-strength-label">Aguardando senha</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+                      <div class="h-full w-0 bg-outline rounded-full transition-all duration-300" id="spa-signup-strength-bar"></div>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 pt-1 text-xs">
+                    <div class="flex items-center gap-1.5 text-outline transition-colors" id="spa-req-length">
+                      <span class="material-symbols-outlined text-[16px]" id="spa-icon-len">radio_button_unchecked</span>
+                      <span>Mínimo 8 caracteres</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-outline transition-colors" id="spa-req-upper">
+                      <span class="material-symbols-outlined text-[16px]" id="spa-icon-up">radio_button_unchecked</span>
+                      <span>Uma letra maiúscula</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-outline transition-colors" id="spa-req-num">
+                      <span class="material-symbols-outlined text-[16px]" id="spa-icon-num">radio_button_unchecked</span>
+                      <span>Pelo menos um número</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-outline transition-colors" id="spa-req-spec">
+                      <span class="material-symbols-outlined text-[16px]" id="spa-icon-spec">radio_button_unchecked</span>
+                      <span>Um caractere especial (@$!%*?)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-semibold text-on-surface mb-1.5" for="spa-signup-confirm-password">
+                    Confirme a Senha <span aria-hidden="true" class="text-error">*</span>
+                  </label>
+                  <div class="relative flex items-center">
+                    <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant pointer-events-none text-[20px]">lock_clock</span>
+                    <input class="w-full bg-surface-container-low pl-11 pr-12 py-3 rounded-xl text-sm font-medium text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary border border-outline-variant/30 min-h-[44px]" id="spa-signup-confirm-password" placeholder="Repita sua senha" required type="password"/>
+                    <div class="absolute right-3.5 flex items-center text-outline-variant pointer-events-none">
+                      <span class="material-symbols-outlined text-[20px]" id="spa-match-icon">check_circle</span>
+                    </div>
+                  </div>
+                  <p class="hidden text-xs text-error mt-1 font-medium" id="spa-match-hint">
+                    As senhas informadas não coincidem.
+                  </p>
+                </div>
+
+                <div class="pt-1">
+                  <label class="flex items-start gap-2.5 cursor-pointer">
+                    <input class="mt-1 w-4 h-4 rounded text-primary bg-surface-container-low focus:ring-2 focus:ring-primary accent-primary cursor-pointer" id="spa-signup-terms" required type="checkbox"/>
+                    <span class="text-xs text-on-surface-variant leading-relaxed">
+                      Concordo expressamente com os 
+                      <a class="text-primary font-medium underline" data-path="configuracoes-ajuda">Termos de Serviço</a> 
+                      e a <a class="text-primary font-medium underline" data-path="configuracoes-ajuda">Política de Privacidade & LGPD</a>.
+                    </span>
+                  </label>
+                </div>
+
+                <div class="pt-2">
+                  <button class="w-full bg-primary hover:bg-primary-container text-on-primary py-3.5 px-6 rounded-xl font-semibold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer" type="submit">
+                    <span>Criar Minha Conta Grátis</span>
+                    <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="pt-6 text-center border-t border-surface-container mt-6">
+              <p class="text-sm text-on-surface-variant">
+                Já possui uma conta ativa? 
+                <a class="text-primary font-bold hover:underline cursor-pointer" data-path="login">
+                  Faça login aqui
+                </a>
+              </p>
+            </div>
+          </div>
+
+          <!-- Coluna Direita: Inspiração & Social Proof -->
+          <div class="lg:col-span-5 bg-gradient-to-br from-primary via-primary-container to-[#003882] rounded-2xl shadow-xl p-8 sm:p-10 text-on-primary flex flex-col justify-between relative overflow-hidden">
+            <div class="space-y-6">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-xs font-semibold">
+                <span class="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse"></span>
+                JUNTE-SE A +25.000 ESTUDANTES
+              </div>
+              <h2 class="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+                Transforme horas dispersas em aprovações reais.
+              </h2>
+              <p class="text-sm text-primary-fixed leading-relaxed">
+                O FocusLearn une neurociência aplicada e rotinas de alta retenção para você dominar matérias complexas com menos ansiedade.
+              </p>
+
+              <div class="p-4 rounded-xl bg-surface-container-lowest/15 backdrop-blur-lg shadow-lg space-y-2 mt-6">
+                <div class="flex items-center gap-3">
+                  <img class="w-10 h-10 rounded-full object-cover ring-2 ring-white/30" alt="Lucas Andrade" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1IE3YCSYWZd8JeeMgajCGu-8o9-yWqnVIWoC9DQciD9gN56wo_K9DV-B9oDy7mFxgXKOGL-kW0tshYg-Ck2evLJWdu0Ucw_blMjk37C_2PRmL3yi-MD-zERA63mN2n3enazS3F_fRKusdRDG_ZZp7SKp_dupHN6RyN3lfiPi_eb8p7GH2WzV4mljnS0Gv1RtKRUqeLWDg8FePNamXQQrBa3xF6kFn_uvQ1dzJR3BL"/>
+                  <div>
+                    <div class="text-sm font-bold text-white">Lucas Andrade</div>
+                    <div class="text-xs text-secondary-fixed">Medicina • USP Pinheiros</div>
+                  </div>
+                </div>
+                <p class="text-xs text-primary-fixed italic leading-relaxed">
+                  “O FocusLearn aumentou meu rendimento semanal em mais de 40% logo no primeiro mês com o Pomodoro sincronizado.”
+                </p>
+              </div>
+            </div>
+
+            <div class="pt-6 border-t border-white/20 flex items-center justify-between text-xs text-primary-fixed-dim">
+              <span>99.4% satisfação acadêmica</span>
+              <span class="text-white font-semibold">★ 4.9/5.0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 11: RECUPERAÇÃO DE SENHA ==================== -->
+    <section id="view-recuperar-senha" class="hidden w-full min-h-screen flex flex-col justify-between py-6 px-4 sm:px-6">
+      <!-- Header da Recuperação SPA -->
+      <header class="w-full max-w-7xl mx-auto py-2 flex items-center justify-between">
+        <div class="flex items-center gap-3 cursor-pointer" data-path="visao-geral">
+          <div aria-hidden="true" class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold shadow-md shadow-primary/20">
+            <span class="material-symbols-outlined text-[22px]">lock_reset</span>
+          </div>
+          <span class="text-xl font-bold tracking-tight text-on-surface">Focus<span class="text-primary">Learn</span></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <a class="text-xs font-semibold text-primary hover:underline px-3 py-1.5 rounded-lg bg-surface-container cursor-pointer" data-path="login">
+            Voltar ao Login
+          </a>
+          <button aria-label="Alternar tema" class="btn-theme-toggle p-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors inline-flex items-center justify-center">
+            <span class="theme-toggle-icon material-symbols-outlined text-[20px]">dark_mode</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Recovery Content -->
+      <div class="flex-1 flex flex-col justify-center items-center py-6">
+        <div class="w-full max-w-7xl mx-auto">
+          <!-- Simulator Tabs -->
+          <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-surface-container-low rounded-2xl border border-surface-container">
+            <div class="flex items-center gap-2 px-2">
+              <span class="flex h-2.5 w-2.5 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+              </span>
+              <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
+                Simulador de Estados & Validações
+              </span>
+            </div>
+
+            <nav class="flex flex-wrap items-center gap-1.5 p-1 bg-surface-container rounded-xl">
+              <button class="spa-recovery-tab-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs transition-all bg-surface-container-lowest text-primary shadow-xs font-semibold cursor-pointer" id="spa-btn-tab-recovery" onclick="AppUI.switchSpaRecoveryTab('recovery')" type="button">
+                <span class="material-symbols-outlined text-[16px]">lock_reset</span>
+                Recuperar Senha
+              </button>
+              <button class="spa-recovery-tab-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs transition-all text-on-surface-variant hover:text-on-surface font-medium cursor-pointer" id="spa-btn-tab-auth-error" onclick="AppUI.switchSpaRecoveryTab('auth-error')" type="button">
+                <span class="material-symbols-outlined text-[16px] text-error">gpp_maybe</span>
+                Simulação: Senha Incorreta
+              </button>
+              <button class="spa-recovery-tab-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs transition-all text-on-surface-variant hover:text-on-surface font-medium cursor-pointer" id="spa-btn-tab-success" onclick="AppUI.switchSpaRecoveryTab('success')" type="button">
+                <span class="material-symbols-outlined text-[16px] text-secondary">mark_email_read</span>
+                Simulação: E-mail Enviado
+              </button>
+            </nav>
+          </div>
+
+          <!-- Two Columns Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            <div class="lg:col-span-7 bg-surface-container-lowest rounded-2xl p-6 sm:p-10 shadow-xl border border-surface-container/60 flex flex-col justify-between">
+              
+              <!-- Tab 1: Recovery Form -->
+              <div class="flex flex-col flex-1" id="spa-panel-recovery">
+                <div class="space-y-2 mb-6">
+                  <h1 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
+                    Redefinir sua senha acadêmica
+                  </h1>
+                  <p class="text-sm sm:text-base text-on-surface-variant">
+                    Informe seu e-mail cadastrado e enviaremos um token de acesso para redefinir sua credencial.
+                  </p>
+                </div>
+
+                <div aria-live="assertive" class="hidden mb-4 p-4 bg-error-container text-on-error-container rounded-xl shadow-xs" id="spa-recovery-input-error-banner" role="alert">
+                  <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-error text-[22px] shrink-0">error</span>
+                    <div class="text-xs">
+                      <p class="font-bold text-sm" id="spa-recovery-error-title">Formato de e-mail inválido</p>
+                      <p id="spa-recovery-error-desc" class="mt-0.5">Por favor, insira um e-mail válido com @ e domínio.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <form class="flex flex-col gap-4 flex-1" id="form-spa-recovery" onsubmit="AppUI.handleSpaRecoverySubmit(event)">
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-sm font-semibold text-on-surface" for="spa-recovery-email">
+                      E-mail cadastrado <span aria-hidden="true" class="text-error">*</span>
+                    </label>
+                    <div class="relative">
+                      <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+                        <span class="material-symbols-outlined text-[20px]">alternate_email</span>
+                      </div>
+                      <input class="w-full pl-11 pr-10 py-3 bg-surface-container-low text-on-surface rounded-xl text-sm placeholder:text-outline border border-outline-variant/30 focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary min-h-[44px]" id="spa-recovery-email" oninput="AppUI.handleSpaRecoveryInput(this)" placeholder="estudante@universidade.br" required type="email"/>
+                      <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none" id="spa-recovery-input-status-icon"></div>
+                    </div>
+                  </div>
+
+                  <div class="p-4 bg-surface-container rounded-xl flex items-start gap-3 mt-1 text-xs text-on-surface-variant">
+                    <span class="material-symbols-outlined text-primary text-[22px] shrink-0 mt-0.5">verified_user</span>
+                    <div>
+                      <strong class="text-on-surface block font-semibold mb-0.5">Validade e Política de Uso</strong>
+                      O link de recuperação tem validade máxima de <strong>30 minutos</strong> e só pode ser utilizado uma única vez.
+                    </div>
+                  </div>
+
+                  <div class="pt-2 mt-auto">
+                    <button class="w-full py-3.5 px-6 bg-primary hover:bg-primary-container text-on-primary rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer" type="submit">
+                      <span>Enviar Link de Recuperação</span>
+                      <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    </button>
+                  </div>
+                </form>
+
+                <div class="mt-6 pt-4 bg-surface-container-low/70 p-4 rounded-xl border border-surface-container text-xs text-on-surface-variant">
+                  <h2 class="font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px] text-primary">rule</span>
+                    Critérios de Validação em Tempo Real
+                  </h2>
+                  <ul class="space-y-1.5">
+                    <li class="flex items-center gap-2" id="spa-check-domain">
+                      <span class="material-symbols-outlined text-[16px] text-outline-variant">check_circle</span>
+                      <span>Contém domínio válido com sufixo institucional ou comercial</span>
+                    </li>
+                    <li class="flex items-center gap-2" id="spa-check-format">
+                      <span class="material-symbols-outlined text-[16px] text-outline-variant">check_circle</span>
+                      <span>Presença do caractere "@" separador de destinatário</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Tab 2: Error Demonstration -->
+              <div class="hidden flex-col flex-1" id="spa-panel-auth-error">
+                <div class="mb-5 p-4 bg-error-container text-on-error-container rounded-xl shadow-xs">
+                  <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-error text-[24px] shrink-0">report</span>
+                    <div class="flex-1 text-xs">
+                      <h2 class="text-sm font-bold mb-1 text-on-error-container">
+                        E-mail ou senha incorretos
+                      </h2>
+                      <p class="leading-relaxed">
+                        Verifique suas credenciais. Restam <strong>2 tentativas adicionais</strong> antes do bloqueio temporário de 15 minutos.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-5 bg-surface-container-low rounded-xl mb-4 flex flex-col gap-4 border border-surface-container">
+                  <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-on-surface">E-mail</label>
+                    <input class="w-full px-3 py-2 bg-surface-container-lowest rounded-lg text-sm border border-outline-variant/30" readonly value="carla.santos@universidade.edu.br"/>
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-error">Senha Incorreta</label>
+                    <input class="w-full px-3 py-2 bg-error-container/20 rounded-lg text-sm ring-2 ring-error" readonly type="password" value="SenhaAntiga123!"/>
+                    <p class="text-xs text-error font-medium mt-1">Senha incorreta para esta conta.</p>
+                  </div>
+                  <button class="w-full py-2.5 px-4 bg-surface-container-highest text-on-surface rounded-xl text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer" onclick="AppUI.switchSpaRecoveryTab('recovery')" type="button">
+                    <span class="material-symbols-outlined text-[18px] text-primary">vpn_key</span>
+                    Recuperar senha deste e-mail
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tab 3: Success Screen -->
+              <div class="hidden flex-col flex-1 items-center justify-center text-center py-6" id="spa-panel-success">
+                <div class="w-16 h-16 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center mb-4 shadow-md animate-bounce">
+                  <span class="material-symbols-outlined text-[36px]">forward_to_inbox</span>
+                </div>
+                <h2 class="text-2xl text-on-surface font-extrabold mb-2">Verifique sua caixa de entrada</h2>
+                <p class="text-sm text-on-surface-variant max-w-md mx-auto mb-6">
+                  Enviamos o link de recuperação para:
+                  <span class="block font-bold text-on-surface text-base mt-2 p-2 bg-surface-container rounded-lg" id="spa-display-sent-email">estudante@universidade.br</span>
+                </p>
+                <div class="flex gap-3 w-full max-w-md">
+                  <button class="flex-1 py-3 px-4 bg-surface-container-high hover:bg-surface-container-highest text-primary text-sm rounded-xl font-semibold cursor-pointer" id="spa-btn-resend" onclick="AppUI.resendSpaEmail()" type="button">
+                    Reenviar
+                  </button>
+                  <button class="flex-1 py-3 px-4 bg-primary text-on-primary text-sm rounded-xl font-semibold cursor-pointer" onclick="AppRouter.navigate('login')" type="button">
+                    Ir para Login
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Coluna Direita: Central de Segurança -->
+            <div class="lg:col-span-5 bg-gradient-to-br from-primary via-primary-container to-surface-tint text-on-primary rounded-2xl p-6 sm:p-10 shadow-xl flex flex-col justify-between">
+              <div class="space-y-4">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-xs font-semibold tracking-wider uppercase">
+                  <span class="material-symbols-outlined text-[16px]">verified</span>
+                  Segurança Acadêmica
+                </span>
+                <h2 class="text-2xl font-bold leading-snug">
+                  Sua jornada acadêmica 100% protegida.
+                </h2>
+                <p class="text-sm text-primary-fixed leading-relaxed">
+                  Arquitetura zero-trust com criptografia ponta a ponta para que suas horas de estudo, resumos e notas permaneçam seguros.
+                </p>
+                <div class="space-y-2 pt-2 text-xs">
+                  <div class="p-3 bg-white/10 rounded-xl flex items-center gap-2.5">
+                    <span class="material-symbols-outlined text-[20px]">phonelink_lock</span>
+                    <span>Autenticação em Duas Etapas (2FA)</span>
+                  </div>
+                  <div class="p-3 bg-white/10 rounded-xl flex items-center gap-2.5">
+                    <span class="material-symbols-outlined text-[20px]">enhanced_encryption</span>
+                    <span>Criptografia AES-256 em repouso</span>
+                  </div>
+                  <div class="p-3 bg-white/10 rounded-xl flex items-center gap-2.5">
+                    <span class="material-symbols-outlined text-[20px]">hub</span>
+                    <span>Federação Acadêmica CAFe / RNP</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pt-6 border-t border-white/20 mt-6 text-xs text-primary-fixed-dim">
+                Status da Rede FocusLearn: <strong class="text-white">Operacional (99.98%)</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MOBILE FLOATING BOTTOM NAV ==================== -->
+  <nav class="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface-container-lowest/95 backdrop-blur-lg border-t border-surface-container z-40 px-3 flex items-center justify-around shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+    <a class="nav-item flex flex-col items-center justify-center gap-1 py-1 px-2 text-primary font-medium flex-1 min-h-[44px] cursor-pointer" data-path="visao-geral" href="#visao-geral">
+      <span class="material-symbols-outlined text-[20px]">dashboard</span>
+      <span class="text-[10px]">Início</span>
+    </a>
+    <a class="nav-item flex flex-col items-center justify-center gap-1 py-1 px-2 text-on-surface-variant hover:text-on-surface transition-colors flex-1 min-h-[44px] cursor-pointer" data-path="materias-cursos" href="#materias-cursos">
+      <span class="material-symbols-outlined text-[20px]">school</span>
+      <span class="text-[10px]">Matérias</span>
+    </a>
+    <a class="nav-item flex flex-col items-center justify-center gap-1 py-1 px-2 text-on-surface-variant hover:text-on-surface transition-colors flex-1 min-h-[44px] cursor-pointer" data-path="cronometro-pomodoro" href="#cronometro-pomodoro">
+      <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-[18px]">timer</span>
+      </div>
+    </a>
+    <a class="nav-item flex flex-col items-center justify-center gap-1 py-1 px-2 text-on-surface-variant hover:text-on-surface transition-colors flex-1 min-h-[44px] cursor-pointer" data-path="planejador-semanal" href="#planejador-semanal">
+      <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+      <span class="text-[10px]">Agenda</span>
+    </a>
+    <a class="nav-item flex flex-col items-center justify-center gap-1 py-1 px-2 text-on-surface-variant hover:text-on-surface transition-colors flex-1 min-h-[44px] cursor-pointer" data-path="estatisticas-metas" href="#estatisticas-metas">
+      <span class="material-symbols-outlined text-[20px]">query_stats</span>
+      <span class="text-[10px]">Metas</span>
+    </a>
+  </nav>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Modal: Nova Matéria -->
+  <div id="modal-nova-materia" class="fixed inset-0 bg-on-surface/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-surface-container-lowest rounded-2xl max-w-md w-full p-6 shadow-2xl border border-surface-container">
+      <div class="flex items-center justify-between pb-3 border-b border-surface-container mb-4">
+        <h3 class="text-lg font-bold text-on-surface">Adicionar Nova Disciplina</h3>
+        <button id="btn-close-modal-materia" class="text-outline hover:text-on-surface"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <form id="form-nova-materia" class="flex flex-col gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Código da Matéria</label>
+          <input id="materia-codigo" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" placeholder="ex: MAT-301" required>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nome da Disciplina</label>
+          <input id="materia-nome" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" placeholder="ex: Física Teórica I" required>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Professor(a)</label>
+          <input id="materia-prof" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" placeholder="ex: Prof. Fernando Costa">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Horário das Aulas</label>
+          <input id="materia-horario" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" placeholder="ex: Ter/Qui 14:00 - 16:00">
+        </div>
+        <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-surface-container">
+          <button type="submit" class="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-semibold text-sm hover:bg-primary-container">Salvar Disciplina</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Nova Sessão (Planejador) -->
+  <div id="modal-nova-sessao" class="fixed inset-0 bg-on-surface/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-surface-container-lowest rounded-2xl max-w-md w-full p-6 shadow-2xl border border-surface-container">
+      <div class="flex items-center justify-between pb-3 border-b border-surface-container mb-4">
+        <h3 class="text-lg font-bold text-on-surface">Agendar Sessão de Estudo</h3>
+        <button id="btn-close-modal-sessao" class="text-outline hover:text-on-surface"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <form id="form-nova-sessao" class="flex flex-col gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Título do Bloco</label>
+          <input id="sessao-titulo" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" placeholder="ex: Revisão Prova P1" required>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Dia da Semana</label>
+            <select id="sessao-dia" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30">
+              <option value="0">Segunda-feira</option>
+              <option value="1">Terça-feira</option>
+              <option value="2">Quarta-feira</option>
+              <option value="3">Quinta-feira</option>
+              <option value="4">Sexta-feira</option>
+              <option value="5">Sábado</option>
+              <option value="6">Domingo</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Tipo de Bloco</label>
+            <select id="sessao-tipo" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30">
+              <option value="aula">Aula</option>
+              <option value="revisao">Revisão</option>
+              <option value="pausa">Pausa</option>
+              <option value="prova">Prova / Avaliação</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Hora de Início</label>
+            <input id="sessao-inicio" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" type="number" min="8" max="18" value="14" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Hora de Fim</label>
+            <input id="sessao-fim" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" type="number" min="9" max="19" value="16" required>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Matéria Associada</label>
+          <select id="sessao-materia" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30"></select>
+        </div>
+        <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-surface-container">
+          <button type="submit" class="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-semibold text-sm hover:bg-primary-container">Agendar Sessão</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Nova Nota -->
+  <div id="modal-nova-nota" class="fixed inset-0 bg-on-surface/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-surface-container">
+      <div class="flex items-center justify-between pb-3 border-b border-surface-container mb-4">
+        <h3 class="text-lg font-bold text-on-surface">Criar Nova Anotação / Resumo</h3>
+        <button id="btn-close-modal-nota" class="text-outline hover:text-on-surface"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <form id="form-nova-nota" class="flex flex-col gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Título da Nota</label>
+          <input id="nota-titulo" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" placeholder="ex: Teorema de Green e Aplicações" required>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Disciplina</label>
+            <select id="nota-materia" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Tags (separadas por vírgula)</label>
+            <input id="nota-tags" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" placeholder="#resumo, #formulas">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant mb-1">Conteúdo (Suporta Markdown)</label>
+          <textarea id="nota-conteudo" rows="6" class="w-full bg-surface-container-low rounded-lg p-2.5 text-sm border border-outline-variant/30" placeholder="Escreva seu resumo, definições, teoremas..." required></textarea>
+        </div>
+        <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-surface-container">
+          <button type="submit" class="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-semibold text-sm hover:bg-primary-container">Salvar Anotação</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Zen Mode Fullscreen Overlay -->
+  <div id="zen-mode-overlay" class="fixed inset-0 bg-surface z-50 flex flex-col items-center justify-center p-6 hidden">
+    <button id="zen-mode-exit" class="absolute top-6 right-6 p-3 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface shadow-sm">
+      <span class="material-symbols-outlined text-[24px]">fullscreen_exit</span>
+    </button>
+    <div class="flex flex-col items-center max-w-md w-full text-center">
+      <span class="text-xs uppercase tracking-widest text-primary font-bold mb-2">Modo Zen Imersivo</span>
+      <h2 class="text-xl font-bold text-on-surface mb-6">Foco Total Sem Distrações</h2>
+      <div class="relative w-72 h-72 flex items-center justify-center mb-8">
+        <svg class="w-full h-full -rotate-90 transform drop-shadow-md" viewBox="0 0 280 280">
+          <circle class="text-surface-container" cx="140" cy="140" fill="transparent" r="120" stroke="currentColor" stroke-width="10"></circle>
+          <circle id="timer-progress-ring-zen" class="transition-all duration-1000 ease-linear text-primary" cx="140" cy="140" fill="transparent" r="120" stroke="currentColor" stroke-dasharray="753.98" stroke-dashoffset="0" stroke-linecap="round" stroke-width="10"></circle>
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span class="pomo-display text-6xl font-extrabold text-on-surface tracking-tight tabular-nums">25:00</span>
+        </div>
+      </div>
+      <button class="pomo-toggle-btn px-8 py-3.5 rounded-2xl bg-primary text-on-primary font-bold text-lg shadow-lg flex items-center gap-2">
+        <span class="pomo-icon material-symbols-outlined text-[24px]">play_arrow</span>
+        <span class="pomo-text">Iniciar Foco</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Cadastro de Estudante - FocusLearn</title>
+  
+  <!-- Google Fonts: Inter & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+  
+  <!-- Tailwind CSS with custom Design System config -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-tertiary-container": "#fffbff",
+            "tertiary-fixed": "#ffddb8",
+            "on-tertiary": "#ffffff",
+            "secondary-fixed": "#6ffbbe",
+            "on-background": "#111c2d",
+            "surface-tint": "#005ac2",
+            "surface-container": "#e7eeff",
+            "secondary-container": "#6cf8bb",
+            "on-primary-container": "#fefcff",
+            "surface": "#f9f9ff",
+            "on-primary-fixed": "#001a42",
+            "surface-variant": "#d8e3fb",
+            "primary-fixed": "#d8e2ff",
+            "primary-container": "#2170e4",
+            "outline-variant": "#c2c6d6",
+            "primary-fixed-dim": "#adc6ff",
+            "primary": "#0058be",
+            "surface-container-high": "#dee8ff",
+            "inverse-surface": "#263143",
+            "secondary": "#006c49",
+            "tertiary-fixed-dim": "#ffb95f",
+            "surface-container-highest": "#d8e3fb",
+            "outline": "#727785",
+            "tertiary-container": "#a36700",
+            "on-tertiary-fixed-variant": "#653e00",
+            "on-secondary": "#ffffff",
+            "on-error": "#ffffff",
+            "tertiary": "#825100",
+            "on-surface-variant": "#424754",
+            "secondary-fixed-dim": "#4edea3",
+            "inverse-on-surface": "#ecf1ff",
+            "on-primary-fixed-variant": "#004395",
+            "error": "#ba1a1a",
+            "on-secondary-container": "#00714d",
+            "surface-container-low": "#f0f3ff",
+            "surface-dim": "#cfdaf2",
+            "surface-bright": "#f9f9ff",
+            "on-primary": "#ffffff",
+            "background": "#f9f9ff",
+            "on-error-container": "#93000a",
+            "on-secondary-fixed": "#002113",
+            "on-secondary-fixed-variant": "#005236",
+            "surface-container-lowest": "#ffffff",
+            "error-container": "#ffdad6",
+            "on-surface": "#111c2d",
+            "inverse-primary": "#adc6ff",
+            "on-tertiary-fixed": "#2a1700"
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",
+            lg: "0.75rem",
+            xl: "1rem",
+            full: "9999px"
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :focus-visible {
+      outline: 2px solid #0058be !important;
+      outline-offset: 2px !important;
+    }
+    html.dark {
+      background-color: #0b1120 !important;
+      color: #f8fafc !important;
+    }
+    html.dark body {
+      background-color: #0b1120 !important;
+      color: #f8fafc !important;
+    }
+    html.dark .bg-surface-container-lowest {
+      background-color: #131d31 !important;
+      color: #f8fafc !important;
+    }
+    html.dark .bg-surface-container-low {
+      background-color: #19253e !important;
+    }
+    html.dark .bg-surface-container {
+      background-color: #223253 !important;
+    }
+    html.dark .text-on-surface {
+      color: #f8fafc !important;
+    }
+    html.dark .text-on-surface-variant {
+      color: #94a3b8 !important;
+    }
+    html.dark input, html.dark select {
+      background-color: #19253e !important;
+      color: #f8fafc !important;
+      border-color: #334155 !important;
+    }
+    html.dark input::placeholder {
+      color: #64748b !important;
+    }
+    html.dark .border-surface-container-high {
+      border-color: #334155 !important;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased font-sans min-h-screen flex flex-col justify-between selection:bg-primary-fixed selection:text-on-primary-fixed transition-colors duration-200">
+
+  <!-- Toast Notification -->
+  <div id="cadastro-toast" aria-live="polite" class="fixed top-6 right-6 z-50 transform translate-y-[-20px] opacity-0 pointer-events-none transition-all duration-300 ease-out flex items-center gap-3 bg-surface-container-lowest border border-surface-container-high px-4 py-3 rounded-xl shadow-xl">
+    <div class="w-8 h-8 rounded-lg bg-secondary/15 text-secondary flex items-center justify-center shrink-0">
+      <span class="material-symbols-outlined text-[20px]" id="toast-icon">check_circle</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-xs font-semibold text-primary" id="toast-title">Notificação</span>
+      <span class="text-sm text-on-surface font-medium" id="toast-message">Cadastro realizado com sucesso!</span>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="w-full bg-surface/80 backdrop-blur-xl border-b border-surface-container shadow-[0_1px_8px_rgba(0,0,0,0.04)] sticky top-0 z-40">
+    <div class="h-16 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <a class="flex items-center gap-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg group" href="login.html">
+        <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-sm transition-transform group-hover:scale-105">
+          <span class="material-symbols-outlined text-[22px]">school</span>
+        </div>
+        <span class="text-xl font-bold tracking-tight text-primary">Focus<span class="text-on-surface">Learn</span></span>
+      </a>
+
+      <div class="flex items-center gap-3">
+        <a class="text-on-surface-variant font-medium text-sm hover:text-on-surface transition-colors py-2 px-3 rounded-lg" href="index.html#configuracoes-ajuda">
+          Precisa de ajuda?
+        </a>
+        <button aria-label="Alternar tema de cor" onclick="toggleDarkMode()" class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors" type="button">
+          <span class="material-symbols-outlined text-[20px]" id="theme-icon">dark_mode</span>
+        </button>
+        <a href="login.html" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container text-primary font-semibold text-xs hover:bg-surface-container-high transition-colors">
+          <span class="material-symbols-outlined text-[16px]">login</span>
+          <span>Entrar</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="w-full flex-1 flex flex-col justify-center items-center py-8">
+    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        
+        <!-- Coluna Esquerda: Formulário de Cadastro -->
+        <section class="lg:col-span-7 bg-surface-container-lowest rounded-2xl shadow-xl border border-surface-container/60 p-6 sm:p-10 flex flex-col justify-between">
+          <div class="w-full">
+            <!-- Cabeçalho do Card -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-primary font-semibold text-xs uppercase tracking-wide">
+                <span class="material-symbols-outlined text-[14px]">how_to_reg</span>
+                NOVA CONTA ACADÊMICA
+              </span>
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-semibold text-xs">
+                <span class="material-symbols-outlined text-[14px]">school</span>
+                Universitário / Pré-Vestibular
+              </span>
+            </div>
+
+            <div class="space-y-2 mb-8">
+              <h1 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
+                Crie sua conta no FocusLearn 🚀
+              </h1>
+              <p class="text-sm sm:text-base text-on-surface-variant">
+                Comece a organizar suas matérias, cronometrar ciclos de estudo e alcançar suas melhores notas.
+              </p>
+            </div>
+
+            <!-- Formulário Principal -->
+            <form class="space-y-5" id="signup-form" onsubmit="handleSignupSubmit(event)">
+              <!-- Nome Completo -->
+              <div>
+                <label class="block text-sm font-semibold text-on-surface mb-1.5" for="full-name">
+                  Nome Completo <span aria-hidden="true" class="text-error">*</span>
+                </label>
+                <div class="relative flex items-center">
+                  <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant pointer-events-none text-[20px]">
+                    person
+                  </span>
+                  <input aria-required="true" class="w-full bg-surface-container-low pl-11 pr-4 py-3 rounded-xl text-sm font-medium text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary border border-outline-variant/30 transition-all duration-200 min-h-[44px]" id="full-name" name="fullName" placeholder="Ex.: Lucas Andrade Silva" required type="text"/>
+                </div>
+              </div>
+
+              <!-- E-mail Institucional ou Pessoal -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label class="block text-sm font-semibold text-on-surface" for="email">
+                    E-mail Institucional ou Pessoal <span aria-hidden="true" class="text-error">*</span>
+                  </label>
+                  <span class="text-xs font-semibold text-secondary flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">verified</span>
+                    Vantagem para e-mail .edu
+                  </span>
+                </div>
+                <div class="relative flex items-center">
+                  <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant pointer-events-none text-[20px]">
+                    alternate_email
+                  </span>
+                  <input aria-describedby="email-hint" aria-required="true" class="w-full bg-surface-container-low pl-11 pr-4 py-3 rounded-xl text-sm font-medium text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary border border-outline-variant/30 transition-all duration-200 min-h-[44px]" id="email" name="email" placeholder="nome.sobrenome@universidade.edu.br" required type="email"/>
+                </div>
+                <p class="text-xs text-on-surface-variant mt-1.5" id="email-hint">
+                  Preferencialmente utilize seu e-mail acadêmico para desbloquear grupos exclusivos da sua turma.
+                </p>
+              </div>
+
+              <!-- Curso / Graduação -->
+              <div>
+                <label class="block text-sm font-semibold text-on-surface mb-1.5" for="academic-course">
+                  Curso / Área de Estudo <span aria-hidden="true" class="text-error">*</span>
+                </label>
+                <div class="relative flex items-center">
+                  <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant pointer-events-none text-[20px]">
+                    menu_book
+                  </span>
+                  <select aria-required="true" class="w-full bg-surface-container-low pl-11 pr-10 py-3 rounded-xl text-sm font-medium text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary border border-outline-variant/30 appearance-none transition-all duration-200 min-h-[44px]" id="academic-course" name="course" required>
+                    <option disabled selected value="">Selecione seu curso ou objetivo acadêmico</option>
+                    <option value="Engenharia de Software / TI">Engenharia de Software / TI</option>
+                    <option value="Medicina">Medicina</option>
+                    <option value="Direito">Direito</option>
+                    <option value="Administração & Negócios">Administração & Negócios</option>
+                    <option value="Psicologia">Psicologia</option>
+                    <option value="Pré-Vestibular / ENEM">Pré-Vestibular / ENEM</option>
+                    <option value="Concursos Públicos">Concursos Públicos</option>
+                    <option value="Outra Graduação / Pós">Outra Graduação / Pós-Graduação</option>
+                  </select>
+                  <span class="material-symbols-outlined absolute right-3.5 text-on-surface-variant pointer-events-none text-[20px]">
+                    unfold_more
+                  </span>
+                </div>
+              </div>
+
+              <!-- Senha com Medidor de Força -->
+              <div>
+                <label class="block text-sm font-semibold text-on-surface mb-1.5" for="password">
+                  Senha Segura <span aria-hidden="true" class="text-error">*</span>
+                </label>
+                <div class="relative flex items-center">
+                  <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant pointer-events-none text-[20px]">
+                    lock
+                  </span>
+                  <input aria-describedby="password-rules" aria-required="true" class="w-full bg-surface-container-low pl-11 pr-12 py-3 rounded-xl text-sm font-medium text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary border border-outline-variant/30 transition-all duration-200 min-h-[44px]" id="password" name="password" placeholder="Crie uma senha forte" required type="password"/>
+                  <button aria-label="Exibir ou ocultar senha digitada" class="absolute right-2 p-2 text-on-surface-variant hover:text-on-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg transition-colors" id="toggle-pwd" type="button">
+                    <span class="material-symbols-outlined text-[20px]" id="eye-icon">visibility</span>
+                  </button>
+                </div>
+
+                <!-- Barra do Medidor de Força -->
+                <div class="mt-2.5 space-y-1.5">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-on-surface-variant">Nível de segurança:</span>
+                    <span class="text-xs font-semibold text-outline" id="strength-label">Aguardando senha</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+                    <div class="h-full w-0 bg-outline rounded-full transition-all duration-300" id="strength-bar"></div>
+                  </div>
+                </div>
+
+                <!-- Requisitos da Senha com Checkmarks dinâmicos -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-2" id="password-rules">
+                  <div class="flex items-center gap-1.5 text-outline text-xs transition-colors" id="req-length">
+                    <span class="material-symbols-outlined text-[16px] text-outline" id="icon-len">radio_button_unchecked</span>
+                    <span>Mínimo 8 caracteres</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-outline text-xs transition-colors" id="req-upper">
+                    <span class="material-symbols-outlined text-[16px] text-outline" id="icon-up">radio_button_unchecked</span>
+                    <span>Uma letra maiúscula</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-outline text-xs transition-colors" id="req-num">
+                    <span class="material-symbols-outlined text-[16px] text-outline" id="icon-num">radio_button_unchecked</span>
+                    <span>Pelo menos um número</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-outline text-xs transition-colors" id="req-spec">
+                    <span class="material-symbols-outlined text-[16px] text-outline" id="icon-spec">radio_button_unchecked</span>
+                    <span>Um caractere especial (@$!%*?)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Confirmação de Senha -->
+              <div>
+                <label class="block text-sm font-semibold text-on-surface mb-1.5" for="confirm-password">
+                  Confirme a Senha <span aria-hidden="true" class="text-error">*</span>
+                </label>
+                <div class="relative flex items-center">
+                  <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant pointer-events-none text-[20px]">
+                    lock_clock
+                  </span>
+                  <input aria-required="true" class="w-full bg-surface-container-low pl-11 pr-12 py-3 rounded-xl text-sm font-medium text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary border border-outline-variant/30 transition-all duration-200 min-h-[44px]" id="confirm-password" name="confirmPassword" placeholder="Repita sua senha" required type="password"/>
+                  <div class="absolute right-3.5 flex items-center text-outline-variant pointer-events-none" id="match-indicator">
+                    <span class="material-symbols-outlined text-[20px]" id="match-icon">check_circle</span>
+                  </div>
+                </div>
+                <p class="hidden text-xs text-error mt-1.5 font-medium" id="match-hint">
+                  As senhas informadas não coincidem.
+                </p>
+              </div>
+
+              <!-- Checkbox de Aceite de Termos -->
+              <div class="pt-1">
+                <label class="flex items-start gap-2.5 cursor-pointer group">
+                  <input aria-required="true" class="mt-1 w-4 h-4 rounded text-primary bg-surface-container-low focus:ring-2 focus:ring-primary focus:ring-offset-1 accent-primary transition-colors cursor-pointer" id="terms" name="terms" required type="checkbox"/>
+                  <span class="text-xs text-on-surface-variant leading-relaxed">
+                    Concordo expressamente com os 
+                    <a class="text-primary font-medium underline hover:text-primary-container transition-colors" href="index.html#configuracoes-ajuda">Termos de Serviço</a> 
+                    e reconheço o tratamento de dados segundo a 
+                    <a class="text-primary font-medium underline hover:text-primary-container transition-colors" href="index.html#configuracoes-ajuda">Política de Privacidade & LGPD</a>.
+                  </span>
+                </label>
+              </div>
+
+              <!-- CTA Principal -->
+              <div class="pt-2">
+                <button class="w-full bg-primary hover:bg-primary-container text-on-primary py-3.5 px-6 rounded-xl font-semibold shadow-md hover:shadow-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/40 transform active:scale-[0.99] transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer" type="submit" id="btn-submit-signup">
+                  <span>Criar Minha Conta Grátis</span>
+                  <span class="material-symbols-outlined text-[22px]">arrow_forward</span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Divisor SSO -->
+            <div class="relative my-7">
+              <div aria-hidden="true" class="absolute inset-0 flex items-center">
+                <div class="w-full h-px bg-surface-container-high"></div>
+              </div>
+              <div class="relative flex justify-center">
+                <span class="px-4 bg-surface-container-lowest text-xs font-semibold text-outline uppercase tracking-wider">
+                  OU CADASTRE-SE COM
+                </span>
+              </div>
+            </div>
+
+            <!-- Botões SSO -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button onclick="handleSSOSignup('Google Estudantil')" class="flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary border border-surface-container" type="button">
+                <svg aria-hidden="true" class="w-5 h-5" viewBox="0 0 24 24">
+                  <path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z" fill="#4285F4"></path>
+                  <path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z" fill="#34A853"></path>
+                  <path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z" fill="#FBBC05"></path>
+                  <path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335"></path>
+                </svg>
+                <span>Google Estudantil</span>
+              </button>
+              <button onclick="handleSSOSignup('Portal CAFe / RNP')" class="flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary border border-surface-container" type="button">
+                <span class="material-symbols-outlined text-primary text-[20px]">account_balance</span>
+                <span>Portal CAFe / RNP</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Rodapé do Formulário -->
+          <div class="pt-8 text-center border-t border-surface-container mt-6">
+            <p class="text-sm text-on-surface-variant">
+              Já possui uma conta ativa? 
+              <a class="text-primary font-bold hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded" href="login.html">
+                Faça login aqui
+              </a>
+            </p>
+          </div>
+        </section>
+
+        <!-- Coluna Direita: Painel Inspirador / Social Proof -->
+        <section class="lg:col-span-5 bg-gradient-to-br from-primary via-primary-container to-[#003882] rounded-2xl shadow-xl p-8 sm:p-10 text-on-primary flex flex-col justify-between relative overflow-hidden">
+          <!-- Elementos de iluminação suave em background -->
+          <div aria-hidden="true" class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
+          <div aria-hidden="true" class="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-secondary-fixed/20 blur-3xl pointer-events-none"></div>
+
+          <div class="relative z-10 space-y-6">
+            <!-- Selo de Comunidade Ativa -->
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-on-primary text-xs font-semibold tracking-wide shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse"></span>
+              JUNTE-SE A +25.000 ESTUDANTES
+            </div>
+
+            <!-- Título Heroico da Coluna -->
+            <div class="space-y-3">
+              <h2 class="text-2xl sm:text-3xl font-extrabold text-white leading-tight tracking-tight">
+                Transforme horas dispersas em aprovações reais.
+              </h2>
+              <p class="text-sm sm:text-base text-primary-fixed leading-relaxed">
+                O FocusLearn une neurociência aplicada e rotinas de alta retenção para você dominar matérias complexas com menos ansiedade.
+              </p>
+            </div>
+
+            <!-- Lista de Vantagens com Ícones -->
+            <ul class="space-y-4 pt-2" role="list">
+              <li class="flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 text-secondary-fixed shadow-inner">
+                  <span class="material-symbols-outlined text-[24px]">timer</span>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold text-white">Cronômetro Pomodoro Inteligente</h3>
+                  <p class="text-xs text-primary-fixed-dim mt-0.5">Registro automático de sessões líquidas, sons sintetizados e pausas restaurativas.</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 text-secondary-fixed shadow-inner">
+                  <span class="material-symbols-outlined text-[24px]">event_available</span>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold text-white">Planejador Sincronizado</h3>
+                  <p class="text-xs text-primary-fixed-dim mt-0.5">Grade horária semanal conectada com datas de provas, entregas e simulados.</p>
+                </div>
+              </li>
+              <li class="flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 text-secondary-fixed shadow-inner">
+                  <span class="material-symbols-outlined text-[24px]">groups</span>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold text-white">Comunidade & Salas de Foco</h3>
+                  <p class="text-xs text-primary-fixed-dim mt-0.5">Estude em tempo real com colegas do mesmo curso e compartilhe resumos.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Prova Social Flutuante (Card de Depoimento) -->
+          <div class="relative z-10 pt-8 mt-6 border-t border-white/20">
+            <div class="p-4 rounded-xl bg-surface-container-lowest/15 backdrop-blur-lg shadow-lg space-y-2">
+              <div class="flex items-center gap-3">
+                <img class="w-11 h-11 rounded-full object-cover shadow-sm ring-2 ring-white/30" alt="Lucas Andrade" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1IE3YCSYWZd8JeeMgajCGu-8o9-yWqnVIWoC9DQciD9gN56wo_K9DV-B9oDy7mFxgXKOGL-kW0tshYg-Ck2evLJWdu0Ucw_blMjk37C_2PRmL3yi-MD-zERA63mN2n3enazS3F_fRKusdRDG_ZZp7SKp_dupHN6RyN3lfiPi_eb8p7GH2WzV4mljnS0Gv1RtKRUqeLWDg8FePNamXQQrBa3xF6kFn_uvQ1dzJR3BL"/>
+                <div>
+                  <div class="text-sm font-bold text-white leading-snug">Lucas Andrade</div>
+                  <div class="text-xs text-secondary-fixed font-medium">Medicina • USP Pinheiros</div>
+                </div>
+              </div>
+              <p class="text-xs text-primary-fixed italic leading-relaxed">
+                “O FocusLearn aumentou meu rendimento semanal em mais de 40% logo no primeiro mês. O cronômetro integrado aos ciclos de revisão evitou o esgotamento antes da prova de anatomia.”
+              </p>
+            </div>
+
+            <!-- Indicador de Desempenho / Selo Inferior -->
+            <div class="mt-4 flex items-center justify-between text-xs text-primary-fixed-dim">
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-secondary-fixed text-[18px]">verified_user</span>
+                <span>99.4% satisfação acadêmica</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-tertiary-fixed text-[16px]">star</span>
+                <span class="text-white font-semibold">4.9/5.0</span>
+                <span class="text-white/60">(4.8k avaliações)</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full bg-surface-container-lowest/80 backdrop-blur-sm py-6 border-t border-surface-container">
+    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="font-medium">© 2025 FocusLearn Tecnologia Educacional.</span>
+        <span class="hidden md:inline text-outline-variant">•</span>
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-semibold text-[11px]">
+          <span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
+          WCAG 2.1 AA Compliant
+        </span>
+      </div>
+      <div class="flex flex-wrap items-center gap-5">
+        <a class="hover:text-primary transition-colors" href="index.html#configuracoes-ajuda">Termos de Serviço</a>
+        <a class="hover:text-primary transition-colors" href="index.html#configuracoes-ajuda">Privacidade & LGPD</a>
+        <a class="hover:text-primary transition-colors" href="index.html#configuracoes-ajuda">Acessibilidade</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts Interativos -->
+  <script>
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      const icon = document.getElementById('theme-icon');
+      if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+      try {
+        const settings = JSON.parse(localStorage.getItem('focuslearn_settings') || '{}');
+        settings.theme = isDark ? 'dark' : 'light';
+        localStorage.setItem('focuslearn_settings', JSON.stringify(settings));
+      } catch (e) {}
+    }
+
+    function initTheme() {
+      let isDark = false;
+      try {
+        const settings = JSON.parse(localStorage.getItem('focuslearn_settings') || '{}');
+        if (settings.theme === 'dark') isDark = true;
+      } catch (e) {}
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        const icon = document.getElementById('theme-icon');
+        if (icon) icon.textContent = 'light_mode';
+      }
+    }
+
+    function showToast(title, msg, icon = 'check_circle') {
+      const toast = document.getElementById('cadastro-toast');
+      document.getElementById('toast-title').textContent = title;
+      document.getElementById('toast-message').textContent = msg;
+      document.getElementById('toast-icon').textContent = icon;
+      toast.classList.remove('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+      }, 3500);
+    }
+
+    (function initFocusLearnRegistration() {
+      const pwdInput = document.getElementById('password');
+      const toggleBtn = document.getElementById('toggle-pwd');
+      const eyeIcon = document.getElementById('eye-icon');
+      const strengthBar = document.getElementById('strength-bar');
+      const strengthLabel = document.getElementById('strength-label');
+
+      const confirmInput = document.getElementById('confirm-password');
+      const matchIcon = document.getElementById('match-icon');
+      const matchHint = document.getElementById('match-hint');
+
+      const reqLength = document.getElementById('req-length');
+      const reqUpper = document.getElementById('req-upper');
+      const reqNum = document.getElementById('req-num');
+      const reqSpec = document.getElementById('req-spec');
+
+      const iconLen = document.getElementById('icon-len');
+      const iconUp = document.getElementById('icon-up');
+      const iconNum = document.getElementById('icon-num');
+      const iconSpec = document.getElementById('icon-spec');
+
+      // Alternar visibilidade da senha
+      if (toggleBtn && pwdInput) {
+        toggleBtn.addEventListener('click', () => {
+          const isPassword = pwdInput.type === 'password';
+          pwdInput.type = isPassword ? 'text' : 'password';
+          eyeIcon.textContent = isPassword ? 'visibility_off' : 'visibility';
+        });
+      }
+
+      function updateRule(elem, iconElem, isValid) {
+        if (isValid) {
+          elem.classList.remove('text-outline');
+          elem.classList.add('text-secondary', 'font-medium');
+          iconElem.textContent = 'check_circle';
+          iconElem.classList.remove('text-outline');
+          iconElem.classList.add('text-secondary');
+        } else {
+          elem.classList.remove('text-secondary', 'font-medium');
+          elem.classList.add('text-outline');
+          iconElem.textContent = 'radio_button_unchecked';
+          iconElem.classList.remove('text-secondary');
+          iconElem.classList.add('text-outline');
+        }
+      }
+
+      function checkPasswordStrength(val) {
+        const hasLength = val.length >= 8;
+        const hasUpper = /[A-Z]/.test(val);
+        const hasNum = /[0-9]/.test(val);
+        const hasSpec = /[^A-Za-z0-9]/.test(val);
+
+        updateRule(reqLength, iconLen, hasLength);
+        updateRule(reqUpper, iconUp, hasUpper);
+        updateRule(reqNum, iconNum, hasNum);
+        updateRule(reqSpec, iconSpec, hasSpec);
+
+        let score = 0;
+        if (hasLength) score += 1;
+        if (hasUpper) score += 1;
+        if (hasNum) score += 1;
+        if (hasSpec) score += 1;
+
+        if (!val) {
+          strengthBar.style.width = '0%';
+          strengthBar.className = 'h-full w-0 bg-outline rounded-full transition-all duration-300';
+          strengthLabel.textContent = 'Aguardando senha';
+          strengthLabel.className = 'text-xs font-semibold text-outline';
+          return score;
+        }
+
+        if (score <= 1) {
+          strengthBar.style.width = '25%';
+          strengthBar.className = 'h-full bg-error rounded-full transition-all duration-300';
+          strengthLabel.textContent = 'Fraca';
+          strengthLabel.className = 'text-xs font-semibold text-error';
+        } else if (score === 2 || score === 3) {
+          strengthBar.style.width = '65%';
+          strengthBar.className = 'h-full bg-tertiary-container rounded-full transition-all duration-300';
+          strengthLabel.textContent = 'Média';
+          strengthLabel.className = 'text-xs font-semibold text-tertiary';
+        } else if (score === 4) {
+          strengthBar.style.width = '100%';
+          strengthBar.className = 'h-full bg-secondary rounded-full transition-all duration-300';
+          strengthLabel.textContent = 'Forte (Excelente)';
+          strengthLabel.className = 'text-xs font-semibold text-secondary';
+        }
+        return score;
+      }
+
+      function validateMatch() {
+        const pVal = pwdInput ? pwdInput.value : '';
+        const cVal = confirmInput ? confirmInput.value : '';
+
+        if (!cVal) {
+          matchIcon.classList.remove('text-secondary', 'text-error');
+          matchIcon.classList.add('text-outline-variant');
+          matchHint.classList.add('hidden');
+          return true;
+        }
+
+        if (pVal === cVal) {
+          matchIcon.classList.remove('text-outline-variant', 'text-error');
+          matchIcon.classList.add('text-secondary');
+          matchHint.classList.add('hidden');
+          return true;
+        } else {
+          matchIcon.classList.remove('text-outline-variant', 'text-secondary');
+          matchIcon.classList.add('text-error');
+          matchHint.classList.remove('hidden');
+          return false;
+        }
+      }
+
+      if (pwdInput) {
+        pwdInput.addEventListener('input', (e) => {
+          checkPasswordStrength(e.target.value);
+          if (confirmInput && confirmInput.value) {
+            validateMatch();
+          }
+        });
+      }
+
+      if (confirmInput) {
+        confirmInput.addEventListener('input', validateMatch);
+      }
+    })();
+
+    function handleSignupSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('full-name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const course = document.getElementById('academic-course').value;
+      const pwd = document.getElementById('password').value;
+      const confirmPwd = document.getElementById('confirm-password').value;
+      const terms = document.getElementById('terms').checked;
+
+      if (!name || !email || !course || !pwd) {
+        showToast('Campos obrigatórios', 'Por favor preencha todos os campos obrigatórios.', 'error');
+        return;
+      }
+
+      if (pwd !== confirmPwd) {
+        showToast('Senhas não coincidem', 'Por favor confirme a mesma senha nos dois campos.', 'error');
+        return;
+      }
+
+      if (!terms) {
+        showToast('Termos de Serviço', 'Você precisa aceitar os termos de serviço para prosseguir.', 'warning');
+        return;
+      }
+
+      // Generate realistic student registration
+      const regYear = new Date().getFullYear();
+      const regId = `${regYear}.1.FL-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      // Save new student user to localStorage FocusStore
+      const newUser = {
+        name: name,
+        email: email,
+        course: course,
+        university: email.includes('.edu') ? 'Universidade Parceira (.edu)' : 'Universidade Federal / Estadual',
+        semester: '1º Semestre',
+        registration: regId,
+        bio: `Estudante de ${course}. Conta criada no FocusLearn.`,
+        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA1IE3YCSYWZd8JeeMgajCGu-8o9-yWqnVIWoC9DQciD9gN56wo_K9DV-B9oDy7mFxgXKOGL-kW0tshYg-Ck2evLJWdu0Ucw_blMjk37C_2PRmL3yi-MD-zERA63mN2n3enazS3F_fRKusdRDG_ZZp7SKp_dupHN6RyN3lfiPi_eb8p7GH2WzV4mljnS0Gv1RtKRUqeLWDg8FePNamXQQrBa3xF6kFn_uvQ1dzJR3BL',
+        cr: 9.2,
+        streak: 1,
+        dailyGoalHours: 4.0,
+        pomoMinutes: 25,
+        soundEnabled: true,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+      };
+
+      localStorage.setItem('focuslearn_user', JSON.stringify(newUser));
+      localStorage.setItem('focuslearn_auth', JSON.stringify({ loggedIn: true, email: email, timestamp: Date.now() }));
+
+      showToast('Conta Criada!', `Bem-vindo(a), ${name}! Redirecionando para seu painel...`);
+      setTimeout(() => {
+        window.location.href = 'index.html#visao-geral';
+      }, 1500);
+    }
+
+    function handleSSOSignup(provider) {
+      showToast('Cadastro via ' + provider, 'Conectando ao sistema de identidade institucional...', 'sync');
+      setTimeout(() => {
+        const newUser = {
+          name: 'Lucas Andrade Silva',
+          email: 'lucas.andrade@universidade.edu.br',
+          course: 'Engenharia de Software / TI',
+          university: 'Portal CAFe / RNP',
+          semester: '1º Semestre',
+          registration: '2025.1.SSO-7712',
+          cr: 9.0,
+          streak: 1,
+          dailyGoalHours: 4.5,
+          pomoMinutes: 25
+        };
+        localStorage.setItem('focuslearn_user', JSON.stringify(newUser));
+        localStorage.setItem('focuslearn_auth', JSON.stringify({ loggedIn: true, provider: provider, timestamp: Date.now() }));
+        window.location.href = 'index.html#visao-geral';
+      }, 1400);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+    });
+  </script>
+</body>
+</html>

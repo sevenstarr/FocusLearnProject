@@ -1,0 +1,318 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny catch-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ==================== PRIMITIVES ====================
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isVerifiedOwner(userId) {
+      return isOwner(userId) && isEmailVerified();
+    }
+
+    // ==================== ENTITY VALIDATORS ====================
+    function isValidUserProfile(data) {
+      return data.keys().hasAll([
+        'ownerId', 'name', 'email', 'course', 'university', 'semester',
+        'registration', 'bio', 'dailyGoalHours', 'pomoMinutes',
+        'streak', 'recordStreak', 'theme', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'ownerId', 'name', 'email', 'course', 'university', 'semester',
+        'registration', 'bio', 'dailyGoalHours', 'pomoMinutes',
+        'streak', 'recordStreak', 'theme', 'createdAt', 'updatedAt'
+      ])
+      && data.ownerId is string && isValidId(data.ownerId) && data.ownerId == request.auth.uid
+      && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+      && data.email is string && data.email.size() >= 3 && data.email.size() <= 180
+      && data.course is string && data.course.size() <= 120
+      && data.university is string && data.university.size() <= 140
+      && data.semester is string && data.semester.size() <= 40
+      && data.registration is string && data.registration.size() <= 40
+      && data.bio is string && data.bio.size() <= 500
+      && data.dailyGoalHours is number && data.dailyGoalHours >= 0.5 && data.dailyGoalHours <= 24
+      && data.pomoMinutes is number && data.pomoMinutes >= 5 && data.pomoMinutes <= 120
+      && data.streak is number && data.streak >= 0 && data.streak <= 10000
+      && data.recordStreak is number && data.recordStreak >= 0 && data.recordStreak <= 10000
+      && data.theme in ['light', 'dark']
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidSubject(data) {
+      return data.keys().hasAll([
+        'ownerId', 'code', 'name', 'professor', 'schedule', 'credits',
+        'p1', 'p2', 'hoursStudied', 'status', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'ownerId', 'code', 'name', 'professor', 'schedule', 'credits',
+        'p1', 'p2', 'hoursStudied', 'status', 'createdAt', 'updatedAt'
+      ])
+      && data.ownerId is string && isValidId(data.ownerId) && data.ownerId == request.auth.uid
+      && data.code is string && data.code.size() >= 1 && data.code.size() <= 24
+      && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+      && data.professor is string && data.professor.size() <= 100
+      && data.schedule is string && data.schedule.size() <= 80
+      && data.credits is number && data.credits >= 0 && data.credits <= 40
+      && data.p1 is number && data.p1 >= 0 && data.p1 <= 10
+      && data.p2 is number && data.p2 >= 0 && data.p2 <= 10
+      && data.hoursStudied is number && data.hoursStudied >= 0 && data.hoursStudied <= 5000
+      && data.status in ['active', 'completed', 'archived']
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidQuickTask(data) {
+      return data.keys().hasAll(['ownerId', 'title', 'completed', 'subjectId', 'createdAt', 'updatedAt'])
+      && data.keys().hasOnly(['ownerId', 'title', 'completed', 'subjectId', 'createdAt', 'updatedAt'])
+      && data.ownerId is string && isValidId(data.ownerId) && data.ownerId == request.auth.uid
+      && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+      && data.completed is bool
+      && data.subjectId is string && data.subjectId.size() <= 128
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidPomodoroSession(data) {
+      return data.keys().hasAll(['ownerId', 'subjectId', 'subjectName', 'mode', 'durationMinutes', 'dateKey', 'createdAt'])
+      && data.keys().hasOnly(['ownerId', 'subjectId', 'subjectName', 'mode', 'durationMinutes', 'dateKey', 'createdAt'])
+      && data.ownerId is string && isValidId(data.ownerId) && data.ownerId == request.auth.uid
+      && data.subjectId is string && data.subjectId.size() <= 128
+      && data.subjectName is string && data.subjectName.size() >= 1 && data.subjectName.size() <= 120
+      && data.mode in ['pomodoro25', 'ultra50', 'shortBreak', 'longBreak']
+      && data.durationMinutes is number && data.durationMinutes >= 1 && data.durationMinutes <= 240
+      && data.dateKey is string && data.dateKey.size() >= 8 && data.dateKey.size() <= 20
+      && data.createdAt is timestamp;
+    }
+
+    function isValidScheduleBlock(data) {
+      return data.keys().hasAll([
+        'ownerId', 'title', 'dayIndex', 'startHour', 'endHour',
+        'type', 'subjectId', 'subjectName', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'ownerId', 'title', 'dayIndex', 'startHour', 'endHour',
+        'type', 'subjectId', 'subjectName', 'createdAt', 'updatedAt'
+      ])
+      && data.ownerId is string && isValidId(data.ownerId) && data.ownerId == request.auth.uid
+      && data.title is string && data.title.size() >= 1 && data.title.size() <= 120
+      && data.dayIndex is number && data.dayIndex >= 0 && data.dayIndex <= 6
+      && data.startHour is number && data.startHour >= 6 && data.startHour <= 23
+      && data.endHour is number && data.endHour >= 7 && data.endHour <= 24 && data.endHour > data.startHour
+      && data.type in ['aula', 'revisao', 'pausa', 'prova']
+      && data.subjectId is string && data.subjectId.size() <= 128
+      && data.subjectName is string && data.subjectName.size() <= 120
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidStudyNote(data) {
+      return data.keys().hasAll(['ownerId', 'title', 'subjectId', 'subjectName', 'tags', 'content', 'createdAt', 'updatedAt'])
+      && data.keys().hasOnly(['ownerId', 'title', 'subjectId', 'subjectName', 'tags', 'content', 'createdAt', 'updatedAt'])
+      && data.ownerId is string && isValidId(data.ownerId) && data.ownerId == request.auth.uid
+      && data.title is string && data.title.size() >= 1 && data.title.size() <= 160
+      && data.subjectId is string && data.subjectId.size() <= 128
+      && data.subjectName is string && data.subjectName.size() <= 120
+      && data.tags is list && data.tags.size() <= 10 && (data.tags.size() == 0 || (data.tags[0] is string && data.tags[0].size() <= 40))
+      && data.content is string && data.content.size() >= 1 && data.content.size() <= 20000
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidSemesterGoal(data) {
+      return data.keys().hasAll([
+        'ownerId', 'title', 'category', 'currentValue', 'targetValue',
+        'unit', 'deadline', 'status', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'ownerId', 'title', 'category', 'currentValue', 'targetValue',
+        'unit', 'deadline', 'status', 'createdAt', 'updatedAt'
+      ])
+      && data.ownerId is string && isValidId(data.ownerId) && data.ownerId == request.auth.uid
+      && data.title is string && data.title.size() >= 1 && data.title.size() <= 140
+      && data.category is string && data.category.size() >= 1 && data.category.size() <= 60
+      && data.currentValue is number && data.currentValue >= 0 && data.currentValue <= 100000
+      && data.targetValue is number && data.targetValue >= 0.1 && data.targetValue <= 100000
+      && data.unit is string && data.unit.size() >= 1 && data.unit.size() <= 24
+      && data.deadline is string && data.deadline.size() <= 40
+      && data.status in ['active', 'completed']
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidCommunityMessage(data) {
+      return data.keys().hasAll(['authorId', 'authorName', 'authorCourse', 'channel', 'text', 'createdAt'])
+      && data.keys().hasOnly(['authorId', 'authorName', 'authorCourse', 'channel', 'text', 'createdAt'])
+      && data.authorId is string && isValidId(data.authorId) && data.authorId == request.auth.uid
+      && data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 100
+      && data.authorCourse is string && data.authorCourse.size() <= 100
+      && data.channel in ['calculo', 'algoritmos', 'geral']
+      && data.text is string && data.text.size() >= 1 && data.text.size() <= 1000
+      && data.createdAt is timestamp;
+    }
+
+    // ==================== COLLECTION RULES ====================
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+      allow create: if isVerifiedOwner(userId) && isValidId(userId)
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedOwner(userId) && isValidId(userId)
+        && isValidUserProfile(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'name', 'email', 'course', 'university', 'semester', 'registration',
+            'bio', 'dailyGoalHours', 'pomoMinutes', 'theme', 'updatedAt'
+          ]) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['streak', 'recordStreak', 'updatedAt'])
+        );
+      allow delete: if false;
+
+      match /subjects/{subjectId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(subjectId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(subjectId)
+          && isValidSubject(incoming())
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(subjectId)
+          && isValidSubject(incoming())
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'code', 'name', 'professor', 'schedule', 'credits', 'p1', 'p2', 'status', 'updatedAt'
+            ]) ||
+            incoming().diff(existing()).affectedKeys().hasOnly(['hoursStudied', 'updatedAt'])
+          );
+        allow delete: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(subjectId);
+      }
+
+      match /tasks/{taskId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(taskId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(taskId)
+          && isValidQuickTask(incoming())
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(taskId)
+          && isValidQuickTask(incoming())
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'updatedAt']) ||
+            incoming().diff(existing()).affectedKeys().hasOnly(['title', 'subjectId', 'updatedAt'])
+          );
+        allow delete: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(taskId);
+      }
+
+      match /sessions/{sessionId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(sessionId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(sessionId)
+          && isValidPomodoroSession(incoming())
+          && incoming().createdAt == request.time;
+        allow update: if false;
+        allow delete: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(sessionId);
+      }
+
+      match /schedule/{blockId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(blockId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(blockId)
+          && isValidScheduleBlock(incoming())
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(blockId)
+          && isValidScheduleBlock(incoming())
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'dayIndex', 'startHour', 'endHour', 'type', 'subjectId', 'subjectName', 'updatedAt'
+          ]);
+        allow delete: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(blockId);
+      }
+
+      match /notes/{noteId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(noteId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(noteId)
+          && isValidStudyNote(incoming())
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(noteId)
+          && isValidStudyNote(incoming())
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'subjectId', 'subjectName', 'tags', 'content', 'updatedAt'
+          ]);
+        allow delete: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(noteId);
+      }
+
+      match /goals/{goalId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(goalId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(goalId)
+          && isValidSemesterGoal(incoming())
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(goalId)
+          && isValidSemesterGoal(incoming())
+          && existing().status != 'completed'
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['currentValue', 'status', 'updatedAt']) ||
+            incoming().diff(existing()).affectedKeys().hasOnly(['title', 'category', 'targetValue', 'unit', 'deadline', 'updatedAt'])
+          );
+        allow delete: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(goalId);
+      }
+    }
+
+    match /communityMessages/{messageId} {
+      allow get: if isEmailVerified() && isValidId(messageId);
+      allow list: if isEmailVerified() && resource.data.channel in ['calculo', 'algoritmos', 'geral'];
+      allow create: if isEmailVerified() && isValidId(messageId)
+        && isValidCommunityMessage(incoming())
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isEmailVerified() && isValidId(messageId) && existing().authorId == request.auth.uid;
+    }
+  }
+}
