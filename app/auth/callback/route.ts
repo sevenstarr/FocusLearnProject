@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
   </head>
   <body>
     <div class="card">
-      <h1>Concluindo login com Google...</h1>
+      <h1 id="title">Concluindo autenticação...</h1>
       <p id="status">Você pode fechar esta janela caso ela não feche automaticamente.</p>
     </div>
     <script>
@@ -79,7 +79,11 @@ export async function GET(req: NextRequest) {
         var params = new URLSearchParams(window.location.search || '');
         var hashParams = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
         var flowType = params.get('type') || hashParams.get('type');
-        var target = flowType === 'recovery'
+        var isRecovery = flowType === 'recovery' || params.get('flow') === 'recovery';
+        if (isRecovery) {
+          document.getElementById('title').textContent = 'Preparando redefinição de senha...';
+        }
+        var target = isRecovery
           ? '/recuperar-senha'
           : ${JSON.stringify(safeNext)};
 
@@ -99,3 +103,4 @@ export async function GET(req: NextRequest) {
     },
   });
 }
+
