@@ -4,7 +4,19 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   const fallbackNext = req.nextUrl.searchParams.get('next') || '/';
-  const safeNext = fallbackNext.startsWith('/') ? fallbackNext : '/';
+  let safeNext = '/';
+  try {
+    const nextUrl = new URL(fallbackNext, req.nextUrl.origin);
+    if (
+      fallbackNext.startsWith('/') &&
+      !fallbackNext.startsWith('//') &&
+      nextUrl.origin === req.nextUrl.origin
+    ) {
+      safeNext = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+    }
+  } catch {
+    // Invalid or external redirect destinations fall back to the app root.
+  }
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -47,7 +59,7 @@ export async function GET(req: NextRequest) {
   </head>
   <body>
     <div class="card">
-      <h1>Concluindo login com Google...</h1>
+      <h1 id="title">Concluindo autenticação...</h1>
       <p id="status">Você pode fechar esta janela caso ela não feche automaticamente.</p>
     </div>
     <script>
@@ -68,7 +80,7 @@ export async function GET(req: NextRequest) {
 
         if (window.opener && !window.opener.closed) {
           try {
-            window.opener.postMessage(payload, '*');
+            window.opener.postMessage(payload, window.location.origin);
           } catch (_) {}
           setTimeout(function () {
             window.close();
@@ -79,7 +91,11 @@ export async function GET(req: NextRequest) {
         var params = new URLSearchParams(window.location.search || '');
         var hashParams = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
         var flowType = params.get('type') || hashParams.get('type');
-        var target = flowType === 'recovery'
+        var isRecovery = flowType === 'recovery' || params.get('flow') === 'recovery';
+        if (isRecovery) {
+          document.getElementById('title').textContent = 'Preparando redefinição de senha...';
+        }
+        var target = isRecovery
           ? '/recuperar-senha'
           : ${JSON.stringify(safeNext)};
 

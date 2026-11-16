@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   KeyRound,
@@ -21,10 +21,14 @@ import { ToastBanner } from '@/components/ToastBanner';
 type RecoveryTab = 'recovery' | 'success';
 
 export default function RecuperarSenhaPage() {
-  const { sendPasswordReset } = useAuth();
+  const { authReady, user, passwordRecoveryReady, sendPasswordReset, updatePassword } = useAuth();
   const { theme, toggleTheme, showToast } = useFocus();
 
   const [tab, setTab] = useState<RecoveryTab>('recovery');
+  const [recoveryFlow, setRecoveryFlow] = useState(false);
+  const [passwordUpdated, setPasswordUpdated] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
   const [sentEmail, setSentEmail] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -33,6 +37,16 @@ export default function RecuperarSenhaPage() {
   const hasAt = email.includes('@');
   const hasDomain = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
   const isClean = !/[<>{}\\]/.test(email);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    setRecoveryFlow(
+      searchParams.get('flow') === 'recovery' ||
+        searchParams.get('type') === 'recovery' ||
+        hashParams.get('type') === 'recovery'
+    );
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +65,39 @@ export default function RecuperarSenhaPage() {
     } else {
       setErrorMsg(res.message);
     }
+  };
+
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    if (newPassword.length < 6) {
+      setErrorMsg('A nova senha precisa ter pelo menos 6 caracteres.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setErrorMsg('As senhas não coincidem. Confira os dois campos.');
+      return;
+    }
+
+    setSubmitting(true);
+    const res = await updatePassword(newPassword);
+    setSubmitting(false);
+    if (res.ok) {
+      setPasswordUpdated(true);
+      setNewPassword('');
+      setConfirmPassword('');
+      showToast('Senha redefinida!', res.message, 'success');
+    } else {
+      setErrorMsg(res.message);
+    }
+  };
+
+  const requestAnotherLink = () => {
+    setRecoveryFlow(false);
+    setTab('recovery');
+    setErrorMsg(null);
+    window.history.replaceState({}, document.title, window.location.pathname);
   };
 
   return (
@@ -100,7 +147,121 @@ export default function RecuperarSenhaPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             {/* Left Main Card */}
             <section className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-10 flex flex-col justify-between">
-              {tab === 'recovery' && (
+              {recoveryFlow && (
+                <div className="flex flex-col flex-1 justify-center">
+                  {passwordUpdated ? (
+                    <div className="flex flex-col items-center text-center py-8">
+                      <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4">
+                        <CheckCircle2 className="w-8 h-8" />
+                      </div>
+                      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                        Senha redefinida
+                      </h1>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
+                        Sua senha foi atualizada. Agora você já pode entrar na sua conta.
+                      </p>
+                      <Link
+                        href="/login"
+                        className="mt-6 w-full max-w-sm py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm text-center"
+                      >
+                        Ir para Login
+                      </Link>
+                    </div>
+                  ) : !authReady ? (
+                    <div className="py-12 text-center">
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Validando o link de recuperação...
+                      </p>
+                    </div>
+                  ) : !user || !passwordRecoveryReady ? (
+                    <div className="flex flex-col items-center text-center py-8">
+                      <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
+                        <AlertCircle className="w-8 h-8" />
+                      </div>
+                      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                        Link inválido ou expirado
+                      </h1>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 max-w-md">
+                        Solicite um novo e-mail de recuperação e abra o link mais recente que receber.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={requestAnotherLink}
+                        className="mt-6 w-full max-w-sm py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm cursor-pointer"
+                      >
+                        Solicitar novo link
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col flex-1">
+                      <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                        <KeyRound className="w-3.5 h-3.5" />
+                        Recuperação de Conta
+                      </p>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mt-2">
+                        Crie uma nova senha
+                      </h1>
+                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                        Escolha uma senha com pelo menos 6 caracteres para sua conta.
+                      </p>
+
+                      {errorMsg && (
+                        <div
+                          role="alert"
+                          className="mt-5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-red-800 dark:text-red-200 text-xs flex items-start gap-2.5"
+                        >
+                          <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                          <p>{errorMsg}</p>
+                        </div>
+                      )}
+
+                      <form onSubmit={(e) => void handlePasswordUpdate(e)} className="mt-6 flex flex-col gap-4">
+                        <div>
+                          <label htmlFor="new-password" className="block text-sm font-semibold mb-1.5">
+                            Nova senha
+                          </label>
+                          <input
+                            id="new-password"
+                            name="new-password"
+                            type="password"
+                            autoComplete="new-password"
+                            minLength={6}
+                            required
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm min-h-[44px]"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="confirm-password" className="block text-sm font-semibold mb-1.5">
+                            Confirme a nova senha
+                          </label>
+                          <input
+                            id="confirm-password"
+                            name="confirm-password"
+                            type="password"
+                            autoComplete="new-password"
+                            minLength={6}
+                            required
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm min-h-[44px]"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={submitting || !user}
+                          className="mt-2 w-full py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold text-sm cursor-pointer"
+                        >
+                          {submitting ? 'Salvando...' : 'Salvar nova senha'}
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!recoveryFlow && tab === 'recovery' && (
                 <div className="flex flex-col flex-1">
                   <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                     <KeyRound className="w-3.5 h-3.5" />
@@ -169,7 +330,7 @@ export default function RecuperarSenhaPage() {
                 </div>
               )}
 
-              {tab === 'success' && (
+              {!recoveryFlow && tab === 'success' && (
                 <div className="flex flex-col items-center justify-center text-center py-8 flex-1">
                   <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4">
                     <Inbox className="w-8 h-8" />

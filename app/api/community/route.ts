@@ -56,12 +56,8 @@ export async function POST(req: NextRequest) {
 
     const message = await createCommunityMessageRow({
       authorId: decoded.uid,
-      authorName: typeof body?.authorName === 'string' && body.authorName.trim()
-        ? body.authorName
-        : userRow.name,
-      authorCourse: typeof body?.authorCourse === 'string' && body.authorCourse.trim()
-        ? body.authorCourse
-        : userRow.course,
+      authorName: userRow.name,
+      authorCourse: userRow.course,
       channel,
       text,
     });

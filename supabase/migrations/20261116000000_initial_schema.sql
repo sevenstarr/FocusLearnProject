@@ -119,7 +119,7 @@ CREATE INDEX IF NOT EXISTS "semester_goals_owner_idx" ON "public"."semester_goal
 CREATE INDEX IF NOT EXISTS "community_messages_channel_idx" ON "public"."community_messages" USING btree ("channel");
 
 -- Segurança: ativa RLS em todas as tabelas para bloquear acesso anônimo direto via PostgREST.
--- As rotas Next.js (/api/*) utilizam SUPABASE_SERVICE_ROLE_KEY após validar o Firebase JWT.
+-- As rotas Next.js (/api/*) utilizam SUPABASE_SERVICE_ROLE_KEY após validar o token do Supabase Auth.
 ALTER TABLE "public"."users" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."subjects" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."quick_tasks" ENABLE ROW LEVEL SECURITY;
