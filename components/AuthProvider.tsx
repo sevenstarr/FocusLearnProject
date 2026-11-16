@@ -32,6 +32,7 @@ export interface AuthResult {
 interface AuthContextValue {
   user: AuthUser | null;
   authReady: boolean;
+  passwordRecoveryReady: boolean;
   supabaseConfigured: boolean;
   getAccessToken: () => Promise<string | null>;
   signInWithGoogle: () => Promise<AuthResult>;
@@ -158,6 +159,7 @@ interface OAuthCallbackPayload {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [passwordRecoveryReady, setPasswordRecoveryReady] = useState(false);
   const [config, setConfig] = useState<PublicSupabaseConfig | null>(() =>
     getInlineSupabaseConfig()
   );
@@ -277,14 +279,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== 'undefined') {
           const search = window.location.search;
           const hash = window.location.hash;
+          const searchParams = new URLSearchParams(search);
+          const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+          const isPasswordRecovery =
+            searchParams.get('flow') === 'recovery' ||
+            searchParams.get('type') === 'recovery' ||
+            hashParams.get('type') === 'recovery';
           if (
             search.includes('code=') ||
             search.includes('error=') ||
             hash.includes('access_token=') ||
             hash.includes('error=')
           ) {
-            await completeOAuthFromParams(client, search, hash);
-            const cleanUrl = window.location.pathname;
+            const result = await completeOAuthFromParams(client, search, hash);
+            if (isPasswordRecovery) {
+              setPasswordRecoveryReady(result.ok);
+            }
+            const cleanUrl = isPasswordRecovery
+              ? `${window.location.pathname}?flow=recovery`
+              : window.location.pathname;
             window.history.replaceState({}, document.title, cleanUrl);
           }
         }
@@ -300,8 +313,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     void initAuth();
 
-    const { data: subscription } = client.auth.onAuthStateChange((_event, session) => {
+    const { data: subscription } = client.auth.onAuthStateChange((event, session) => {
       if (!active) return;
+      if (event === 'PASSWORD_RECOVERY') {
+        setPasswordRecoveryReady(true);
+      }
       sessionRef.current = session;
       setUser(mapSupabaseUser(session?.user, session));
       setAuthReady(true);
@@ -587,7 +603,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const { error } = await client.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth/callback?next=/recuperar-senha`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/recuperar-senha&flow=recovery`,
         });
         if (error) {
           return mapSupabaseAuthError(error);
@@ -643,6 +659,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         authReady,
+        passwordRecoveryReady,
         supabaseConfigured: Boolean(config),
         getAccessToken,
         signInWithGoogle,
@@ -665,3 +682,4 @@ export function useAuth() {
   }
   return ctx;
 }
+
