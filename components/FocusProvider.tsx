@@ -16,6 +16,7 @@ import {
   PomodoroMode,
   ThemeMode,
   NavSection,
+  ShopState,
 } from '@/lib/types';
 import {
   createDefaultProfile,
@@ -52,6 +53,10 @@ interface FocusContextValue {
   setSearchQuery: (q: string) => void;
   cloudSynced: boolean;
   loadingData: boolean;
+  shop: ShopState;
+  refreshShop: () => Promise<void>;
+  buyShopItem: (itemId: string) => Promise<void>;
+  equipShopItem: (itemId: string) => Promise<void>;
 
   profile: UserProfile;
   subjects: Subject[];
@@ -139,6 +144,9 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
   const [activeSection, setActiveSection] = useState<NavSection>('visao-geral');
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingData, setLoadingData] = useState(true);
+  const [shop, setShop] = useState<ShopState>({ balance: 0, items: [], transactions: [], owned: [], activeSession: null });
+  const [sessionRunId, setSessionRunId] = useState<string | null>(null);
+  const sessionActionRef = useRef(false);
 
   const localUid = 'local-preview';
   const [profile, setProfile] = useState<UserProfile>(() => createDefaultProfile(localUid));
@@ -220,6 +228,43 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     [user, getAccessToken]
   );
 
+  const refreshShop = useCallback(async () => {
+    if (!cloudSynced) {
+      setShop({ balance: 0, items: [], transactions: [], owned: [], activeSession: null });
+      setSessionRunId(null);
+      return;
+    }
+    const data = await authFetch('/api/shop');
+    setShop(data);
+    const active = data.activeSession;
+    setSessionRunId(active?.id || null);
+    if (active) {
+      const mode = active.mode as PomodoroMode;
+      const activeElapsed = active.activeSinceMs ? Math.max(0, Math.floor((Date.now() - active.activeSinceMs) / 1000)) : 0;
+      const elapsed = active.accumulatedSeconds + activeElapsed;
+      setTimerMode(mode);
+      setTimerSecondsLeft(Math.max(0, MODE_DURATIONS[mode] - elapsed));
+      setTimerRunning(Boolean(active.activeSinceMs));
+    }
+  }, [cloudSynced, authFetch]);
+
+  useEffect(() => {
+    if (!authReady) return;
+    if (!cloudSynced) {
+      setShop({ balance: 0, items: [], transactions: [], owned: [], activeSession: null });
+      setSessionRunId(null);
+      setTimerRunning(false);
+      document.documentElement.dataset.cosmeticTheme = '';
+      return;
+    }
+    void refreshShop().catch(() => {});
+  }, [authReady, cloudSynced, refreshShop]);
+
+  useEffect(() => {
+    const themeId = shop.owned.find((item) => item.category === 'theme' && item.equipped)?.itemId || '';
+    document.documentElement.dataset.cosmeticTheme = themeId;
+  }, [shop.owned]);
+
   // Load local preview state on mount when unauthenticated
   useEffect(() => {
     if (!authReady) return;
@@ -238,7 +283,10 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
               setTheme(parsed.profile.theme);
             }
           }
-          if (Array.isArray(parsed.subjects)) setSubjects(parsed.subjects);
+          if (Array.isArray(parsed.subjects)) setSubjects(parsed.subjects.map((subject: Record<string, unknown>) => {
+            const { credits: _legacyAcademicCredits, ...currentSubject } = subject;
+            return currentSubject as unknown as Subject;
+          }));
           if (Array.isArray(parsed.tasks)) setTasks(parsed.tasks);
           if (Array.isArray(parsed.sessions)) setSessions(parsed.sessions);
           if (Array.isArray(parsed.schedule)) setSchedule(parsed.schedule);
@@ -364,7 +412,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
       1,
       Math.round((MODE_DURATIONS[timerMode] - timerSecondsLeft) / 60) || fullMinutes
     );
-    const loggedMinutes = timerSecondsLeft === 0 ? fullMinutes : Math.min(fullMinutes, elapsedMinutes);
+    const loggedMinutes = cloudSynced ? fullMinutes : Math.max(1, Math.min(fullMinutes, elapsedMinutes));
 
     const activeSubject = subjects.find((s) => s.id === resolvedSelectedSubjectId) || subjects[0];
     const subId = activeSubject?.id || 'geral';
@@ -374,15 +422,9 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
       const dateKey = getDateKey();
       if (cloudSynced && user) {
         try {
-          const res = await authFetch('/api/sessions', {
+          if (!sessionRunId) throw new Error('Inicie o cronômetro conectado para validar esta sessão.');
+          const res = await authFetch(`/api/sessions/${encodeURIComponent(sessionRunId)}/complete`, {
             method: 'POST',
-            body: JSON.stringify({
-              subjectId: subId,
-              subjectName: subName.slice(0, 120),
-              mode: timerMode,
-              durationMinutes: loggedMinutes,
-              dateKey,
-            }),
           });
           if (res.session) {
             setSessions((prev) => [res.session, ...prev]);
@@ -392,7 +434,16 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
               prev.map((s) => (s.id === res.updatedSubject.id ? res.updatedSubject : s))
             );
           }
+          setSessionRunId(null);
+          setShop((prev) => ({ ...prev, balance: Number(res.balance ?? prev.balance) }));
+          void refreshShop().catch(() => {});
+          showToast('Sessão concluída!', `+${loggedMinutes} min registrados. ${res.reward ? `+${res.reward} crédito${res.reward === 1 ? '' : 's'}!` : 'O limite de créditos das últimas 24h foi atingido.'}`, 'success');
         } catch (err) {
+          if (err instanceof Error && /ainda não completou|não completou o tempo/i.test(err.message)) {
+            setTimerSecondsLeft(1);
+            setTimerRunning(true);
+            return;
+          }
           showToast(
             'Erro ao salvar sessão',
             err instanceof Error ? err.message : 'Tente novamente em instantes.',
@@ -422,11 +473,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
           );
         }
       }
-      showToast(
-        'Sessão concluída!',
-        `+${loggedMinutes} min registrados em ${subName}.`,
-        'success'
-      );
+      if (!cloudSynced) showToast('Sessão concluída!', `+${loggedMinutes} min registrados em ${subName}.`, 'success');
     } else {
       showToast('Pausa encerrada', 'Hora de retomar o próximo ciclo de foco!', 'info');
     }
@@ -435,7 +482,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     const nextMode: PomodoroMode = isBreak ? 'pomodoro25' : 'shortBreak';
     setTimerMode(nextMode);
     setTimerSecondsLeft(MODE_DURATIONS[nextMode]);
-  }, [timerMode, timerSecondsLeft, subjects, resolvedSelectedSubjectId, cloudSynced, user, authFetch, showToast]);
+  }, [timerMode, timerSecondsLeft, subjects, resolvedSelectedSubjectId, cloudSynced, user, authFetch, showToast, sessionRunId, refreshShop]);
 
   useEffect(() => {
     completeSessionRef.current = completeSessionNow;
@@ -458,27 +505,82 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
   }, [timerRunning]);
 
   const switchTimerMode = (mode: PomodoroMode) => {
-    setTimerRunning(false);
-    setTimerMode(mode);
-    setTimerSecondsLeft(MODE_DURATIONS[mode]);
+    if (sessionActionRef.current) return;
+    sessionActionRef.current = true;
+    void (async () => {
+      try {
+        if (sessionRunId) await authFetch(`/api/sessions/${encodeURIComponent(sessionRunId)}/state`, { method: 'POST', body: JSON.stringify({ state: 'cancel' }) });
+        setSessionRunId(null);
+        setTimerRunning(false);
+        setTimerMode(mode);
+        setTimerSecondsLeft(MODE_DURATIONS[mode]);
+      } catch (err) { showToast('Não foi possível trocar o modo', err instanceof Error ? err.message : 'Tente novamente.', 'error'); }
+      finally { sessionActionRef.current = false; }
+    })();
   };
 
   const toggleTimer = () => {
-    setTimerRunning((prev) => !prev);
+    if (sessionActionRef.current) return;
+    sessionActionRef.current = true;
+    void (async () => {
+      try {
+        if (!timerRunning && cloudSynced && timerMode !== 'shortBreak' && timerMode !== 'longBreak') {
+          const activeSubject = subjects.find((s) => s.id === resolvedSelectedSubjectId) || subjects[0];
+          if (sessionRunId) {
+            await authFetch(`/api/sessions/${encodeURIComponent(sessionRunId)}/state`, { method: 'POST', body: JSON.stringify({ state: 'resume' }) });
+          } else {
+            const result = await authFetch('/api/sessions/start', { method: 'POST', body: JSON.stringify({ mode: timerMode, subjectId: activeSubject?.id || 'geral', subjectName: activeSubject?.name || 'Estudo Geral' }) });
+            const runId = String(result.run.id);
+            const runMode = result.run.mode as PomodoroMode;
+            setSessionRunId(runId);
+            if (runMode !== timerMode) setTimerMode(runMode);
+            if (result.run.status === 'paused') {
+              await authFetch(`/api/sessions/${encodeURIComponent(runId)}/state`, { method: 'POST', body: JSON.stringify({ state: 'resume' }) });
+            }
+            const startedAt = result.run.active_since || result.run.activeSince;
+            const accumulated = Number(result.run.accumulated_seconds || result.run.accumulatedSeconds || 0);
+            const activeElapsed = startedAt ? Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)) : 0;
+            setTimerSecondsLeft(Math.max(0, MODE_DURATIONS[runMode] - accumulated - activeElapsed));
+          }
+        } else if (timerRunning && cloudSynced && sessionRunId && timerMode !== 'shortBreak' && timerMode !== 'longBreak') {
+          await authFetch(`/api/sessions/${encodeURIComponent(sessionRunId)}/state`, { method: 'POST', body: JSON.stringify({ state: 'pause' }) });
+        }
+        setTimerRunning((prev) => !prev);
+      } catch (err) {
+        showToast('Cronômetro não iniciado', err instanceof Error ? err.message : 'Tente novamente.', 'error');
+      } finally { sessionActionRef.current = false; }
+    })();
   };
 
   const resetTimer = () => {
-    setTimerRunning(false);
-    setTimerSecondsLeft(MODE_DURATIONS[timerMode]);
+    if (sessionActionRef.current) return;
+    sessionActionRef.current = true;
+    void (async () => {
+      try {
+        if (sessionRunId) await authFetch(`/api/sessions/${encodeURIComponent(sessionRunId)}/state`, { method: 'POST', body: JSON.stringify({ state: 'cancel' }) });
+        setSessionRunId(null);
+        setTimerRunning(false);
+        setTimerSecondsLeft(MODE_DURATIONS[timerMode]);
+      } catch (err) { showToast('Não foi possível reiniciar', err instanceof Error ? err.message : 'Tente novamente.', 'error'); }
+      finally { sessionActionRef.current = false; }
+    })();
   };
 
   const skipTimer = () => {
-    setTimerRunning(false);
-    const next: PomodoroMode =
-      timerMode === 'pomodoro25' || timerMode === 'ultra50' ? 'shortBreak' : 'pomodoro25';
-    setTimerMode(next);
-    setTimerSecondsLeft(MODE_DURATIONS[next]);
-    showToast('Bloco alternado', 'Timer ajustado para o próximo ciclo.', 'info');
+    if (sessionActionRef.current) return;
+    sessionActionRef.current = true;
+    void (async () => {
+      try {
+        if (sessionRunId) await authFetch(`/api/sessions/${encodeURIComponent(sessionRunId)}/state`, { method: 'POST', body: JSON.stringify({ state: 'cancel' }) });
+        setSessionRunId(null);
+        setTimerRunning(false);
+        const next: PomodoroMode = timerMode === 'pomodoro25' || timerMode === 'ultra50' ? 'shortBreak' : 'pomodoro25';
+        setTimerMode(next);
+        setTimerSecondsLeft(MODE_DURATIONS[next]);
+        showToast('Bloco alternado', 'Timer ajustado para o próximo ciclo.', 'info');
+      } catch (err) { showToast('Não foi possível alternar o bloco', err instanceof Error ? err.message : 'Tente novamente.', 'error'); }
+      finally { sessionActionRef.current = false; }
+    })();
   };
 
   const toggleAmbientSound = (sound?: AmbientSoundType) => {
@@ -570,7 +672,6 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
       name: input.name.trim().slice(0, 120),
       professor: input.professor.trim().slice(0, 100),
       schedule: input.schedule.trim().slice(0, 80),
-      credits: Math.max(0, Math.min(40, Number(input.credits) || 4)),
       p1: Math.max(0, Math.min(10, Number(input.p1) || 0)),
       p2: Math.max(0, Math.min(10, Number(input.p2) || 0)),
       hoursStudied: Math.max(0, Math.min(5000, Number(input.hoursStudied) || 0)),
@@ -607,7 +708,6 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
       name: (updates.name ?? existing.name).slice(0, 120),
       professor: (updates.professor ?? existing.professor).slice(0, 100),
       schedule: (updates.schedule ?? existing.schedule).slice(0, 80),
-      credits: Math.max(0, Math.min(40, Number(updates.credits ?? existing.credits))),
       p1: Math.max(0, Math.min(10, Number(updates.p1 ?? existing.p1))),
       p2: Math.max(0, Math.min(10, Number(updates.p2 ?? existing.p2))),
       status: updates.status ?? existing.status,
@@ -633,6 +733,31 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
       setSubjects((prev) => prev.map((s) => (s.id === id ? { ...s, ...next } : s)));
     }
     showToast('Matéria atualizada', 'Notas e dados da disciplina atualizados.');
+  };
+
+  const buyShopItem = async (itemId: string) => {
+    if (!cloudSynced || !user) {
+      showToast('Loja indisponível', 'Entre na sua conta para comprar itens.', 'error');
+      return;
+    }
+    try {
+      await authFetch('/api/shop/purchase', { method: 'POST', body: JSON.stringify({ itemId }) });
+      await refreshShop();
+      showToast('Item adquirido', 'O cosmético já está no seu inventário.', 'success');
+    } catch (err) {
+      showToast('Compra não concluída', err instanceof Error ? err.message : 'Tente novamente.', 'error');
+    }
+  };
+
+  const equipShopItem = async (itemId: string) => {
+    if (!cloudSynced || !user) return;
+    try {
+      await authFetch('/api/shop/equip', { method: 'POST', body: JSON.stringify({ itemId }) });
+      await refreshShop();
+      showToast('Cosmético equipado', 'Sua aparência foi atualizada.', 'success');
+    } catch (err) {
+      showToast('Não foi possível equipar', err instanceof Error ? err.message : 'Tente novamente.', 'error');
+    }
   };
 
   const deleteSubject = async (id: string) => {
@@ -1052,6 +1177,10 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
         setSearchQuery,
         cloudSynced,
         loadingData,
+        shop,
+        refreshShop,
+        buyShopItem,
+        equipShopItem,
         profile,
         subjects,
         tasks,

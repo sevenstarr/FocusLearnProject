@@ -86,7 +86,6 @@ export async function seedStarterWorkspaceIfNeeded(uid: string) {
             name: s.name,
             professor: s.professor,
             schedule: s.schedule,
-            credits: s.credits,
             p1: s.p1,
             p2: s.p2,
             hoursStudied: s.hoursStudied,

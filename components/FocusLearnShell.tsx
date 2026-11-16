@@ -21,6 +21,8 @@ import {
   Moon,
   Flame,
   Target,
+  ShoppingBag,
+  Coins,
 } from 'lucide-react';
 import { useFocus } from '@/components/FocusProvider';
 import { useAuth } from '@/components/AuthProvider';
@@ -37,6 +39,7 @@ import { StatsGoalsView } from '@/components/views/StatsGoalsView';
 import { NotesView } from '@/components/views/NotesView';
 import { CommunityView } from '@/components/views/CommunityView';
 import { SettingsProfileView } from '@/components/views/SettingsProfileView';
+import { ShopView } from '@/components/views/ShopView';
 
 const NAV_ITEMS: {
   id: NavSection;
@@ -47,6 +50,7 @@ const NAV_ITEMS: {
   { id: 'visao-geral', label: 'Visão Geral', shortLabel: 'Início', Icon: LayoutDashboard },
   { id: 'materias-cursos', label: 'Matérias & Cursos', shortLabel: 'Matérias', Icon: GraduationCap },
   { id: 'cronometro-pomodoro', label: 'Cronômetro Pomodoro', shortLabel: 'Foco', Icon: Timer },
+  { id: 'loja', label: 'Loja de Cosméticos', shortLabel: 'Loja', Icon: ShoppingBag },
   { id: 'planejador-semanal', label: 'Planejador Semanal', shortLabel: 'Agenda', Icon: CalendarDays },
   { id: 'estatisticas-metas', label: 'Estatísticas & Metas', shortLabel: 'Metas', Icon: BarChart3 },
   { id: 'anotacoes', label: 'Anotações & Cadernos', shortLabel: 'Notas', Icon: FileText },
@@ -66,8 +70,11 @@ export function FocusLearnShell() {
     theme,
     toggleTheme,
     cloudSynced,
+    shop,
   } = useFocus();
   const { user } = useAuth();
+  const equippedAvatar = shop.owned.find((item) => item.category === 'avatar' && item.equipped);
+  const equippedAvatarEmoji = shop.items.find((item) => item.id === equippedAvatar?.itemId)?.emoji;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -153,7 +160,7 @@ export function FocusLearnShell() {
           </div>
 
           <div className="px-5 pb-4 mb-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-            <UserAvatar name={profile.name} photoURL={user?.photoURL || undefined} />
+            <UserAvatar name={profile.name} photoURL={user?.photoURL || undefined} emoji={equippedAvatarEmoji} />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                 {profile.name}
@@ -330,6 +337,7 @@ export function FocusLearnShell() {
         </div>
 
         <div className="flex items-center gap-4 shrink-0">
+          {cloudSynced && <button type="button" onClick={() => navigate('loja')} className="inline-flex items-center gap-1 rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200" aria-label="Abrir loja e ver saldo"><Coins className="h-4 w-4" />{shop.balance}</button>}
           <div className="hidden md:flex items-center gap-3 text-xs font-medium text-slate-600 dark:text-slate-300 tabular-nums">
             <span className="inline-flex items-center gap-1">
               <Flame className="w-3.5 h-3.5 text-amber-500" />
@@ -366,6 +374,7 @@ export function FocusLearnShell() {
             <UserAvatar
               name={profile.name}
               photoURL={user?.photoURL || undefined}
+              emoji={equippedAvatarEmoji}
               sizeClass="w-8 h-8 text-xs"
             />
             <span className="hidden xl:inline text-xs font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
@@ -395,6 +404,7 @@ export function FocusLearnShell() {
             {activeSection === 'visao-geral' && <DashboardView />}
             {activeSection === 'materias-cursos' && <SubjectsView />}
             {activeSection === 'cronometro-pomodoro' && <PomodoroView />}
+            {activeSection === 'loja' && <ShopView />}
             {activeSection === 'planejador-semanal' && <PlannerView />}
             {activeSection === 'estatisticas-metas' && <StatsGoalsView />}
             {activeSection === 'anotacoes' && <NotesView />}

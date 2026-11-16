@@ -98,12 +98,13 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 
 ## Modelo de Dados e Migrations (Supabase / PostgreSQL)
 
-As migrations SQL versionadas ficam em `supabase/migrations/20261116000000_initial_schema.sql` (pronta para `supabase db push` ou SQL Editor do Supabase, já com RLS habilitado) e em `drizzle/`:
+As migrations SQL versionadas ficam em `supabase/migrations/` (prontas para `supabase db push` ou SQL Editor do Supabase, já com RLS habilitado) e em `drizzle/`:
 
 - `users` — Perfil acadêmico, preferências, streak e flag `seeded` (`uid` único indexado)
-- `subjects` — Disciplinas, créditos, notas `p1`/`p2` e `hours_studied` (FK `owner_id -> users.uid`)
+- `subjects` — Disciplinas, notas `p1`/`p2` e `hours_studied` (FK `owner_id -> users.uid`)
 - `quick_tasks` — Micro-tarefas rápidas (FK `owner_id -> users.uid`)
 - `pomodoro_sessions` — Histórico de blocos Pomodoro concluídos (FK `owner_id -> users.uid`)
+- `study_session_runs`, `credit_transactions`, `cosmetic_ownership` — Sessões validadas, ledger de créditos e inventário da loja
 - `schedule_blocks` — Blocos do planejador semanal (FK `owner_id -> users.uid`)
 - `study_notes` — Cadernos em Markdown com tags em `jsonb` (FK `owner_id -> users.uid`)
 - `semester_goals` — Metas semestrais com status `active` / `completed` (FK `owner_id -> users.uid`)
@@ -130,7 +131,13 @@ npm install
 ### 3. Aplicar a Migration no Supabase
 
 1. No painel do seu projeto Supabase, abra **SQL Editor** (ou use a Supabase CLI com `supabase db push`).
-2. Execute o conteúdo de `supabase/migrations/20261116000000_initial_schema.sql` para criar todas as tabelas, índices, chaves estrangeiras e ativar o RLS.
+2. Execute em ordem `supabase/migrations/20261116000000_initial_schema.sql` e `supabase/migrations/20261116010000_focus_shop.sql`. A segunda migration remove o campo acadêmico antigo das disciplinas e cria o ledger, o inventário e as funções seguras da loja. Saldos começam em zero; dados antigos não geram créditos.
+
+### Créditos e loja de cosméticos
+
+Créditos são concedidos apenas após sessões de foco concluídas pelo cronômetro autenticado: 1 por 25 minutos, 2 por 50 minutos, com limite móvel de 8 créditos em 24 horas. Pausas e sessões antigas não geram créditos. Compras e recompensas são registradas no ledger do servidor. Modo local/offline permite estudar, mas não concede créditos nem permite compras.
+
+O catálogo inicial oferece os temas Maré (10), Bosque (40) e Nebulosa (100), além dos avatares Raposa (15), Coruja (35) e Capivara (70). Itens podem ser comprados uma vez e equipados após a compra.
 
 ### 4. Configurar variáveis e Google OAuth no Supabase
 

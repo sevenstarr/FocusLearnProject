@@ -27,6 +27,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+html[data-cosmetic-theme='mare'] .bg-blue-600 { background-color: #0284c7 !important; }
+html[data-cosmetic-theme='bosque'] .bg-blue-600 { background-color: #16a34a !important; }
+html[data-cosmetic-theme='nebulosa'] .bg-blue-600 { background-color: #8b5cf6 !important; }
+html[data-cosmetic-theme='mare'] .text-blue-600 { color: #0284c7 !important; }
+html[data-cosmetic-theme='bosque'] .text-blue-600 { color: #16a34a !important; }
+html[data-cosmetic-theme='nebulosa'] .text-blue-600 { color: #8b5cf6 !important; }
+
 @media print {
   aside,
   nav,
