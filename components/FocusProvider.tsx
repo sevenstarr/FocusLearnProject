@@ -38,6 +38,50 @@ export interface ToastState {
 }
 
 const LOCAL_STORAGE_KEY = 'focuslearn_local_state_v3';
+const TUTORIAL_PROGRESS_STORAGE_KEY = 'focuslearn_tutorial_progress_v1';
+const TUTORIAL_SECTIONS: NavSection[] = [
+  'visao-geral',
+  'materias-cursos',
+  'cronometro-pomodoro',
+  'loja',
+  'planejador-semanal',
+  'estatisticas-metas',
+  'anotacoes',
+  'comunidade',
+  'configuracoes-ajuda',
+];
+
+function readSavedTutorialProgress(uid: string): Partial<Record<NavSection, boolean>> {
+  try {
+    const value: unknown = JSON.parse(
+      localStorage.getItem(`${TUTORIAL_PROGRESS_STORAGE_KEY}:${uid}`) || '{}'
+    );
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+    return Object.fromEntries(
+      Object.entries(value).filter(
+        ([section, seen]) => TUTORIAL_SECTIONS.includes(section as NavSection) && seen === true
+      )
+    ) as Partial<Record<NavSection, boolean>>;
+  } catch {
+    return {};
+  }
+}
+
+function saveTutorialProgressLocally(uid: string, progress: Partial<Record<NavSection, boolean>>) {
+  try {
+    localStorage.setItem(`${TUTORIAL_PROGRESS_STORAGE_KEY}:${uid}`, JSON.stringify(progress));
+  } catch {
+    // Keep tutorial dismissal usable if browser storage is unavailable.
+  }
+}
+
+function clearSavedTutorialProgress(uid: string) {
+  try {
+    localStorage.removeItem(`${TUTORIAL_PROGRESS_STORAGE_KEY}:${uid}`);
+  } catch {
+    // Ignore unavailable browser storage.
+  }
+}
 
 const MODE_DURATIONS: Record<PomodoroMode, number> = {
   pomodoro25: 25 * 60,
@@ -338,12 +382,31 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
         const data = await authFetch('/api/workspace');
         if (!active) return;
         if (data.profile) {
+          const serverTutorialsSeen = data.profile.tutorialsSeen || {};
+          const localTutorialsSeen = readSavedTutorialProgress(user!.uid);
+          const tutorialsSeen = { ...localTutorialsSeen, ...serverTutorialsSeen };
           const loadedProfile: UserProfile = {
             ...data.profile,
+            tutorialsSeen,
             photoURL: user?.photoURL || undefined,
           };
           setProfile(loadedProfile);
           setTheme(loadedProfile.theme === 'dark' ? 'dark' : 'light');
+
+          const hasUnsyncedTutorials = Object.entries(localTutorialsSeen).some(
+            ([section, seen]) => seen && serverTutorialsSeen[section as NavSection] !== true
+          );
+          if (hasUnsyncedTutorials) {
+            void authFetch('/api/profile', {
+              method: 'PATCH',
+              body: JSON.stringify({ tutorialsSeen }),
+            }).then(
+              () => clearSavedTutorialProgress(user!.uid),
+              () => undefined
+            );
+          } else {
+            clearSavedTutorialProgress(user!.uid);
+          }
         }
         if (Array.isArray(data.subjects)) setSubjects(data.subjects);
         if (Array.isArray(data.tasks)) setTasks(data.tasks);
@@ -672,16 +735,18 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     const tutorialsSeen = { ...(profile.tutorialsSeen || {}), [section]: true };
     setProfile((prev) => ({ ...prev, tutorialsSeen }));
     if (cloudSynced && user) {
+      saveTutorialProgressLocally(user.uid, tutorialsSeen);
       try {
         await authFetch('/api/profile', {
           method: 'PATCH',
           body: JSON.stringify({ tutorialsSeen }),
         });
-      } catch (err) {
+        clearSavedTutorialProgress(user.uid);
+      } catch {
         showToast(
-          'Erro ao salvar tutorial',
-          err instanceof Error ? err.message : 'Não foi possível salvar seu progresso.',
-          'error'
+          'Tutorial salvo neste dispositivo',
+          'Não foi possível sincronizar com sua conta agora. Vamos tentar novamente na próxima visita.',
+          'info'
         );
       }
     }
