@@ -280,10 +280,10 @@ export default function LoginPage() {
       <footer className="w-full max-w-7xl mx-auto px-6 py-5 text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3">
         <p>© 2026 FocusLearn Tecnologia Educacional.</p>
         <div className="flex items-center gap-5">
-          <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">
+          <Link href="/termos" className="hover:text-blue-600 dark:hover:text-blue-400">
             Termos de Serviço
           </Link>
-          <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">
+          <Link href="/privacidade" className="hover:text-blue-600 dark:hover:text-blue-400">
             Privacidade & LGPD
           </Link>
         </div>
