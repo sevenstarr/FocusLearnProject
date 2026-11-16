@@ -39,6 +39,7 @@ interface DbUserRow {
   streak: number;
   record_streak: number;
   theme: string;
+  tutorials_seen?: Record<string, boolean> | null;
   seeded: boolean;
 }
 
@@ -134,6 +135,7 @@ function mapUserRow(row: DbUserRow): UserProfile {
     streak: row.streak,
     recordStreak: row.record_streak,
     theme: row.theme === 'dark' ? 'dark' : 'light',
+    tutorialsSeen: row.tutorials_seen || {},
   };
 }
 
@@ -506,6 +508,9 @@ export async function updateUserProfileRowSupabase(
   }
   if (updates.theme === 'light' || updates.theme === 'dark') {
     patch.theme = updates.theme;
+  }
+  if (updates.tutorialsSeen !== undefined) {
+    patch.tutorials_seen = updates.tutorialsSeen;
   }
 
   const { data, error } = await supabase

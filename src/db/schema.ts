@@ -30,6 +30,7 @@ export const users = pgTable('users', {
   streak: integer('streak').notNull().default(0),
   recordStreak: integer('record_streak').notNull().default(0),
   theme: text('theme').notNull().default('light'),
+  tutorialsSeen: jsonb('tutorials_seen').$type<Record<string, boolean>>().notNull().default(sql`'{}'::jsonb`),
   seeded: boolean('seeded').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
