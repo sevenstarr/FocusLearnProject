@@ -28,6 +28,7 @@ import { NavSection } from '@/lib/types';
 import { getDateKey } from '@/lib/seedData';
 import { UserAvatar } from '@/components/UserAvatar';
 import { ToastBanner } from '@/components/ToastBanner';
+import { FocusLearnHomeButton } from '@/components/FocusLearnHomeButton';
 import { ZenModeModal } from '@/components/ZenModeModal';
 import { DashboardView } from '@/components/views/DashboardView';
 import { SubjectsView } from '@/components/views/SubjectsView';
@@ -130,18 +131,7 @@ export function FocusLearnShell() {
       >
         <div className="flex flex-col">
           <div className="px-5 flex items-center justify-between mb-5">
-            <button
-              type="button"
-              onClick={() => navigate('visao-geral')}
-              className="flex items-center gap-2.5 cursor-pointer"
-            >
-              <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
-                FL
-              </div>
-              <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-                FocusLearn
-              </span>
-            </button>
+            <FocusLearnHomeButton compact onHome={() => navigate('visao-geral')} />
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
@@ -219,18 +209,9 @@ export function FocusLearnShell() {
       {/* Desktop Fixed Sidebar */}
       <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-40 flex-col justify-between py-6">
         <div className="flex flex-col">
-          <button
-            type="button"
-            onClick={() => navigate('visao-geral')}
-            className="px-6 flex items-center gap-3 mb-7 text-left cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-base">
-              FL
-            </div>
-            <span className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-              FocusLearn
-            </span>
-          </button>
+          <div className="px-4 mb-7">
+            <FocusLearnHomeButton onHome={() => navigate('visao-geral')} />
+          </div>
 
           <nav aria-label="Navegação principal" className="px-3 flex flex-col gap-1">
             {NAV_ITEMS.map(({ id, label, Icon }) => {

@@ -1,0 +1,30 @@
+{
+  "brand": "FocusLearn",
+  "tagline": "Estude com foco. Avance com constância.",
+  "brief": "Plataforma de estudos que integra foco Pomodoro, organização acadêmica, planejamento, anotações e comunidade. A identidade deve expressar atenção, clareza e progresso sustentável sem se reduzir a um único recurso.",
+  "adjectives": ["clara", "confiável", "concentrada", "acolhedora"],
+  "criteria": "Um símbolo reconhecível pequeno, simples em uma cor e flexível entre ícone de app e assinatura de produto.",
+  "industry": "education",
+  "mockups": ["website", "app-icon", "social", "favicon-tab", "sticker", "business-card"],
+  "brand_color": "#14213D",
+  "tile_color": "#F8FAFC",
+  "greyscale": false,
+  "final": true,
+  "round": 1,
+  "concepts": [
+    {
+      "name": "Focus Frame",
+      "symbol": "focuslearn-symbol.svg",
+      "lockup": "focuslearn-horizontal.svg",
+      "stacked": "focuslearn-stacked.svg",
+      "idea": "Quatro marcas de enquadramento convergem no ponto de atenção.",
+      "rationale": [
+        "Traz o foco para o centro da experiência de estudo.",
+        "Funciona como ícone independente e em uma cor.",
+        "A geometria simples combina com a interface digital e permanece legível pequena."
+      ]
+    }
+  ],
+  "recommendation": "Direção escolhida: Focus Frame. A paleta preserva familiaridade com a interface existente e dá ao ponto central um acento turquesa próprio.",
+  "next_steps": []
+}

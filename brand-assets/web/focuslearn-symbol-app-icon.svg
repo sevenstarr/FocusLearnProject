@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><title>FocusLearn — símbolo</title><rect width="256" height="256" rx="57.6" fill="#F8FAFC"/><g transform="translate(12.54 12.54) scale(0.902)">
+  <title id="title">FocusLearn — símbolo compacto</title>
+  <path fill="#2563EB" d="M40 40h70v28H68v42H40V40zm106 0h70v70h-28V68h-42V40zM40 146h28v42h42v28H40v-70zm148 0h28v70h-70v-28h42v-42z"/>
+  <circle cx="128" cy="128" r="20" fill="#14B8A6"/>
+</g></svg>
