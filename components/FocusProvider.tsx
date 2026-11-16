@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { useFirebase } from '@/components/FirebaseProvider';
+import { useAuth } from '@/components/AuthProvider';
 import { ambientAudio, AmbientSoundType } from '@/lib/audio';
 import {
   UserProfile,
@@ -134,7 +134,7 @@ function applyDomTheme(mode: ThemeMode) {
 }
 
 export function FocusProvider({ children }: { children: React.ReactNode }) {
-  const { user, authReady } = useFirebase();
+  const { user, authReady, getAccessToken } = useAuth();
 
   const [activeSection, setActiveSection] = useState<NavSection>('visao-geral');
   const [searchQuery, setSearchQuery] = useState('');
@@ -193,7 +193,10 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
       if (!user) {
         throw new Error('Usuário não autenticado.');
       }
-      const token = await user.getIdToken();
+      const token = await getAccessToken();
+      if (!token) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
       const res = await fetch(input, {
         ...init,
         headers: {
@@ -214,7 +217,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
       }
       return res.json();
     },
-    [user]
+    [user, getAccessToken]
   );
 
   // Load local preview state on mount when unauthenticated

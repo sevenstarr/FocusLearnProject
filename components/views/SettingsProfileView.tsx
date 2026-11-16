@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Sun, Moon, LogIn, LogOut, UserPlus, KeyRound, RotateCcw } from 'lucide-react';
 import { useFocus } from '@/components/FocusProvider';
-import { useFirebase } from '@/components/FirebaseProvider';
+import { useAuth } from '@/components/AuthProvider';
 import { UserAvatar } from '@/components/UserAvatar';
 import { UserProfile } from '@/lib/types';
 
@@ -18,7 +18,7 @@ export function SettingsProfileView() {
     resetLocalDemo,
     showToast,
   } = useFocus();
-  const { user, signInWithGoogle, signOutUser } = useFirebase();
+  const { user, signInWithGoogle, signOutUser } = useAuth();
 
   const [draft, setDraft] = useState<Partial<UserProfile>>({});
 
@@ -51,6 +51,11 @@ export function SettingsProfileView() {
     await signOutUser();
     setDraft({});
     showToast('Sessão encerrada', 'Você voltou para o modo local deste dispositivo.', 'info');
+  };
+
+  const handleGoogleSync = async () => {
+    const res = await signInWithGoogle();
+    showToast(res.ok ? 'Conectado!' : 'Aviso', res.message, res.ok ? 'success' : 'error');
   };
 
   return (
@@ -86,7 +91,7 @@ export function SettingsProfileView() {
         ) : (
           <button
             type="button"
-            onClick={() => void signInWithGoogle()}
+            onClick={() => void handleGoogleSync()}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer"
           >
             <LogIn className="w-4 h-4" />

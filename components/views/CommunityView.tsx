@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { MessageSquare, Send, Trash2, Cloud } from 'lucide-react';
 import { useFocus } from '@/components/FocusProvider';
-import { useFirebase } from '@/components/FirebaseProvider';
+import { useAuth } from '@/components/AuthProvider';
 import { CommunityChannel } from '@/lib/types';
 import { UserAvatar } from '@/components/UserAvatar';
 
@@ -23,7 +23,7 @@ export function CommunityView() {
     cloudSynced,
     showToast,
   } = useFocus();
-  const { user, signInWithGoogle } = useFirebase();
+  const { user, signInWithGoogle } = useAuth();
 
   const [text, setText] = useState('');
 

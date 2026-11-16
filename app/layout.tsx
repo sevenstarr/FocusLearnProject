@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { FirebaseProvider } from '@/components/FirebaseProvider';
+import { AuthProvider } from '@/components/AuthProvider';
 import { FocusProvider } from '@/components/FocusProvider';
 
 export const metadata: Metadata = {
@@ -37,9 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased min-h-screen transition-colors duration-200"
         suppressHydrationWarning
       >
-        <FirebaseProvider>
+        <AuthProvider>
           <FocusProvider>{children}</FocusProvider>
-        </FirebaseProvider>
+        </AuthProvider>
       </body>
     </html>
   );

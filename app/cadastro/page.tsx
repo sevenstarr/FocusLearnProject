@@ -20,14 +20,14 @@ import {
   Calendar,
   MessageSquare,
 } from 'lucide-react';
-import { useFirebase } from '@/components/FirebaseProvider';
+import { useAuth } from '@/components/AuthProvider';
 import { useFocus } from '@/components/FocusProvider';
 import { ToastBanner } from '@/components/ToastBanner';
 import { UserAvatar } from '@/components/UserAvatar';
 
 export default function CadastroPage() {
   const router = useRouter();
-  const { signInWithGoogle, signUpWithEmail } = useFirebase();
+  const { signInWithGoogle, signUpWithEmail } = useAuth();
   const { theme, toggleTheme, updateUserProfile, showToast } = useFocus();
 
   const [fullName, setFullName] = useState('');

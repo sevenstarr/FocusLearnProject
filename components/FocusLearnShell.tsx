@@ -23,7 +23,7 @@ import {
   Target,
 } from 'lucide-react';
 import { useFocus } from '@/components/FocusProvider';
-import { useFirebase } from '@/components/FirebaseProvider';
+import { useAuth } from '@/components/AuthProvider';
 import { NavSection } from '@/lib/types';
 import { getDateKey } from '@/lib/seedData';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -67,7 +67,7 @@ export function FocusLearnShell() {
     toggleTheme,
     cloudSynced,
   } = useFocus();
-  const { user } = useFirebase();
+  const { user } = useAuth();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
 

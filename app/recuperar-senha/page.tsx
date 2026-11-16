@@ -14,14 +14,14 @@ import {
   Inbox,
   RefreshCw,
 } from 'lucide-react';
-import { useFirebase } from '@/components/FirebaseProvider';
+import { useAuth } from '@/components/AuthProvider';
 import { useFocus } from '@/components/FocusProvider';
 import { ToastBanner } from '@/components/ToastBanner';
 
 type RecoveryTab = 'recovery' | 'auth-error' | 'success';
 
 export default function RecuperarSenhaPage() {
-  const { sendPasswordReset } = useFirebase();
+  const { sendPasswordReset } = useAuth();
   const { theme, toggleTheme, showToast } = useFocus();
 
   const [tab, setTab] = useState<RecoveryTab>('recovery');
@@ -152,7 +152,7 @@ export default function RecuperarSenhaPage() {
                     Redefinir sua senha acadêmica
                   </h1>
                   <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                    Informe seu e-mail cadastrado e enviaremos um link seguro via Firebase Auth para redefinir sua senha.
+                    Informe seu e-mail cadastrado e enviaremos um link seguro via Supabase Auth para redefinir sua senha.
                   </p>
 
                   {errorMsg && (
@@ -301,7 +301,7 @@ export default function RecuperarSenhaPage() {
                   Sua jornada acadêmica protegida de ponta a ponta.
                 </h2>
                 <p className="text-sm text-blue-100/90 leading-relaxed">
-                  Suas credenciais são gerenciadas diretamente pelo Firebase Authentication com tokens verificados e isolamento por conta.
+                  Suas credenciais são gerenciadas diretamente pelo Supabase Authentication com tokens JWT verificados e isolamento por conta.
                 </p>
                 <ul className="space-y-2.5 pt-2 text-xs text-blue-100">
                   <li className="p-3 rounded-xl bg-white/10">

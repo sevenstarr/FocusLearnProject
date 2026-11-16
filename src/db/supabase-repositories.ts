@@ -233,6 +233,67 @@ function mapCommunityRow(row: DbCommunityRow): CommunityMessage {
   };
 }
 
+function throwSupabaseError(
+  context: string,
+  fallbackMessage: string,
+  err: unknown
+): never {
+  const errObj =
+    typeof err === 'object' && err !== null
+      ? (err as { code?: unknown; message?: unknown; details?: unknown; hint?: unknown })
+      : null;
+
+  const code = errObj?.code ? String(errObj.code) : '';
+  const rawMsg = errObj?.message
+    ? String(errObj.message)
+    : err instanceof Error
+      ? err.message
+      : String(err || 'Unknown Supabase error');
+  const lower = rawMsg.toLowerCase();
+
+  console.warn(
+    `Supabase query issue [${context}]: code=${code || 'none'} message=${rawMsg}`
+  );
+
+  if (
+    code === 'PGRST205' ||
+    code === '42P01' ||
+    lower.includes('could not find the table') ||
+    lower.includes('does not exist')
+  ) {
+    throw new Error(
+      'As tabelas do Supabase ainda não foram criadas. Execute supabase/migrations/20261116000000_initial_schema.sql no SQL Editor do seu projeto Supabase.',
+      { cause: err }
+    );
+  }
+
+  if (
+    code === '42501' ||
+    lower.includes('row-level security') ||
+    lower.includes('permission denied') ||
+    lower.includes('invalid api key') ||
+    lower.includes('jwt')
+  ) {
+    throw new Error(
+      'Credenciais do Supabase inválidas ou sem permissão. Verifique se SUPABASE_SERVICE_ROLE_KEY contém a chave service_role correta.',
+      { cause: err }
+    );
+  }
+
+  if (
+    lower.includes('fetch failed') ||
+    lower.includes('enotfound') ||
+    lower.includes('econnrefused')
+  ) {
+    throw new Error(
+      'Não foi possível conectar ao Supabase. Verifique NEXT_PUBLIC_SUPABASE_URL nos Secrets.',
+      { cause: err }
+    );
+  }
+
+  throw new Error(fallbackMessage, { cause: err });
+}
+
 export async function getOrCreateUserSupabase(uid: string, email: string, name?: string) {
   const supabase = getSupabaseAdmin();
   const safeEmail = (email || 'estudante@universidade.edu.br').slice(0, 180);
@@ -246,8 +307,7 @@ export async function getOrCreateUserSupabase(uid: string, email: string, name?:
     .maybeSingle<DbUserRow>();
 
   if (fetchError) {
-    console.error('Supabase query failed (getOrCreateUser fetch):', fetchError);
-    throw new Error('Failed to synchronize user account.', { cause: fetchError });
+    throwSupabaseError('getOrCreateUser fetch', 'Failed to synchronize user account.', fetchError);
   }
 
   if (existing) {
@@ -259,8 +319,7 @@ export async function getOrCreateUserSupabase(uid: string, email: string, name?:
       .single<DbUserRow>();
 
     if (updateError) {
-      console.error('Supabase query failed (getOrCreateUser update):', updateError);
-      throw new Error('Failed to synchronize user account.', { cause: updateError });
+      throwSupabaseError('getOrCreateUser update', 'Failed to synchronize user account.', updateError);
     }
     return updated;
   }
@@ -287,8 +346,7 @@ export async function getOrCreateUserSupabase(uid: string, email: string, name?:
     .single<DbUserRow>();
 
   if (insertError) {
-    console.error('Supabase query failed (getOrCreateUser insert):', insertError);
-    throw new Error('Failed to synchronize user account.', { cause: insertError });
+    throwSupabaseError('getOrCreateUser insert', 'Failed to synchronize user account.', insertError);
   }
 
   return inserted;
@@ -305,8 +363,7 @@ export async function seedStarterWorkspaceIfNeededSupabase(uid: string) {
     .select('uid');
 
   if (claimError) {
-    console.error('Supabase query failed (seed claim):', claimError);
-    throw new Error('Failed to initialize workspace data.', { cause: claimError });
+    throwSupabaseError('seed claim', 'Failed to initialize workspace data.', claimError);
   }
 
   if (!claimed || claimed.length === 0) {
@@ -333,8 +390,7 @@ export async function seedStarterWorkspaceIfNeededSupabase(uid: string) {
     .select('*');
 
   if (subErr) {
-    console.error('Supabase query failed (seed subjects):', subErr);
-    throw new Error('Failed to initialize workspace data.', { cause: subErr });
+    throwSupabaseError('seed subjects', 'Failed to initialize workspace data.', subErr);
   }
 
   const subjectIdMap = new Map<string, string>();
@@ -421,8 +477,7 @@ export async function seedStarterWorkspaceIfNeededSupabase(uid: string) {
 
   for (const res of results) {
     if (res.error) {
-      console.error('Supabase query failed (seed children):', res.error);
-      throw new Error('Failed to initialize workspace data.', { cause: res.error });
+      throwSupabaseError('seed children', 'Failed to initialize workspace data.', res.error);
     }
   }
 }
@@ -460,8 +515,7 @@ export async function updateUserProfileRowSupabase(
     .maybeSingle<DbUserRow>();
 
   if (error) {
-    console.error('Supabase query failed (updateUserProfileRow):', error);
-    throw new Error('Failed to update user profile.', { cause: error });
+    throwSupabaseError('updateUserProfileRow', 'Failed to update user profile.', error);
   }
 
   return data;
@@ -499,8 +553,11 @@ export async function getWorkspaceDataSupabase(uid: string) {
   ].filter(Boolean);
 
   if (errors.length > 0 || !userRes.data) {
-    console.error('Supabase query failed (getWorkspaceData):', errors[0]);
-    throw new Error('Failed to load workspace data.', { cause: errors[0] });
+    throwSupabaseError(
+      'getWorkspaceData',
+      'Failed to load workspace data.',
+      errors[0] || new Error('User profile row missing.')
+    );
   }
 
   return {
@@ -537,8 +594,7 @@ export async function createSubjectSupabase(
     .single<DbSubjectRow>();
 
   if (error) {
-    console.error('Supabase query failed (createSubject):', error);
-    throw new Error('Failed to create subject.', { cause: error });
+    throwSupabaseError('createSubject', 'Failed to create subject.', error);
   }
   return mapSubjectRow(data);
 }
@@ -570,8 +626,7 @@ export async function updateSubjectRowSupabase(
     .maybeSingle<DbSubjectRow>();
 
   if (error) {
-    console.error('Supabase query failed (updateSubjectRow):', error);
-    throw new Error('Failed to update subject.', { cause: error });
+    throwSupabaseError('updateSubjectRow', 'Failed to update subject.', error);
   }
   return data ? mapSubjectRow(data) : null;
 }
@@ -586,8 +641,7 @@ export async function deleteSubjectRowSupabase(uid: string, id: string): Promise
     .select('id');
 
   if (error) {
-    console.error('Supabase query failed (deleteSubjectRow):', error);
-    throw new Error('Failed to delete subject.', { cause: error });
+    throwSupabaseError('deleteSubjectRow', 'Failed to delete subject.', error);
   }
   return Boolean(data && data.length > 0);
 }
@@ -610,8 +664,7 @@ export async function createTaskRowSupabase(
     .single<DbTaskRow>();
 
   if (error) {
-    console.error('Supabase query failed (createTaskRow):', error);
-    throw new Error('Failed to create task.', { cause: error });
+    throwSupabaseError('createTaskRow', 'Failed to create task.', error);
   }
   return mapTaskRow(data);
 }
@@ -631,8 +684,7 @@ export async function updateTaskRowSupabase(
     .maybeSingle<DbTaskRow>();
 
   if (error) {
-    console.error('Supabase query failed (updateTaskRow):', error);
-    throw new Error('Failed to update task.', { cause: error });
+    throwSupabaseError('updateTaskRow', 'Failed to update task.', error);
   }
   return data ? mapTaskRow(data) : null;
 }
@@ -647,8 +699,7 @@ export async function deleteTaskRowSupabase(uid: string, id: string): Promise<bo
     .select('id');
 
   if (error) {
-    console.error('Supabase query failed (deleteTaskRow):', error);
-    throw new Error('Failed to delete task.', { cause: error });
+    throwSupabaseError('deleteTaskRow', 'Failed to delete task.', error);
   }
   return Boolean(data && data.length > 0);
 }
@@ -680,8 +731,7 @@ export async function createPomodoroSessionRowSupabase(
     .single<DbSessionRow>();
 
   if (sessError) {
-    console.error('Supabase query failed (createPomodoroSessionRow):', sessError);
-    throw new Error('Failed to log study session.', { cause: sessError });
+    throwSupabaseError('createPomodoroSessionRow', 'Failed to log study session.', sessError);
   }
 
   let updatedSubject: Subject | null = null;
@@ -738,8 +788,7 @@ export async function createScheduleBlockRowSupabase(
     .single<DbScheduleRow>();
 
   if (error) {
-    console.error('Supabase query failed (createScheduleBlockRow):', error);
-    throw new Error('Failed to create schedule block.', { cause: error });
+    throwSupabaseError('createScheduleBlockRow', 'Failed to create schedule block.', error);
   }
   return mapScheduleRow(data);
 }
@@ -754,8 +803,7 @@ export async function deleteScheduleBlockRowSupabase(uid: string, id: string): P
     .select('id');
 
   if (error) {
-    console.error('Supabase query failed (deleteScheduleBlockRow):', error);
-    throw new Error('Failed to delete schedule block.', { cause: error });
+    throwSupabaseError('deleteScheduleBlockRow', 'Failed to delete schedule block.', error);
   }
   return Boolean(data && data.length > 0);
 }
@@ -784,8 +832,7 @@ export async function createNoteRowSupabase(
     .single<DbNoteRow>();
 
   if (error) {
-    console.error('Supabase query failed (createNoteRow):', error);
-    throw new Error('Failed to create note.', { cause: error });
+    throwSupabaseError('createNoteRow', 'Failed to create note.', error);
   }
   return mapNoteRow(data);
 }
@@ -817,8 +864,7 @@ export async function updateNoteRowSupabase(
     .maybeSingle<DbNoteRow>();
 
   if (error) {
-    console.error('Supabase query failed (updateNoteRow):', error);
-    throw new Error('Failed to update note.', { cause: error });
+    throwSupabaseError('updateNoteRow', 'Failed to update note.', error);
   }
   return data ? mapNoteRow(data) : null;
 }
@@ -833,8 +879,7 @@ export async function deleteNoteRowSupabase(uid: string, id: string): Promise<bo
     .select('id');
 
   if (error) {
-    console.error('Supabase query failed (deleteNoteRow):', error);
-    throw new Error('Failed to delete note.', { cause: error });
+    throwSupabaseError('deleteNoteRow', 'Failed to delete note.', error);
   }
   return Boolean(data && data.length > 0);
 }
@@ -864,8 +909,7 @@ export async function createGoalRowSupabase(
     .single<DbGoalRow>();
 
   if (error) {
-    console.error('Supabase query failed (createGoalRow):', error);
-    throw new Error('Failed to create goal.', { cause: error });
+    throwSupabaseError('createGoalRow', 'Failed to create goal.', error);
   }
   return mapGoalRow(data);
 }
@@ -884,8 +928,7 @@ export async function incrementGoalRowSupabase(
     .maybeSingle<DbGoalRow>();
 
   if (fetchError) {
-    console.error('Supabase query failed (incrementGoalRow fetch):', fetchError);
-    throw new Error('Failed to update goal progress.', { cause: fetchError });
+    throwSupabaseError('incrementGoalRow fetch', 'Failed to update goal progress.', fetchError);
   }
 
   if (!existing) return null;
@@ -912,8 +955,7 @@ export async function incrementGoalRowSupabase(
     .maybeSingle<DbGoalRow>();
 
   if (updateError) {
-    console.error('Supabase query failed (incrementGoalRow update):', updateError);
-    throw new Error('Failed to update goal progress.', { cause: updateError });
+    throwSupabaseError('incrementGoalRow update', 'Failed to update goal progress.', updateError);
   }
   return updated ? mapGoalRow(updated) : null;
 }
@@ -928,8 +970,7 @@ export async function deleteGoalRowSupabase(uid: string, id: string): Promise<bo
     .select('id');
 
   if (error) {
-    console.error('Supabase query failed (deleteGoalRow):', error);
-    throw new Error('Failed to delete goal.', { cause: error });
+    throwSupabaseError('deleteGoalRow', 'Failed to delete goal.', error);
   }
   return Boolean(data && data.length > 0);
 }
@@ -946,8 +987,7 @@ export async function listCommunityMessagesSupabase(
     .limit(100);
 
   if (error) {
-    console.error('Supabase query failed (listCommunityMessages):', error);
-    throw new Error('Failed to fetch community messages.', { cause: error });
+    throwSupabaseError('listCommunityMessages', 'Failed to fetch community messages.', error);
   }
   return ((data || []) as DbCommunityRow[]).map(mapCommunityRow);
 }
@@ -973,8 +1013,7 @@ export async function createCommunityMessageRowSupabase(input: {
     .single<DbCommunityRow>();
 
   if (error) {
-    console.error('Supabase query failed (createCommunityMessageRow):', error);
-    throw new Error('Failed to post community message.', { cause: error });
+    throwSupabaseError('createCommunityMessageRow', 'Failed to post community message.', error);
   }
   return mapCommunityRow(data);
 }
@@ -992,8 +1031,7 @@ export async function deleteCommunityMessageRowSupabase(
     .select('id');
 
   if (error) {
-    console.error('Supabase query failed (deleteCommunityMessageRow):', error);
-    throw new Error('Failed to delete community message.', { cause: error });
+    throwSupabaseError('deleteCommunityMessageRow', 'Failed to delete community message.', error);
   }
   return Boolean(data && data.length > 0);
 }

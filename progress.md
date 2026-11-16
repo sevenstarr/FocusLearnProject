@@ -7,7 +7,7 @@ Documento de contexto técnico para continuidade por outros agentes e desenvolve
 ## 1. Visão Geral do Projeto
 
 - **Nome**: FocusLearn (`metadata.json`)
-- **Objetivo**: Plataforma web inteligente de estudos e produtividade acadêmica em português (`pt-BR`), convertida de 4 protótipos HTML estáticos (`/public/assets/aistudio/*.html`) para **Next.js 15 (App Router)** com autenticação Firebase e persistência relacional em **PostgreSQL (Cloud SQL)** via **Drizzle ORM**.
+- **Objetivo**: Plataforma web inteligente de estudos e produtividade acadêmica em português (`pt-BR`), convertida de 4 protótipos HTML estáticos (`/public/assets/aistudio/*.html`) para **Next.js 15 (App Router)** com autenticação **Supabase Auth** (Google OAuth + E-mail/Senha) e persistência relacional em **Supabase PostgreSQL** (com fallback local Drizzle/Cloud SQL).
 - **Design System**: Tailwind CSS v4 (`@import "tailwindcss";`, variante `dark` baseada na classe `.dark` em `<html>`), fontes `Plus Jakarta Sans`, `DM Sans` e `JetBrains Mono`, ícones via `lucide-react` e animações com `motion/react`.
 
 ---
@@ -44,10 +44,12 @@ Gerenciado por `components/FocusLearnShell.tsx` e `components/FocusProvider.tsx`
 8. **Configurações & Perfil (`components/views/SettingsProfileView.tsx`)**:
    - Edição de perfil acadêmico (`UserProfile`), alternância de tema Claro/Escuro persistida, gerenciamento de sessão e reset do estado local.
 
-### 2.2. Autenticação Firebase (`/app/login`, `/app/cadastro`, `/app/recuperar-senha`)
-- **Client SDK**: `lib/firebase.ts` e `components/FirebaseProvider.tsx` (`signInWithPopup` com Google, `signInWithEmailAndPassword`, `createUserWithEmailAndPassword`, `sendPasswordResetEmail`, `sendEmailVerification`).
-- **Admin SDK**: `src/lib/firebase-admin.ts` (import estático obrigatório de `firebase-applet-config.json`) e `src/lib/api-auth.ts` (`verifyRequestAuth` validando `Authorization: Bearer <token>`).
-- **Fallback Local**: Quando o usuário não está autenticado/verificado, o `FocusProvider` opera localmente via `localStorage` (`focuslearn_local_state_v2`) com dados iniciais de `lib/seedData.ts`. Quando `user && user.emailVerified` é verdadeiro, sincroniza com a API PostgreSQL.
+### 2.2. Autenticação Supabase Auth (`/app/login`, `/app/cadastro`, `/app/recuperar-senha`, `/auth/callback`)
+- **Client SDK**: `lib/supabase-browser.ts` (`flowType: 'pkce'`, `safeStorage`) e `components/AuthProvider.tsx` (`useAuth()`), obtendo configuração pública via `NEXT_PUBLIC_*` ou em runtime por `GET /api/auth/config`.
+- **Google OAuth**: `signInWithOAuth({ provider: 'google', options: { skipBrowserRedirect: true } })` abrindo popup direto na URL do provedor e recebendo retorno via `app/auth/callback/route.ts` (`postMessage` + `BroadcastChannel`, com suporte também a redirect tradicional fora de iframe).
+- **E-mail/Senha & Recuperação**: `signInWithPassword`, `signUp` e `resetPasswordForEmail` via Supabase Auth.
+- **Verificação Server-Side**: `src/lib/api-auth.ts` (`verifyRequestAuth` validando `Authorization: Bearer <access_token>` com `supabase.auth.getUser(token)`).
+- **Fallback Local**: Quando o usuário não está autenticado, o `FocusProvider` opera localmente via `localStorage` (`focuslearn_local_state_v2`) com dados iniciais de `lib/seedData.ts`. Quando autenticado com sessão válida, sincroniza com a API REST.
 
 ### 2.3. Banco de Dados Relacional (Supabase + Cloud SQL PostgreSQL + Migrations)
 - **Integração Supabase (`@supabase/supabase-js`)**:
@@ -94,23 +96,27 @@ Todas protegidas por `verifyRequestAuth` e conectadas via `src/db/gateway.ts`:
 4. **Regras ESLint / React 19**:
    - Corrigidos `set-state-in-effect` em `FocusProvider.tsx`, `SettingsProfileView.tsx` e `hooks/use-mobile.ts` (refatorado com `useSyncExternalStore`), e imagem de avatar migrada para `next/image` em `components/UserAvatar.tsx` com `lh3.googleusercontent.com` em `next.config.ts`.
 
+5. **Logs e diagnóstico de queries Supabase (`src/db/supabase-repositories.ts`)**:
+   - Substituídos logs multi-linha `console.error(..., err)` por `throwSupabaseError` em linha única (`console.warn`) com mensagens claras em português para tabelas não migradas (`PGRST205`/`42P01`), chave `service_role` incorreta (`42501`/`Invalid API key`) ou erro de rede (`fetch failed`).
+6. **Migração do Login Google & Auth para Supabase Auth**:
+   - Removidos `components/FirebaseProvider.tsx`, `lib/firebase.ts` e `src/lib/firebase-admin.ts` das rotas ativas; substituídos por `AuthProvider.tsx`, `lib/supabase-browser.ts`, `app/auth/callback/route.ts`, `app/api/auth/config/route.ts` e `src/lib/api-auth.ts` usando `supabase.auth.getUser(token)`.
+
 ---
 
 ## 4. Ações Pendentes / Manuais Externas (Console)
 
-1. **Ativar o Supabase no projeto externo / Vercel**:
-   - Executar `supabase/migrations/20261116000000_initial_schema.sql` no SQL Editor do projeto Supabase (ou `supabase db push`).
-   - Configurar `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` na Vercel / `.env.local`.
-2. **Domínio Vercel no Firebase Authentication**:
-   - Adicionar `focus-learn-project.vercel.app` em:
-     - Firebase Console → `moonlit-rock-j5v9p` → **Authentication → Settings → Authorized domains**
-     - *(Se necessário para OAuth Google)* Google Cloud Console → OAuth Client `126975480206-5raq0jhcpq1d57gpv3ecnl0n8m5oo9u2.apps.googleusercontent.com` → Origens JS autorizadas: `https://focus-learn-project.vercel.app`.
-3. **Provedor E-mail/Senha (Opcional)**:
-   - Login com Google funciona imediatamente. Para habilitar login/cadastro por E-mail e Senha, ativar o provedor *Email/Password* no Firebase Authentication Console.
+1. **Aplicar Migration SQL no Supabase**:
+   - Executar `supabase/migrations/20261116000000_initial_schema.sql` no SQL Editor do projeto Supabase (inclui tabelas, RLS, `GRANT` para `service_role` e `NOTIFY pgrst, 'reload schema'`).
+2. **Ativar Google OAuth no Supabase**:
+   - Em **Supabase → Authentication → Providers → Google**: ativar e preencher Client ID / Client Secret do Google Cloud Console.
+   - Em **Supabase → Authentication → URL Configuration → Redirect URLs**: adicionar as URLs de callback (`/auth/callback`) do preview AI Studio, `https://focus-learn-project.vercel.app/auth/callback` e `http://localhost:3000/auth/callback`.
+   - No **Google Cloud Console → OAuth Client → Authorized redirect URIs**: adicionar `https://<SEU_PROJECT_REF>.supabase.co/auth/v1/callback`.
+3. **Secrets / Variáveis de Ambiente**:
+   - Garantir `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` configurados nos Secrets do AI Studio e na Vercel.
 
 ---
 
 ## 5. Estado Atual Verificado
 
-- Build (`next build`) e ESLint (`eslint .`) validados após integração do Supabase e correções de `.next` e fontes.
-- Servidor de desenvolvimento reiniciado com build limpo.
+- Build (`next build`) e ESLint (`eslint .`) validados após migração completa de banco e autenticação para Supabase.
+- Servidor de desenvolvimento reiniciado com código atualizado.

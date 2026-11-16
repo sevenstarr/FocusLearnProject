@@ -128,3 +128,9 @@ ALTER TABLE "public"."schedule_blocks" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."study_notes" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."semester_goals" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."community_messages" ENABLE ROW LEVEL SECURITY;
+
+GRANT USAGE ON SCHEMA "public" TO "service_role";
+GRANT ALL ON ALL TABLES IN SCHEMA "public" TO "service_role";
+GRANT ALL ON ALL SEQUENCES IN SCHEMA "public" TO "service_role";
+
+NOTIFY pgrst, 'reload schema';

@@ -1,16 +1,16 @@
 # FocusLearn
 
-Plataforma inteligente de estudos e produtividade acadêmica construída com **Next.js 15 (App Router)**, **React 19**, **TypeScript**, **Tailwind CSS v4**, **PostgreSQL (Cloud SQL)** com **Drizzle ORM** e **Firebase Authentication**.
+Plataforma inteligente de estudos e produtividade acadêmica construída com **Next.js 15 (App Router)**, **React 19**, **TypeScript**, **Tailwind CSS v4**, **Supabase (Auth + PostgreSQL)** e **Drizzle ORM**.
 
-O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro com sintetizador de som ambiente, planejador semanal, cadernos em Markdown, metas semestrais e salas de estudo da comunidade — com persistência relacional em PostgreSQL via API Routes protegidas por tokens JWT do Firebase e modo de visualização local (`localStorage`) para uso imediato.
+O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro com sintetizador de som ambiente, planejador semanal, cadernos em Markdown, metas semestrais e salas de estudo da comunidade — com persistência relacional no Supabase PostgreSQL via API Routes protegidas por tokens JWT do **Supabase Auth** e modo de visualização local (`localStorage`) para uso imediato.
 
 ---
 
 ## Funcionalidades
 
-### Autenticação e Contas
-- **Login com Google** (`signInWithPopup`) e fluxos completos de **E-mail/Senha**, **Cadastro** (`/cadastro`) e **Recuperação de Senha** (`/recuperar-senha`).
-- Verificação de identidade no backend via **Firebase Admin SDK** (`Authorization: Bearer <idToken>`) em todas as rotas `/api/*`.
+### Autenticação e Contas (Supabase Auth)
+- **Login com Google OAuth** via **Supabase Auth** (`signInWithOAuth` com PKCE + callback em `/auth/callback`) e fluxos completos de **E-mail/Senha**, **Cadastro** (`/cadastro`) e **Recuperação de Senha** (`/recuperar-senha`).
+- Verificação de identidade no backend via `supabase.auth.getUser(token)` (`Authorization: Bearer <access_token>`) em todas as rotas `/api/*`.
 - Fallback automático em `localStorage` no modo visitante quando não autenticado.
 
 ### 8 Módulos Integrados no Painel Principal (`/`)
@@ -29,8 +29,7 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 
 - **Framework**: [Next.js 15](https://nextjs.org/) (App Router) & [React 19](https://react.dev/)
 - **Linguagem**: [TypeScript 5](https://www.typescriptlang.org/)
-- **Banco de Dados & ORM**: **Supabase** (`@supabase/supabase-js`) / **PostgreSQL** (`pg` pool) + [Drizzle ORM](https://orm.drizzle.team/)
-- **Autenticação**: [Firebase Authentication](https://firebase.google.com/) (Client SDK + `firebase-admin`)
+- **Banco de Dados & Autenticação**: **Supabase** (`@supabase/supabase-js` para Auth + PostgreSQL) com fallback local PostgreSQL + [Drizzle ORM](https://orm.drizzle.team/)
 - **Estilização**: [Tailwind CSS v4](https://tailwindcss.com/) + `tw-animate-css`
 - **Animações e Ícones**: [Motion](https://motion.dev/) (`motion/react`) & [Lucide React](https://lucide.dev/)
 - **Markdown**: [`react-markdown`](https://github.com/remarkjs/react-markdown)
@@ -43,6 +42,7 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 ```text
 ├── app/
 │   ├── api/
+│   │   ├── auth/config/           # GET configuração pública Supabase em runtime
 │   │   ├── community/             # GET/POST/DELETE mensagens da comunidade
 │   │   ├── goals/                 # POST/PATCH/DELETE metas semestrais
 │   │   ├── notes/                 # POST/PATCH/DELETE cadernos em Markdown
@@ -52,6 +52,7 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 │   │   ├── subjects/              # POST/PATCH/DELETE disciplinas e notas
 │   │   ├── tasks/                 # POST/PATCH/DELETE micro-tarefas
 │   │   └── workspace/             # GET bootstrap/upsert e carregamento inicial
+│   ├── auth/callback/route.ts     # Callback HTML OAuth Google (popup postMessage + redirect)
 │   ├── cadastro/page.tsx          # Página de criação de conta
 │   ├── login/page.tsx             # Página de login (Google e E-mail/Senha)
 │   ├── recuperar-senha/page.tsx   # Página de recuperação de senha
@@ -68,9 +69,8 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 │   │   ├── supabase-repositories.ts # Repositório Supabase (@supabase/supabase-js)
 │   │   └── users.ts               # Upsert de usuário e seed inicial atômico (Drizzle)
 │   └── lib/
-│       ├── api-auth.ts            # Verificação de Bearer JWT do Firebase
-│       ├── firebase-admin.ts      # Inicialização do Firebase Admin SDK
-│       └── supabase.ts            # Cliente server-side Supabase (service role)
+│       ├── api-auth.ts            # Verificação de Bearer JWT via Supabase Auth
+│       └── supabase.ts            # Cliente server-side Supabase (service role + config)
 ├── supabase/
 │   └── migrations/
 │       └── 20261116000000_initial_schema.sql # Migration SQL completa para Supabase + RLS
@@ -78,7 +78,7 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 │   └── 0000_shocking_hiroim.sql   # Migration SQL Drizzle inicial
 ├── components/
 │   ├── views/                     # Os 8 módulos visuais do painel
-│   ├── FirebaseProvider.tsx       # Contexto de autenticação Firebase
+│   ├── AuthProvider.tsx           # Contexto de autenticação Supabase (Google OAuth + E-mail)
 │   ├── FocusLearnShell.tsx        # Layout principal, sidebar e navegação
 │   ├── FocusProvider.tsx          # Estado global, chamadas API e fallback local
 │   ├── ToastBanner.tsx            # Notificações toast
@@ -88,8 +88,8 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 │   └── use-mobile.ts              # Detecção responsiva via useSyncExternalStore
 └── lib/
     ├── audio.ts                   # Sintetizador Web Audio API e sino de conclusão
-    ├── firebase.ts                # Inicialização do Firebase Client Auth
     ├── seedData.ts                # Dados iniciais de exemplo e cálculo de médias
+    ├── supabase-browser.ts        # Cliente browser Supabase Auth (PKCE + safeStorage)
     ├── types.ts                   # Tipagens TypeScript do domínio
     └── utils.ts                   # Utilitários de classe CSS
 ```
@@ -117,8 +117,7 @@ Todas as chaves estrangeiras possuem `ON DELETE CASCADE` e índices nas colunas 
 
 ### 1. Pré-requisitos
 - **Node.js 20+**
-- Um projeto no [Supabase](https://supabase.com/) (ou PostgreSQL compatível)
-- Projeto no [Firebase Console](https://console.firebase.google.com/) com **Authentication** ativado
+- Um projeto no [Supabase](https://supabase.com/) com **Database** e **Authentication (Google Provider)** configurados
 
 ### 2. Clonar e instalar dependências
 
@@ -133,7 +132,7 @@ npm install
 1. No painel do seu projeto Supabase, abra **SQL Editor** (ou use a Supabase CLI com `supabase db push`).
 2. Execute o conteúdo de `supabase/migrations/20261116000000_initial_schema.sql` para criar todas as tabelas, índices, chaves estrangeiras e ativar o RLS.
 
-### 4. Configurar variáveis e credenciais
+### 4. Configurar variáveis e Google OAuth no Supabase
 
 1. Copie `.env.example` para `.env.local` e preencha as chaves do seu projeto Supabase:
    ```bash
@@ -144,20 +143,11 @@ npm install
    NEXT_PUBLIC_SUPABASE_ANON_KEY="SUA_ANON_KEY"
    SUPABASE_SERVICE_ROLE_KEY="SUA_SERVICE_ROLE_KEY"
    ```
-   > Quando `NEXT_PUBLIC_SUPABASE_URL` (ou `SUPABASE_URL`) e `SUPABASE_SERVICE_ROLE_KEY` estão definidos, todas as rotas `/api/*` usam o **Supabase** automaticamente. No ambiente do Google AI Studio, caso não estejam definidos, o gateway utiliza o PostgreSQL local provisionado via variáveis `SQL_*`.
+   > Quando `NEXT_PUBLIC_SUPABASE_URL` (ou `SUPABASE_URL`) e `SUPABASE_SERVICE_ROLE_KEY` estão definidos, todas as rotas `/api/*` usam o **Supabase** automaticamente.
 
-2. Configure `firebase-applet-config.json` na raiz do projeto com as credenciais web do seu projeto Firebase:
-   ```json
-   {
-     "apiKey": "SUA_FIREBASE_API_KEY",
-     "authDomain": "SEU_PROJETO.firebaseapp.com",
-     "projectId": "SEU_PROJECT_ID",
-     "storageBucket": "SEU_PROJETO.firebasestorage.app",
-     "messagingSenderId": "SEU_SENDER_ID",
-     "appId": "SEU_APP_ID"
-   }
-   ```
-3. No **Firebase Console → Authentication → Sign-in method**, ative o provedor **Google** (e adicione o seu domínio de produção, como `focus-learn-project.vercel.app`, em **Authorized domains**).
+2. No painel do **Supabase → Authentication → Providers → Google**, ative o provedor Google informando seu Client ID / Client Secret do Google Cloud Console.
+3. No **Supabase → Authentication → URL Configuration**, adicione suas URLs de redirect permitidas (ex.: `https://focus-learn-project.vercel.app/auth/callback` e `http://localhost:3000/auth/callback`).
+4. No **Google Cloud Console → Credentials (OAuth Client)**, adicione em **Authorized redirect URIs**: `https://<SEU_PROJECT_REF>.supabase.co/auth/v1/callback`.
 
 ### 5. Iniciar em desenvolvimento
 

@@ -15,14 +15,14 @@ import {
   AlertCircle,
   CheckCircle2,
 } from 'lucide-react';
-import { useFirebase } from '@/components/FirebaseProvider';
+import { useAuth } from '@/components/AuthProvider';
 import { useFocus } from '@/components/FocusProvider';
 import { ToastBanner } from '@/components/ToastBanner';
 import { UserAvatar } from '@/components/UserAvatar';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signInWithGoogle, signInWithEmail } = useFirebase();
+  const { signInWithGoogle, signInWithEmail } = useAuth();
   const { theme, toggleTheme, showToast } = useFocus();
 
   const [email, setEmail] = useState('');
@@ -285,7 +285,7 @@ export default function LoginPage() {
                 <UserAvatar name="Lucas Andrade" sizeClass="w-8 h-8 text-[10px]" />
               </div>
               <p className="text-xs text-blue-100">
-                Autenticação segura via Firebase Auth com sincronização em nuvem.
+                Autenticação segura via Supabase Auth (Google OAuth & E-mail) com sincronização em nuvem.
               </p>
             </div>
           </aside>
