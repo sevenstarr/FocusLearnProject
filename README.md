@@ -1,4 +1,9 @@
-# FocusLearn
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand-assets/focuslearn-horizontal-dark.svg" />
+    <img src="brand-assets/focuslearn-horizontal-light.svg" alt="FocusLearn" width="380" />
+  </picture>
+</p>
 
 Plataforma inteligente de estudos e produtividade acadêmica construída com **Next.js 15 (App Router)**, **React 19**, **TypeScript**, **Tailwind CSS v4**, **Supabase (Auth + PostgreSQL)** e **Drizzle ORM**.
 
