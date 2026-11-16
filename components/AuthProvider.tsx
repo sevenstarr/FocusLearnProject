@@ -169,6 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
   const sessionRef = useRef<Session | null>(null);
   const pendingOAuthResolverRef = useRef<((res: AuthResult) => void) | null>(null);
+  const pendingOAuthPopupRef = useRef<Window | null>(null);
 
   const completeOAuthFromParams = useCallback(
     async (
@@ -334,15 +335,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === 'undefined') return;
 
     const handlePayload = async (payload: OAuthCallbackPayload | null | undefined) => {
-      if (!payload || payload.type !== 'SUPABASE_OAUTH_CALLBACK') return;
+      if (
+        !payload ||
+        payload.type !== 'SUPABASE_OAUTH_CALLBACK' ||
+        typeof payload.search !== 'string' ||
+        payload.search.length > 8192 ||
+        !pendingOAuthResolverRef.current
+      ) return;
+
+      const callbackParams = new URLSearchParams(payload.search);
+      if (!callbackParams.has('code') && !callbackParams.has('error')) return;
+
       const client = clientRef.current;
       if (!client) return;
 
-      const result = await completeOAuthFromParams(
-        client,
-        payload.search || '',
-        payload.hash || ''
-      );
+      const result = await completeOAuthFromParams(client, payload.search, '');
       if (pendingOAuthResolverRef.current) {
         const resolve = pendingOAuthResolverRef.current;
         pendingOAuthResolverRef.current = null;
@@ -351,13 +358,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const onMessage = (event: MessageEvent) => {
-      const origin = event.origin;
-      const sameOrigin = origin === window.location.origin;
-      const allowedHost =
-        origin.endsWith('.run.app') ||
-        origin.endsWith('.vercel.app') ||
-        origin.includes('localhost');
-      if (!sameOrigin && !allowedHost) return;
+      if (
+        event.origin !== window.location.origin ||
+        event.source !== pendingOAuthPopupRef.current
+      ) return;
       void handlePayload(event.data as OAuthCallbackPayload);
     };
 
@@ -477,6 +481,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           settled = true;
           if (pendingOAuthResolverRef.current === finish) {
             pendingOAuthResolverRef.current = null;
+            pendingOAuthPopupRef.current = null;
           }
           if (closeGraceTimer) clearTimeout(closeGraceTimer);
           if (pollTimer) clearInterval(pollTimer);
@@ -485,6 +490,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
 
         pendingOAuthResolverRef.current = finish;
+        pendingOAuthPopupRef.current = popup;
 
         pollTimer = setInterval(() => {
           if (popup.closed && !closeGraceTimer) {

@@ -4,7 +4,19 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   const fallbackNext = req.nextUrl.searchParams.get('next') || '/';
-  const safeNext = fallbackNext.startsWith('/') ? fallbackNext : '/';
+  let safeNext = '/';
+  try {
+    const nextUrl = new URL(fallbackNext, req.nextUrl.origin);
+    if (
+      fallbackNext.startsWith('/') &&
+      !fallbackNext.startsWith('//') &&
+      nextUrl.origin === req.nextUrl.origin
+    ) {
+      safeNext = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+    }
+  } catch {
+    // Invalid or external redirect destinations fall back to the app root.
+  }
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -68,7 +80,7 @@ export async function GET(req: NextRequest) {
 
         if (window.opener && !window.opener.closed) {
           try {
-            window.opener.postMessage(payload, '*');
+            window.opener.postMessage(payload, window.location.origin);
           } catch (_) {}
           setTimeout(function () {
             window.close();
