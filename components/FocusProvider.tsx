@@ -1,23 +1,6 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import {
-  collection,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  onSnapshot,
-  query,
-  where,
-  limit,
-  serverTimestamp,
-  writeBatch,
-  increment,
-  Timestamp,
-} from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '@/lib/firebase';
 import { useFirebase } from '@/components/FirebaseProvider';
 import { ambientAudio, AmbientSoundType } from '@/lib/audio';
 import {
@@ -205,6 +188,35 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     applyDomTheme(theme);
   }, [theme]);
 
+  const authFetch = useCallback(
+    async (input: string, init?: RequestInit) => {
+      if (!user) {
+        throw new Error('Usuário não autenticado.');
+      }
+      const token = await user.getIdToken();
+      const res = await fetch(input, {
+        ...init,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          ...(init?.headers || {}),
+        },
+      });
+      if (!res.ok) {
+        let errMessage = 'Falha ao sincronizar com o servidor.';
+        try {
+          const errJson = await res.json();
+          if (errJson?.error) errMessage = String(errJson.error);
+        } catch {
+          // Ignore parse error
+        }
+        throw new Error(errMessage);
+      }
+      return res.json();
+    },
+    [user]
+  );
+
   // Load local preview state on mount when unauthenticated
   useEffect(() => {
     if (!authReady) return;
@@ -264,354 +276,74 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     }
   }, [authReady, user, profile, theme, subjects, tasks, sessions, schedule, notes, goals, communityMessages]);
 
-  // Bootstrap & listen to Firestore when user is verified & authenticated
+  // Bootstrap & load workspace from PostgreSQL API when authenticated
   useEffect(() => {
     if (!authReady || !user || !user.emailVerified) return;
 
-    const uid = user.uid;
     let active = true;
-
-    async function bootstrapUserAccount() {
-      const profileRef = doc(db, 'users', uid);
+    async function loadWorkspace() {
       try {
-        const snap = await getDoc(profileRef);
-        if (!snap.exists()) {
-          const defaultProf = createDefaultProfile(
-            uid,
-            user?.displayName || 'Estudante FocusLearn',
-            user?.email || 'estudante@universidade.edu.br'
-          );
-          const batch = writeBatch(db);
-          batch.set(profileRef, {
-            ownerId: uid,
-            name: defaultProf.name,
-            email: defaultProf.email,
-            course: defaultProf.course,
-            university: defaultProf.university,
-            semester: defaultProf.semester,
-            registration: defaultProf.registration,
-            bio: defaultProf.bio,
-            dailyGoalHours: defaultProf.dailyGoalHours,
-            pomoMinutes: defaultProf.pomoMinutes,
-            streak: defaultProf.streak,
-            recordStreak: defaultProf.recordStreak,
-            theme: defaultProf.theme,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          });
-
-          for (const sub of createStarterSubjects(uid)) {
-            batch.set(doc(db, 'users', uid, 'subjects', sub.id), {
-              ownerId: uid,
-              code: sub.code,
-              name: sub.name,
-              professor: sub.professor,
-              schedule: sub.schedule,
-              credits: sub.credits,
-              p1: sub.p1,
-              p2: sub.p2,
-              hoursStudied: sub.hoursStudied,
-              status: sub.status,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            });
-          }
-          for (const t of createStarterTasks(uid)) {
-            batch.set(doc(db, 'users', uid, 'tasks', t.id), {
-              ownerId: uid,
-              title: t.title,
-              completed: t.completed,
-              subjectId: t.subjectId,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            });
-          }
-          for (const s of createStarterSessions(uid)) {
-            batch.set(doc(db, 'users', uid, 'sessions', s.id), {
-              ownerId: uid,
-              subjectId: s.subjectId,
-              subjectName: s.subjectName,
-              mode: s.mode,
-              durationMinutes: s.durationMinutes,
-              dateKey: s.dateKey,
-              createdAt: serverTimestamp(),
-            });
-          }
-          for (const b of createStarterSchedule(uid)) {
-            batch.set(doc(db, 'users', uid, 'schedule', b.id), {
-              ownerId: uid,
-              title: b.title,
-              dayIndex: b.dayIndex,
-              startHour: b.startHour,
-              endHour: b.endHour,
-              type: b.type,
-              subjectId: b.subjectId,
-              subjectName: b.subjectName,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            });
-          }
-          for (const n of createStarterNotes(uid)) {
-            batch.set(doc(db, 'users', uid, 'notes', n.id), {
-              ownerId: uid,
-              title: n.title,
-              subjectId: n.subjectId,
-              subjectName: n.subjectName,
-              tags: n.tags,
-              content: n.content,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            });
-          }
-          for (const g of createStarterGoals(uid)) {
-            batch.set(doc(db, 'users', uid, 'goals', g.id), {
-              ownerId: uid,
-              title: g.title,
-              category: g.category,
-              currentValue: g.currentValue,
-              targetValue: g.targetValue,
-              unit: g.unit,
-              deadline: g.deadline,
-              status: g.status,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            });
-          }
-          await batch.commit();
+        const data = await authFetch('/api/workspace');
+        if (!active) return;
+        if (data.profile) {
+          const loadedProfile: UserProfile = {
+            ...data.profile,
+            photoURL: user?.photoURL || undefined,
+          };
+          setProfile(loadedProfile);
+          setTheme(loadedProfile.theme === 'dark' ? 'dark' : 'light');
         }
+        if (Array.isArray(data.subjects)) setSubjects(data.subjects);
+        if (Array.isArray(data.tasks)) setTasks(data.tasks);
+        if (Array.isArray(data.sessions)) setSessions(data.sessions);
+        if (Array.isArray(data.schedule)) setSchedule(data.schedule);
+        if (Array.isArray(data.notes)) setNotes(data.notes);
+        if (Array.isArray(data.goals)) setGoals(data.goals);
       } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, `users/${uid}`);
+        if (!active) return;
+        showToast(
+          'Erro ao carregar dados',
+          err instanceof Error ? err.message : 'Não foi possível carregar sua conta agora.',
+          'error'
+        );
+      } finally {
+        if (active) setLoadingData(false);
       }
     }
 
-    void bootstrapUserAccount().then(() => {
-      if (!active) return;
-      setLoadingData(false);
-    });
-
-    const unsubs: (() => void)[] = [];
-
-    unsubs.push(
-      onSnapshot(
-        doc(db, 'users', uid),
-        (snap) => {
-          if (!snap.exists()) return;
-          const d = snap.data();
-          const prof: UserProfile = {
-            ownerId: d.ownerId,
-            name: d.name,
-            email: d.email,
-            course: d.course,
-            university: d.university,
-            semester: d.semester,
-            registration: d.registration,
-            bio: d.bio,
-            dailyGoalHours: d.dailyGoalHours,
-            pomoMinutes: d.pomoMinutes,
-            streak: d.streak,
-            recordStreak: d.recordStreak,
-            theme: d.theme === 'dark' ? 'dark' : 'light',
-            photoURL: user.photoURL || undefined,
-          };
-          setProfile(prof);
-          setTheme(prof.theme);
-        },
-        (error) => handleFirestoreError(error, OperationType.GET, `users/${uid}`)
-      )
-    );
-
-    const subsQuery = query(collection(db, 'users', uid, 'subjects'), where('ownerId', '==', uid));
-    unsubs.push(
-      onSnapshot(
-        subsQuery,
-        (snap) => {
-          const list: Subject[] = snap.docs.map((docSnap) => {
-            const d = docSnap.data();
-            return {
-              id: docSnap.id,
-              ownerId: d.ownerId,
-              code: d.code,
-              name: d.name,
-              professor: d.professor,
-              schedule: d.schedule,
-              credits: d.credits,
-              p1: d.p1,
-              p2: d.p2,
-              hoursStudied: d.hoursStudied,
-              status: d.status,
-            };
-          });
-          setSubjects(list);
-        },
-        (error) => handleFirestoreError(error, OperationType.LIST, `users/${uid}/subjects`)
-      )
-    );
-
-    const tasksQuery = query(collection(db, 'users', uid, 'tasks'), where('ownerId', '==', uid));
-    unsubs.push(
-      onSnapshot(
-        tasksQuery,
-        (snap) => {
-          const list: QuickTask[] = snap.docs.map((docSnap) => {
-            const d = docSnap.data();
-            return {
-              id: docSnap.id,
-              ownerId: d.ownerId,
-              title: d.title,
-              completed: Boolean(d.completed),
-              subjectId: d.subjectId || '',
-            };
-          });
-          setTasks(list);
-        },
-        (error) => handleFirestoreError(error, OperationType.LIST, `users/${uid}/tasks`)
-      )
-    );
-
-    const sessionsQuery = query(collection(db, 'users', uid, 'sessions'), where('ownerId', '==', uid));
-    unsubs.push(
-      onSnapshot(
-        sessionsQuery,
-        (snap) => {
-          const list: PomodoroSession[] = snap.docs
-            .map((docSnap) => {
-              const d = docSnap.data();
-              const ts = d.createdAt instanceof Timestamp ? d.createdAt.toMillis() : Date.now();
-              return {
-                id: docSnap.id,
-                ownerId: d.ownerId,
-                subjectId: d.subjectId,
-                subjectName: d.subjectName,
-                mode: d.mode as PomodoroMode,
-                durationMinutes: d.durationMinutes,
-                dateKey: d.dateKey,
-                createdAtMs: ts,
-              };
-            })
-            .sort((a, b) => b.createdAtMs - a.createdAtMs);
-          setSessions(list);
-        },
-        (error) => handleFirestoreError(error, OperationType.LIST, `users/${uid}/sessions`)
-      )
-    );
-
-    const schedQuery = query(collection(db, 'users', uid, 'schedule'), where('ownerId', '==', uid));
-    unsubs.push(
-      onSnapshot(
-        schedQuery,
-        (snap) => {
-          const list: ScheduleBlock[] = snap.docs.map((docSnap) => {
-            const d = docSnap.data();
-            return {
-              id: docSnap.id,
-              ownerId: d.ownerId,
-              title: d.title,
-              dayIndex: d.dayIndex,
-              startHour: d.startHour,
-              endHour: d.endHour,
-              type: d.type,
-              subjectId: d.subjectId,
-              subjectName: d.subjectName,
-            };
-          });
-          setSchedule(list);
-        },
-        (error) => handleFirestoreError(error, OperationType.LIST, `users/${uid}/schedule`)
-      )
-    );
-
-    const notesQuery = query(collection(db, 'users', uid, 'notes'), where('ownerId', '==', uid));
-    unsubs.push(
-      onSnapshot(
-        notesQuery,
-        (snap) => {
-          const list: StudyNote[] = snap.docs
-            .map((docSnap) => {
-              const d = docSnap.data();
-              const ts = d.updatedAt instanceof Timestamp ? d.updatedAt.toMillis() : Date.now();
-              return {
-                id: docSnap.id,
-                ownerId: d.ownerId,
-                title: d.title,
-                subjectId: d.subjectId,
-                subjectName: d.subjectName,
-                tags: Array.isArray(d.tags) ? d.tags : [],
-                content: d.content,
-                updatedAtMs: ts,
-              };
-            })
-            .sort((a, b) => b.updatedAtMs - a.updatedAtMs);
-          setNotes(list);
-        },
-        (error) => handleFirestoreError(error, OperationType.LIST, `users/${uid}/notes`)
-      )
-    );
-
-    const goalsQuery = query(collection(db, 'users', uid, 'goals'), where('ownerId', '==', uid));
-    unsubs.push(
-      onSnapshot(
-        goalsQuery,
-        (snap) => {
-          const list: SemesterGoal[] = snap.docs.map((docSnap) => {
-            const d = docSnap.data();
-            return {
-              id: docSnap.id,
-              ownerId: d.ownerId,
-              title: d.title,
-              category: d.category,
-              currentValue: d.currentValue,
-              targetValue: d.targetValue,
-              unit: d.unit,
-              deadline: d.deadline,
-              status: d.status,
-            };
-          });
-          setGoals(list);
-        },
-        (error) => handleFirestoreError(error, OperationType.LIST, `users/${uid}/goals`)
-      )
-    );
+    void loadWorkspace();
 
     return () => {
       active = false;
-      unsubs.forEach((u) => u());
     };
-  }, [authReady, user]);
+  }, [authReady, user, authFetch, showToast]);
 
-  // Listen to live community messages for active channel when authenticated
+  // Load community messages for active channel when authenticated
   useEffect(() => {
-    if (!authReady || !user || !user.emailVerified) {
-      return;
+    if (!authReady || !user || !user.emailVerified) return;
+
+    let active = true;
+    async function fetchMessages() {
+      try {
+        const data = await authFetch(`/api/community?channel=${encodeURIComponent(activeChannel)}`);
+        if (active && Array.isArray(data.messages)) {
+          setCommunityMessages(data.messages);
+        }
+      } catch {
+        // Keep current messages quietly if transient polling fails
+      }
     }
-    const q = query(
-      collection(db, 'communityMessages'),
-      where('channel', '==', activeChannel),
-      limit(100)
-    );
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        const list: CommunityMessage[] = snap.docs
-          .map((docSnap) => {
-            const d = docSnap.data();
-            const ts = d.createdAt instanceof Timestamp ? d.createdAt.toMillis() : Date.now();
-            return {
-              id: docSnap.id,
-              authorId: d.authorId,
-              authorName: d.authorName,
-              authorCourse: d.authorCourse,
-              channel: d.channel as CommunityChannel,
-              text: d.text,
-              createdAtMs: ts,
-            };
-          })
-          .sort((a, b) => a.createdAtMs - b.createdAtMs);
-        setCommunityMessages(list);
-      },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'communityMessages')
-    );
-    return () => unsub();
-  }, [authReady, user, activeChannel]);
+
+    void fetchMessages();
+    const interval = setInterval(() => {
+      void fetchMessages();
+    }, 8000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [authReady, user, activeChannel, authFetch]);
 
   const resolvedSelectedSubjectId = subjects.some((s) => s.id === selectedSubjectId)
     ? selectedSubjectId
@@ -638,25 +370,32 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     if (!isBreak) {
       const dateKey = getDateKey();
       if (cloudSynced && user) {
-        const sessRef = doc(collection(db, 'users', user.uid, 'sessions'));
         try {
-          await setDoc(sessRef, {
-            ownerId: user.uid,
-            subjectId: subId,
-            subjectName: subName.slice(0, 120),
-            mode: timerMode,
-            durationMinutes: loggedMinutes,
-            dateKey,
-            createdAt: serverTimestamp(),
+          const res = await authFetch('/api/sessions', {
+            method: 'POST',
+            body: JSON.stringify({
+              subjectId: subId,
+              subjectName: subName.slice(0, 120),
+              mode: timerMode,
+              durationMinutes: loggedMinutes,
+              dateKey,
+            }),
           });
-          if (activeSubject) {
-            await updateDoc(doc(db, 'users', user.uid, 'subjects', activeSubject.id), {
-              hoursStudied: increment(Number((loggedMinutes / 60).toFixed(2))),
-              updatedAt: serverTimestamp(),
-            });
+          if (res.session) {
+            setSessions((prev) => [res.session, ...prev]);
+          }
+          if (res.updatedSubject) {
+            setSubjects((prev) =>
+              prev.map((s) => (s.id === res.updatedSubject.id ? res.updatedSubject : s))
+            );
           }
         } catch (err) {
-          handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}/sessions`);
+          showToast(
+            'Erro ao salvar sessão',
+            err instanceof Error ? err.message : 'Tente novamente em instantes.',
+            'error'
+          );
+          return;
         }
       } else {
         const newSession: PomodoroSession = {
@@ -693,7 +432,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     const nextMode: PomodoroMode = isBreak ? 'pomodoro25' : 'shortBreak';
     setTimerMode(nextMode);
     setTimerSecondsLeft(MODE_DURATIONS[nextMode]);
-  }, [timerMode, timerSecondsLeft, subjects, resolvedSelectedSubjectId, cloudSynced, user, showToast]);
+  }, [timerMode, timerSecondsLeft, subjects, resolvedSelectedSubjectId, cloudSynced, user, authFetch, showToast]);
 
   useEffect(() => {
     completeSessionRef.current = completeSessionNow;
@@ -756,12 +495,16 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     setProfile((prev) => ({ ...prev, theme: mode }));
     if (cloudSynced && user) {
       try {
-        await updateDoc(doc(db, 'users', user.uid), {
-          theme: mode,
-          updatedAt: serverTimestamp(),
+        await authFetch('/api/profile', {
+          method: 'PATCH',
+          body: JSON.stringify({ theme: mode }),
         });
       } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
+        showToast(
+          'Erro ao salvar tema',
+          err instanceof Error ? err.message : 'Não foi possível salvar sua preferência.',
+          'error'
+        );
       }
     }
   };
@@ -791,21 +534,28 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
 
     if (cloudSynced && user) {
       try {
-        await updateDoc(doc(db, 'users', user.uid), {
-          name: merged.name,
-          email: merged.email,
-          course: merged.course,
-          university: merged.university,
-          semester: merged.semester,
-          registration: merged.registration,
-          bio: merged.bio,
-          dailyGoalHours: merged.dailyGoalHours,
-          pomoMinutes: merged.pomoMinutes,
-          theme: merged.theme,
-          updatedAt: serverTimestamp(),
+        await authFetch('/api/profile', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            name: merged.name,
+            email: merged.email,
+            course: merged.course,
+            university: merged.university,
+            semester: merged.semester,
+            registration: merged.registration,
+            bio: merged.bio,
+            dailyGoalHours: merged.dailyGoalHours,
+            pomoMinutes: merged.pomoMinutes,
+            theme: merged.theme,
+          }),
         });
       } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
+        showToast(
+          'Erro ao atualizar perfil',
+          err instanceof Error ? err.message : 'Tente novamente em instantes.',
+          'error'
+        );
+        return;
       }
     }
     showToast('Perfil atualizado', 'Suas informações acadêmicas foram salvas.');
@@ -824,16 +574,21 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
       status: input.status || 'active',
     };
     if (cloudSynced && user) {
-      const ref = doc(collection(db, 'users', user.uid, 'subjects'));
       try {
-        await setDoc(ref, {
-          ownerId: user.uid,
-          ...sanitized,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+        const res = await authFetch('/api/subjects', {
+          method: 'POST',
+          body: JSON.stringify(sanitized),
         });
+        if (res.subject) {
+          setSubjects((prev) => [res.subject, ...prev]);
+        }
       } catch (err) {
-        handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}/subjects`);
+        showToast(
+          'Erro ao adicionar matéria',
+          err instanceof Error ? err.message : 'Tente novamente em instantes.',
+          'error'
+        );
+        return;
       }
     } else {
       setSubjects((prev) => [{ id: `sub-${Date.now()}`, ownerId: localUid, ...sanitized }, ...prev]);
@@ -856,12 +611,20 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     };
     if (cloudSynced && user) {
       try {
-        await updateDoc(doc(db, 'users', user.uid, 'subjects', id), {
-          ...next,
-          updatedAt: serverTimestamp(),
+        const res = await authFetch(`/api/subjects/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify(next),
         });
+        if (res.subject) {
+          setSubjects((prev) => prev.map((s) => (s.id === id ? res.subject : s)));
+        }
       } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/subjects/${id}`);
+        showToast(
+          'Erro ao atualizar matéria',
+          err instanceof Error ? err.message : 'Tente novamente em instantes.',
+          'error'
+        );
+        return;
       }
     } else {
       setSubjects((prev) => prev.map((s) => (s.id === id ? { ...s, ...next } : s)));
@@ -872,9 +635,17 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
   const deleteSubject = async (id: string) => {
     if (cloudSynced && user) {
       try {
-        await deleteDoc(doc(db, 'users', user.uid, 'subjects', id));
+        await authFetch(`/api/subjects/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+        setSubjects((prev) => prev.filter((s) => s.id !== id));
       } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/subjects/${id}`);
+        showToast(
+          'Erro ao remover matéria',
+          err instanceof Error ? err.message : 'Tente novamente em instantes.',
+          'error'
+        );
+        return;
       }
     } else {
       setSubjects((prev) => prev.filter((s) => s.id !== id));
@@ -886,18 +657,20 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     const clean = title.trim().slice(0, 200);
     if (!clean) return;
     if (cloudSynced && user) {
-      const ref = doc(collection(db, 'users', user.uid, 'tasks'));
       try {
-        await setDoc(ref, {
-          ownerId: user.uid,
-          title: clean,
-          completed: false,
-          subjectId: subjectId.slice(0, 128),
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+        const res = await authFetch('/api/tasks', {
+          method: 'POST',
+          body: JSON.stringify({ title: clean, subjectId: subjectId.slice(0, 128) }),
         });
+        if (res.task) {
+          setTasks((prev) => [res.task, ...prev]);
+        }
       } catch (err) {
-        handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}/tasks`);
+        showToast(
+          'Erro ao adicionar tarefa',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
       }
     } else {
       setTasks((prev) => [
@@ -911,26 +684,37 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     const existing = tasks.find((t) => t.id === id);
     if (!existing) return;
     const nextVal = !existing.completed;
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, completed: nextVal } : t)));
     if (cloudSynced && user) {
       try {
-        await updateDoc(doc(db, 'users', user.uid, 'tasks', id), {
-          completed: nextVal,
-          updatedAt: serverTimestamp(),
+        await authFetch(`/api/tasks/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ completed: nextVal }),
         });
       } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/tasks/${id}`);
+        setTasks((prev) => prev.map((t) => (t.id === id ? existing : t)));
+        showToast(
+          'Erro ao atualizar tarefa',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
       }
-    } else {
-      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, completed: nextVal } : t)));
     }
   };
 
   const deleteTask = async (id: string) => {
     if (cloudSynced && user) {
       try {
-        await deleteDoc(doc(db, 'users', user.uid, 'tasks', id));
+        await authFetch(`/api/tasks/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+        setTasks((prev) => prev.filter((t) => t.id !== id));
       } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/tasks/${id}`);
+        showToast(
+          'Erro ao remover tarefa',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
       }
     } else {
       setTasks((prev) => prev.filter((t) => t.id !== id));
@@ -950,16 +734,21 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
       subjectName: input.subjectName.slice(0, 120),
     };
     if (cloudSynced && user) {
-      const ref = doc(collection(db, 'users', user.uid, 'schedule'));
       try {
-        await setDoc(ref, {
-          ownerId: user.uid,
-          ...payload,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+        const res = await authFetch('/api/schedule', {
+          method: 'POST',
+          body: JSON.stringify(payload),
         });
+        if (res.block) {
+          setSchedule((prev) => [...prev, res.block]);
+        }
       } catch (err) {
-        handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}/schedule`);
+        showToast(
+          'Erro ao agendar bloco',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
+        return;
       }
     } else {
       setSchedule((prev) => [...prev, { id: `sched-${Date.now()}`, ownerId: localUid, ...payload }]);
@@ -970,9 +759,17 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
   const deleteScheduleBlock = async (id: string) => {
     if (cloudSynced && user) {
       try {
-        await deleteDoc(doc(db, 'users', user.uid, 'schedule', id));
+        await authFetch(`/api/schedule/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+        setSchedule((prev) => prev.filter((b) => b.id !== id));
       } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/schedule/${id}`);
+        showToast(
+          'Erro ao remover bloco',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
+        return;
       }
     } else {
       setSchedule((prev) => prev.filter((b) => b.id !== id));
@@ -994,18 +791,23 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     };
 
     if (cloudSynced && user) {
-      const ref = doc(collection(db, 'users', user.uid, 'notes'));
       try {
-        await setDoc(ref, {
-          ownerId: user.uid,
-          ...payload,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+        const res = await authFetch('/api/notes', {
+          method: 'POST',
+          body: JSON.stringify(payload),
         });
-        showToast('Nota salva', `"${payload.title}" sincronizada na nuvem.`);
-        return ref.id;
+        if (res.note) {
+          setNotes((prev) => [res.note, ...prev]);
+          showToast('Nota salva', `"${payload.title}" sincronizada na nuvem.`);
+          return String(res.note.id);
+        }
       } catch (err) {
-        handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}/notes`);
+        showToast(
+          'Erro ao salvar nota',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
+        return '';
       }
     }
     const id = `note-${Date.now()}`;
@@ -1030,12 +832,20 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     };
     if (cloudSynced && user) {
       try {
-        await updateDoc(doc(db, 'users', user.uid, 'notes', id), {
-          ...payload,
-          updatedAt: serverTimestamp(),
+        const res = await authFetch(`/api/notes/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
         });
+        if (res.note) {
+          setNotes((prev) => prev.map((n) => (n.id === id ? res.note : n)));
+        }
       } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/notes/${id}`);
+        showToast(
+          'Erro ao atualizar nota',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
+        return;
       }
     } else {
       setNotes((prev) =>
@@ -1048,9 +858,17 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
   const deleteNote = async (id: string) => {
     if (cloudSynced && user) {
       try {
-        await deleteDoc(doc(db, 'users', user.uid, 'notes', id));
+        await authFetch(`/api/notes/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+        setNotes((prev) => prev.filter((n) => n.id !== id));
       } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/notes/${id}`);
+        showToast(
+          'Erro ao remover nota',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
+        return;
       }
     } else {
       setNotes((prev) => prev.filter((n) => n.id !== id));
@@ -1073,16 +891,21 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     } as const;
 
     if (cloudSynced && user) {
-      const ref = doc(collection(db, 'users', user.uid, 'goals'));
       try {
-        await setDoc(ref, {
-          ownerId: user.uid,
-          ...payload,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+        const res = await authFetch('/api/goals', {
+          method: 'POST',
+          body: JSON.stringify(payload),
         });
+        if (res.goal) {
+          setGoals((prev) => [...prev, res.goal]);
+        }
       } catch (err) {
-        handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}/goals`);
+        showToast(
+          'Erro ao criar meta',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
+        return;
       }
     } else {
       setGoals((prev) => [...prev, { id: `goal-${Date.now()}`, ownerId: localUid, ...payload }]);
@@ -1097,30 +920,47 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     const nextStatus = nextVal >= existing.targetValue ? 'completed' : 'active';
     if (cloudSynced && user) {
       try {
-        await updateDoc(doc(db, 'users', user.uid, 'goals', id), {
-          currentValue: nextVal,
-          status: nextStatus,
-          updatedAt: serverTimestamp(),
+        const res = await authFetch(`/api/goals/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ delta }),
         });
+        if (res.goal) {
+          setGoals((prev) => prev.map((g) => (g.id === id ? res.goal : g)));
+          if (res.goal.status === 'completed') {
+            showToast('Meta atingida!', `Parabéns por concluir "${existing.title}"!`);
+          }
+        }
       } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/goals/${id}`);
+        showToast(
+          'Erro ao atualizar meta',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
       }
     } else {
       setGoals((prev) =>
         prev.map((g) => (g.id === id ? { ...g, currentValue: nextVal, status: nextStatus } : g))
       );
-    }
-    if (nextStatus === 'completed') {
-      showToast('Meta atingida!', `Parabéns por concluir "${existing.title}"!`);
+      if (nextStatus === 'completed') {
+        showToast('Meta atingida!', `Parabéns por concluir "${existing.title}"!`);
+      }
     }
   };
 
   const deleteGoal = async (id: string) => {
     if (cloudSynced && user) {
       try {
-        await deleteDoc(doc(db, 'users', user.uid, 'goals', id));
+        await authFetch(`/api/goals/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+        setGoals((prev) => prev.filter((g) => g.id !== id));
       } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/goals/${id}`);
+        showToast(
+          'Erro ao remover meta',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
+        return;
       }
     } else {
       setGoals((prev) => prev.filter((g) => g.id !== id));
@@ -1133,18 +973,25 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     if (!clean) return;
 
     if (cloudSynced && user) {
-      const ref = doc(collection(db, 'communityMessages'));
       try {
-        await setDoc(ref, {
-          authorId: user.uid,
-          authorName: profile.name.slice(0, 100),
-          authorCourse: profile.course.slice(0, 100),
-          channel: activeChannel,
-          text: clean,
-          createdAt: serverTimestamp(),
+        const res = await authFetch('/api/community', {
+          method: 'POST',
+          body: JSON.stringify({
+            channel: activeChannel,
+            text: clean,
+            authorName: profile.name.slice(0, 100),
+            authorCourse: profile.course.slice(0, 100),
+          }),
         });
+        if (res.message) {
+          setCommunityMessages((prev) => [...prev, res.message]);
+        }
       } catch (err) {
-        handleFirestoreError(err, OperationType.CREATE, 'communityMessages');
+        showToast(
+          'Erro ao enviar mensagem',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
       }
     } else {
       const msg: CommunityMessage = {
@@ -1163,9 +1010,16 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
   const deleteCommunityMessage = async (id: string) => {
     if (cloudSynced && user) {
       try {
-        await deleteDoc(doc(db, 'communityMessages', id));
+        await authFetch(`/api/community/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+        setCommunityMessages((prev) => prev.filter((m) => m.id !== id));
       } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, `communityMessages/${id}`);
+        showToast(
+          'Erro ao remover mensagem',
+          err instanceof Error ? err.message : 'Tente novamente.',
+          'error'
+        );
       }
     } else {
       setCommunityMessages((prev) => prev.filter((m) => m.id !== id));

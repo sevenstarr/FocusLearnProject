@@ -285,7 +285,7 @@ export default function LoginPage() {
                 <UserAvatar name="Lucas Andrade" sizeClass="w-8 h-8 text-[10px]" />
               </div>
               <p className="text-xs text-blue-100">
-                Autenticação segura via Firebase Auth & Firestore.
+                Autenticação segura via Firebase Auth com sincronização em nuvem.
               </p>
             </div>
           </aside>

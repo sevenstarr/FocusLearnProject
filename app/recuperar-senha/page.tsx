@@ -301,14 +301,14 @@ export default function RecuperarSenhaPage() {
                   Sua jornada acadêmica protegida de ponta a ponta.
                 </h2>
                 <p className="text-sm text-blue-100/90 leading-relaxed">
-                  Suas credenciais são gerenciadas diretamente pelo Firebase Authentication com tokens verificados e isolamento por usuário no Firestore.
+                  Suas credenciais são gerenciadas diretamente pelo Firebase Authentication com tokens verificados e isolamento por conta.
                 </p>
                 <ul className="space-y-2.5 pt-2 text-xs text-blue-100">
                   <li className="p-3 rounded-xl bg-white/10">
                     Autenticação OAuth com Google Workspace & contas pessoais
                   </li>
                   <li className="p-3 rounded-xl bg-white/10">
-                    Regras Zero-Trust no Firestore isolando dados pessoais (PII)
+                    Isolamento estrito de dados acadêmicos por usuário autenticado
                   </li>
                   <li className="p-3 rounded-xl bg-white/10">
                     Links de redefinição com expiração automática

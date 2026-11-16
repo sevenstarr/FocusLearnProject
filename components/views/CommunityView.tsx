@@ -87,7 +87,7 @@ export function CommunityView() {
           <div className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
             <Cloud className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
             <span>
-              Entre com sua conta Google para conversar em tempo real com outros estudantes no Firestore.
+              Entre com sua conta Google para conversar e sincronizar mensagens com outros estudantes.
             </span>
           </div>
           <button

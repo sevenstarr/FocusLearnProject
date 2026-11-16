@@ -12,7 +12,7 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification,
 } from 'firebase/auth';
-import { auth, googleProvider, testFirestoreConnection } from '@/lib/firebase';
+import { auth, googleProvider } from '@/lib/firebase';
 
 interface AuthResult {
   ok: boolean;
@@ -91,7 +91,6 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    void testFirestoreConnection();
     const unsub = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setAuthReady(true);
