@@ -373,7 +373,13 @@ export default function CadastroPage() {
                     className="mt-0.5 w-4 h-4 rounded accent-blue-600 cursor-pointer"
                   />
                   <span className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Concordo com os Termos de Serviço e com o tratamento de dados segundo a LGPD.
+                    Li e aceito os{' '}
+                    <Link href="/termos" className="font-semibold text-blue-700 underline underline-offset-2 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200">
+                      Termos de Serviço
+                    </Link>{' '}e a{' '}
+                    <Link href="/privacidade" className="font-semibold text-blue-700 underline underline-offset-2 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200">
+                      Política de Privacidade
+                    </Link>.
                   </span>
                 </label>
 
