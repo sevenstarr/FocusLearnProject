@@ -28,6 +28,7 @@ import {
   createStarterGoals,
   DEMO_COMMUNITY_MESSAGES,
   getDateKey,
+  normalizeSubjectGrades,
 } from '@/lib/seedData';
 
 export interface ToastState {
@@ -330,8 +331,8 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
             }
           }
           if (Array.isArray(parsed.subjects)) setSubjects(parsed.subjects.map((subject: Record<string, unknown>) => {
-            const { credits: _legacyAcademicCredits, ...currentSubject } = subject;
-            return currentSubject as unknown as Subject;
+            const { credits: _legacyAcademicCredits, p1: _legacyP1, p2: _legacyP2, ...currentSubject } = subject;
+            return { ...currentSubject, ...normalizeSubjectGrades(currentSubject) } as unknown as Subject;
           }));
           if (Array.isArray(parsed.tasks)) setTasks(parsed.tasks);
           if (Array.isArray(parsed.sessions)) setSessions(parsed.sessions);
@@ -762,13 +763,13 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addSubject = async (input: Omit<Subject, 'id' | 'ownerId'>) => {
+    const grades = normalizeSubjectGrades(input as unknown as Record<string, unknown>);
     const sanitized = {
       code: input.code.trim().slice(0, 24),
       name: input.name.trim().slice(0, 120),
       professor: input.professor.trim().slice(0, 100),
       schedule: input.schedule.trim().slice(0, 80),
-      p1: Math.max(0, Math.min(10, Number(input.p1) || 0)),
-      p2: Math.max(0, Math.min(10, Number(input.p2) || 0)),
+      ...grades,
       hoursStudied: Math.max(0, Math.min(5000, Number(input.hoursStudied) || 0)),
       status: input.status || 'active',
     };
@@ -798,13 +799,13 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
   const updateSubject = async (id: string, updates: Partial<Subject>) => {
     const existing = subjects.find((s) => s.id === id);
     if (!existing) return;
+    const nextGrades = normalizeSubjectGrades({ ...existing, ...updates } as unknown as Record<string, unknown>);
     const next = {
       code: (updates.code ?? existing.code).slice(0, 24),
       name: (updates.name ?? existing.name).slice(0, 120),
       professor: (updates.professor ?? existing.professor).slice(0, 100),
       schedule: (updates.schedule ?? existing.schedule).slice(0, 80),
-      p1: Math.max(0, Math.min(10, Number(updates.p1 ?? existing.p1))),
-      p2: Math.max(0, Math.min(10, Number(updates.p2 ?? existing.p2))),
+      ...nextGrades,
       status: updates.status ?? existing.status,
     };
     if (cloudSynced && user) {

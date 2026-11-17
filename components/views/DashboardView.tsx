@@ -16,7 +16,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { useFocus } from '@/components/FocusProvider';
-import { getDateKey, getOffsetDateKey, calculateUFCGrade } from '@/lib/seedData';
+import { getDateKey, getOffsetDateKey, calculateGrade } from '@/lib/seedData';
 
 export function DashboardView() {
   const {
@@ -66,7 +66,7 @@ export function DashboardView() {
   const globalAverage = useMemo(() => {
     const active = subjects.filter((s) => s.status === 'active');
     if (active.length === 0) return 0;
-    const sum = active.reduce((acc, s) => acc + calculateUFCGrade(s.p1, s.p2).average, 0);
+    const sum = active.reduce((acc, s) => acc + (s.gradeMax > 0 ? calculateGrade(s.assessments, s.gradeMax, s.gradingMethod, s.approvalRules).average / s.gradeMax * 100 : 0), 0);
     return Number((sum / active.length).toFixed(1));
   }, [subjects]);
 
@@ -314,12 +314,12 @@ export function DashboardView() {
               <span className="font-mono text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                 {globalAverage.toFixed(1)}
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">/ 10.0</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">%</span>
             </div>
             <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mt-3 overflow-hidden">
               <div
                 className="h-full bg-emerald-600 dark:bg-emerald-500 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, globalAverage * 10)}%` }}
+                style={{ width: `${Math.min(100, globalAverage)}%` }}
               />
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">

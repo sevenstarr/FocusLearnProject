@@ -7,6 +7,7 @@ import {
   createStarterSessions,
   createStarterSubjects,
   createStarterTasks,
+  normalizeSubjectGrades,
 } from '@/lib/seedData';
 import type {
   CommunityChannel,
@@ -50,8 +51,12 @@ interface DbSubjectRow {
   name: string;
   professor: string;
   schedule: string;
-  p1: number;
-  p2: number;
+  assessments: Subject['assessments'];
+  grade_max: number;
+  grading_method: string;
+  approval_rules: Subject['approvalRules'];
+  p1?: number;
+  p2?: number;
   hours_studied: number;
   status: string;
 }
@@ -140,6 +145,14 @@ function mapUserRow(row: DbUserRow): UserProfile {
 }
 
 function mapSubjectRow(row: DbSubjectRow): Subject {
+  const grades = normalizeSubjectGrades({
+    assessments: row.assessments,
+    gradeMax: row.grade_max,
+    gradingMethod: row.grading_method,
+    approvalRules: row.approval_rules,
+    p1: row.p1,
+    p2: row.p2,
+  });
   return {
     id: row.id,
     ownerId: row.owner_id,
@@ -147,8 +160,7 @@ function mapSubjectRow(row: DbSubjectRow): Subject {
     name: row.name,
     professor: row.professor,
     schedule: row.schedule,
-    p1: row.p1,
-    p2: row.p2,
+    ...grades,
     hoursStudied: row.hours_studied,
     status:
       row.status === 'completed' || row.status === 'archived'
@@ -384,8 +396,10 @@ export async function seedStarterWorkspaceIfNeededSupabase(uid: string) {
         name: s.name,
         professor: s.professor,
         schedule: s.schedule,
-        p1: s.p1,
-        p2: s.p2,
+        assessments: s.assessments,
+        grade_max: s.gradeMax,
+        grading_method: s.gradingMethod,
+        approval_rules: s.approvalRules,
         hours_studied: s.hoursStudied,
         status: s.status,
       }))
@@ -590,8 +604,10 @@ export async function createSubjectSupabase(
       name: input.name.trim().slice(0, 120),
       professor: input.professor.trim().slice(0, 100),
       schedule: input.schedule.trim().slice(0, 80),
-      p1: Math.max(0, Math.min(10, Number(input.p1) || 0)),
-      p2: Math.max(0, Math.min(10, Number(input.p2) || 0)),
+      assessments: input.assessments,
+      grade_max: input.gradeMax,
+      grading_method: input.gradingMethod,
+      approval_rules: input.approvalRules,
       hours_studied: Math.max(0, Math.min(5000, Number(input.hoursStudied) || 0)),
       status: input.status || 'active',
     })
@@ -615,8 +631,10 @@ export async function updateSubjectRowSupabase(
   if (updates.name !== undefined) patch.name = updates.name.slice(0, 120);
   if (updates.professor !== undefined) patch.professor = updates.professor.slice(0, 100);
   if (updates.schedule !== undefined) patch.schedule = updates.schedule.slice(0, 80);
-  if (updates.p1 !== undefined) patch.p1 = Math.max(0, Math.min(10, Number(updates.p1)));
-  if (updates.p2 !== undefined) patch.p2 = Math.max(0, Math.min(10, Number(updates.p2)));
+  if (updates.assessments !== undefined) patch.assessments = updates.assessments;
+  if (updates.gradeMax !== undefined) patch.grade_max = Math.max(0.01, Number(updates.gradeMax));
+  if (updates.gradingMethod !== undefined) patch.grading_method = updates.gradingMethod;
+  if (updates.approvalRules !== undefined) patch.approval_rules = updates.approvalRules;
   if (updates.status !== undefined) patch.status = updates.status;
 
   const { data, error } = await supabase

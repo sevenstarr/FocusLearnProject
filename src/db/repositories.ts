@@ -10,6 +10,7 @@ import {
   subjects,
   users,
 } from './schema.ts';
+import { normalizeSubjectGrades } from '@/lib/seedData';
 import type {
   CommunityChannel,
   CommunityMessage,
@@ -47,6 +48,7 @@ function mapUserRow(row: typeof users.$inferSelect): UserProfile {
 }
 
 function mapSubjectRow(row: typeof subjects.$inferSelect): Subject {
+  const grades = normalizeSubjectGrades(row as unknown as Record<string, unknown>);
   return {
     id: row.id,
     ownerId: row.ownerId,
@@ -54,8 +56,7 @@ function mapSubjectRow(row: typeof subjects.$inferSelect): Subject {
     name: row.name,
     professor: row.professor,
     schedule: row.schedule,
-    p1: row.p1,
-    p2: row.p2,
+    ...grades,
     hoursStudied: row.hoursStudied,
     status:
       row.status === 'completed' || row.status === 'archived'
@@ -200,8 +201,7 @@ export async function createSubject(
         name: input.name.trim().slice(0, 120),
         professor: input.professor.trim().slice(0, 100),
         schedule: input.schedule.trim().slice(0, 80),
-        p1: Math.max(0, Math.min(10, Number(input.p1) || 0)),
-        p2: Math.max(0, Math.min(10, Number(input.p2) || 0)),
+        ...normalizeSubjectGrades(input as unknown as Record<string, unknown>),
         hoursStudied: Math.max(0, Math.min(5000, Number(input.hoursStudied) || 0)),
         status: input.status || 'active',
       })
@@ -227,8 +227,10 @@ export async function updateSubjectRow(
     if (updates.name !== undefined) patch.name = updates.name.slice(0, 120);
     if (updates.professor !== undefined) patch.professor = updates.professor.slice(0, 100);
     if (updates.schedule !== undefined) patch.schedule = updates.schedule.slice(0, 80);
-    if (updates.p1 !== undefined) patch.p1 = Math.max(0, Math.min(10, Number(updates.p1)));
-    if (updates.p2 !== undefined) patch.p2 = Math.max(0, Math.min(10, Number(updates.p2)));
+    if (updates.assessments !== undefined) patch.assessments = updates.assessments;
+    if (updates.gradeMax !== undefined) patch.gradeMax = Math.max(0.01, Number(updates.gradeMax));
+    if (updates.gradingMethod !== undefined) patch.gradingMethod = updates.gradingMethod;
+    if (updates.approvalRules !== undefined) patch.approvalRules = updates.approvalRules;
     if (updates.status !== undefined) patch.status = updates.status;
 
     const updated = await db

@@ -106,7 +106,7 @@ export async function completeStudyRun(uid: string, id: string, dateKey: string)
       const updated = await tx.execute(sql`UPDATE subjects SET hours_studied=hours_studied+(${duration}/3600.0),updated_at=now() WHERE owner_id=${uid} AND id=${String(run.subject_id)}::uuid RETURNING *`);
       if (updated.rows[0]) {
         const r = updated.rows[0] as DbRow;
-        updatedSubject = { id: r.id, ownerId: r.owner_id, code: r.code, name: r.name, professor: r.professor, schedule: r.schedule, p1: r.p1, p2: r.p2, hoursStudied: r.hours_studied, status: r.status };
+        updatedSubject = { id: r.id, ownerId: r.owner_id, code: r.code, name: r.name, professor: r.professor, schedule: r.schedule, assessments: r.assessments, gradeMax: r.grade_max, gradingMethod: r.grading_method, approvalRules: r.approval_rules, hoursStudied: r.hours_studied, status: r.status };
       }
     }
     const earnedQ = await tx.execute(sql`SELECT coalesce(sum(amount),0)::int AS n FROM credit_transactions WHERE owner_id=${uid} AND type='study' AND amount>0 AND created_at>now()-interval '24 hours'`);

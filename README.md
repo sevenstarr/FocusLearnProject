@@ -20,7 +20,7 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 
 ### 8 Módulos Integrados no Painel Principal (`/`)
 1. **Visão Geral (Dashboard)**: Indicadores dinâmicos de desempenho, mapa de calor de frequência dos últimos 30 dias, gráfico semanal de carga de estudo, widget de Pomodoro rápido sincronizado e lista de micro-tarefas.
-2. **Matérias & Cursos**: CRUD completo de disciplinas, filtro por status (`Ativas`, `Concluídas`, `Todas`), edição inline de notas `P1`/`P2`, calculadora automática de média e situação acadêmica (Aprovado, Final ou Reprovado) e atalho de 1 clique para iniciar uma sessão Pomodoro na matéria.
+2. **Matérias & Cursos**: CRUD completo de disciplinas, avaliações personalizáveis com escala e método de cálculo configuráveis, critérios de aprovação e prova final ajustáveis, simulador vinculado a uma matéria ou independente e atalho de 1 clique para iniciar uma sessão Pomodoro.
 3. **Cronômetro Pomodoro & Modo Zen**: Timer global (`25m`, `50m`, `5m`, `15m`) vinculado à disciplina selecionada, registro transacional das sessões concluídas com incremento automático de horas da matéria, modo tela cheia sem distrações (saída com `Escape`) e sintetizador de áudio ambiente via **Web Audio API** (`Chuva`, `Lo-Fi`, `Ruído Branco`, `Biblioteca`) com controle de volume e aviso sonoro ao finalizar.
 4. **Planejador Semanal**: Grade interativa de 7 dias (`SEG`–`DOM`) por horário (`08:00`–`20:00`) com agendamento direto ao clicar em células vazias, criação/remoção de blocos e filtros por categoria (`Aula`, `Revisão`, `Prova`, `Pausa`).
 5. **Estatísticas & Metas**: Distribuição de horas estudadas por disciplina, gerenciamento de metas semestrais (com incremento de progresso e trava ao concluir) e exportação para impressão/PDF.
@@ -106,7 +106,7 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 As migrations SQL versionadas ficam em `supabase/migrations/` (prontas para `supabase db push` ou SQL Editor do Supabase, já com RLS habilitado) e em `drizzle/`:
 
 - `users` — Perfil acadêmico, preferências, streak e flag `seeded` (`uid` único indexado)
-- `subjects` — Disciplinas, notas `p1`/`p2` e `hours_studied` (FK `owner_id -> users.uid`)
+- `subjects` — Disciplinas, avaliações e critérios acadêmicos em JSONB, nota máxima, método de cálculo e `hours_studied` (FK `owner_id -> users.uid`)
 - `quick_tasks` — Micro-tarefas rápidas (FK `owner_id -> users.uid`)
 - `pomodoro_sessions` — Histórico de blocos Pomodoro concluídos (FK `owner_id -> users.uid`)
 - `study_session_runs`, `credit_transactions`, `cosmetic_ownership` — Sessões validadas, ledger de créditos e inventário da loja
