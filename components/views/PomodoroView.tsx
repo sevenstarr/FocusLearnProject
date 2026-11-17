@@ -183,7 +183,7 @@ export function PomodoroView() {
                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   {timerMode === 'stopwatch' ? 'Tempo estudado' : 'Tempo restante'}
                 </span>
-                <span className="font-mono text-5xl sm:text-6xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tight my-1 select-none">
+                <span className="font-mono text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tight my-1 select-none">
                   {formatted}
                 </span>
                 <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
