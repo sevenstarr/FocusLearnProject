@@ -43,3 +43,5 @@ BEGIN
   SELECT coalesce(sum(amount),0)::integer INTO v_balance FROM credit_transactions WHERE owner_id=p_uid;
   RETURN jsonb_build_object('session',to_jsonb(v_session),'updatedSubject',CASE WHEN v_subject.id IS NULL THEN NULL ELSE jsonb_build_object('id',v_subject.id,'ownerId',v_subject.owner_id,'code',v_subject.code,'name',v_subject.name,'professor',v_subject.professor,'schedule',v_subject.schedule,'assessments',v_subject.assessments,'gradeMax',v_subject.grade_max,'gradingMethod',v_subject.grading_method,'approvalRules',v_subject.approval_rules,'hoursStudied',v_subject.hours_studied,'status',v_subject.status) END,'reward',v_reward,'balance',v_balance);
 END $$;
+
+NOTIFY pgrst, 'reload schema';
