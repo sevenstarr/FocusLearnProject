@@ -88,6 +88,7 @@ const MODE_DURATIONS: Record<PomodoroMode, number> = {
   ultra50: 50 * 60,
   shortBreak: 5 * 60,
   longBreak: 15 * 60,
+  stopwatch: 0,
 };
 
 interface FocusContextValue {
@@ -470,21 +471,24 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     setTimerRunning(false);
     ambientAudio.playCompletionChime();
 
+    const isStopwatch = timerMode === 'stopwatch';
     const isBreak = timerMode === 'shortBreak' || timerMode === 'longBreak';
     const fullMinutes = Math.round(MODE_DURATIONS[timerMode] / 60);
     const elapsedMinutes = Math.max(
       1,
       Math.round((MODE_DURATIONS[timerMode] - timerSecondsLeft) / 60) || fullMinutes
     );
-    const loggedMinutes = cloudSynced ? fullMinutes : Math.max(1, Math.min(fullMinutes, elapsedMinutes));
+    const loggedMinutes = isStopwatch
+      ? Math.floor(timerSecondsLeft / 60)
+      : cloudSynced ? fullMinutes : Math.max(1, Math.min(fullMinutes, elapsedMinutes));
 
     const activeSubject = subjects.find((s) => s.id === resolvedSelectedSubjectId) || subjects[0];
     const subId = activeSubject?.id || 'geral';
     const subName = activeSubject?.name || 'Estudo Geral';
 
-    if (!isBreak) {
+    if (!isBreak && loggedMinutes > 0) {
       const dateKey = getDateKey();
-      if (cloudSynced && user) {
+      if (cloudSynced && user && !isStopwatch) {
         try {
           if (!sessionRunId) throw new Error('Inicie o cronômetro conectado para validar esta sessão.');
           const res = await authFetch(`/api/sessions/${encodeURIComponent(sessionRunId)}/complete`, {
@@ -543,9 +547,13 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Auto-switch next mode cleanly
-    const nextMode: PomodoroMode = isBreak ? 'pomodoro25' : 'shortBreak';
-    setTimerMode(nextMode);
-    setTimerSecondsLeft(MODE_DURATIONS[nextMode]);
+    if (!isStopwatch) {
+      const nextMode: PomodoroMode = isBreak ? 'pomodoro25' : 'shortBreak';
+      setTimerMode(nextMode);
+      setTimerSecondsLeft(MODE_DURATIONS[nextMode]);
+    } else {
+      setTimerSecondsLeft(0);
+    }
   }, [timerMode, timerSecondsLeft, subjects, resolvedSelectedSubjectId, cloudSynced, user, authFetch, showToast, sessionRunId, refreshShop]);
 
   useEffect(() => {
@@ -557,6 +565,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     if (!timerRunning) return;
     const interval = setInterval(() => {
       setTimerSecondsLeft((prev) => {
+        if (timerMode === 'stopwatch') return prev + 1;
         if (prev <= 1) {
           clearInterval(interval);
           void completeSessionRef.current();
@@ -566,7 +575,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [timerRunning]);
+  }, [timerRunning, timerMode]);
 
   const switchTimerMode = (mode: PomodoroMode) => {
     if (sessionActionRef.current) return;
@@ -588,7 +597,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     sessionActionRef.current = true;
     void (async () => {
       try {
-        if (!timerRunning && cloudSynced && timerMode !== 'shortBreak' && timerMode !== 'longBreak') {
+        if (!timerRunning && cloudSynced && timerMode !== 'shortBreak' && timerMode !== 'longBreak' && timerMode !== 'stopwatch') {
           const activeSubject = subjects.find((s) => s.id === resolvedSelectedSubjectId) || subjects[0];
           if (sessionRunId) {
             await authFetch(`/api/sessions/${encodeURIComponent(sessionRunId)}/state`, { method: 'POST', body: JSON.stringify({ state: 'resume' }) });
@@ -606,7 +615,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
             const activeElapsed = startedAt ? Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)) : 0;
             setTimerSecondsLeft(Math.max(0, MODE_DURATIONS[runMode] - accumulated - activeElapsed));
           }
-        } else if (timerRunning && cloudSynced && sessionRunId && timerMode !== 'shortBreak' && timerMode !== 'longBreak') {
+        } else if (timerRunning && cloudSynced && sessionRunId && timerMode !== 'shortBreak' && timerMode !== 'longBreak' && timerMode !== 'stopwatch') {
           await authFetch(`/api/sessions/${encodeURIComponent(sessionRunId)}/state`, { method: 'POST', body: JSON.stringify({ state: 'pause' }) });
         }
         setTimerRunning((prev) => !prev);
@@ -624,7 +633,7 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
         if (sessionRunId) await authFetch(`/api/sessions/${encodeURIComponent(sessionRunId)}/state`, { method: 'POST', body: JSON.stringify({ state: 'cancel' }) });
         setSessionRunId(null);
         setTimerRunning(false);
-        setTimerSecondsLeft(MODE_DURATIONS[timerMode]);
+        setTimerSecondsLeft(timerMode === 'stopwatch' ? 0 : MODE_DURATIONS[timerMode]);
       } catch (err) { showToast('Não foi possível reiniciar', err instanceof Error ? err.message : 'Tente novamente.', 'error'); }
       finally { sessionActionRef.current = false; }
     })();

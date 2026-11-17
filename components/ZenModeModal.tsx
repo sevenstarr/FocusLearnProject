@@ -32,16 +32,21 @@ export function ZenModeModal() {
 
   const mins = Math.floor(timerSecondsLeft / 60);
   const secs = timerSecondsLeft % 60;
-  const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  const hours = Math.floor(timerSecondsLeft / 3600);
+  const formatted = timerMode === 'stopwatch'
+    ? `${String(hours).padStart(2, '0')}:${String(Math.floor(timerSecondsLeft / 60) % 60).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+    : `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 
   const radius = 120;
   const circumference = 2 * Math.PI * radius;
-  const progress = timerTotalSeconds > 0 ? timerSecondsLeft / timerTotalSeconds : 1;
+  const progress = timerMode === 'stopwatch' ? 1 : timerTotalSeconds > 0 ? timerSecondsLeft / timerTotalSeconds : 1;
   const dashOffset = circumference * (1 - progress);
 
   const activeSubject = subjects.find((s) => s.id === selectedSubjectId);
   const modeLabel =
-    timerMode === 'pomodoro25'
+    timerMode === 'stopwatch'
+      ? 'Cronômetro de estudo'
+      : timerMode === 'pomodoro25'
       ? 'Pomodoro · 25 min'
       : timerMode === 'ultra50'
         ? 'Ultra Foco · 50 min'
@@ -103,7 +108,7 @@ export function ZenModeModal() {
               {formatted}
             </span>
             <span className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-              {timerRunning ? 'Em andamento' : 'Pausado'}
+              {timerRunning ? 'Contando tempo' : timerMode === 'stopwatch' && timerSecondsLeft === 0 ? 'Pronto para iniciar' : 'Pausado'}
             </span>
           </div>
         </div>
@@ -112,7 +117,7 @@ export function ZenModeModal() {
           <button
             type="button"
             onClick={resetTimer}
-            aria-label="Reiniciar ciclo"
+            aria-label={timerMode === 'stopwatch' ? 'Zerar cronômetro' : 'Reiniciar ciclo'}
             className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <RotateCcw className="w-5 h-5" />
@@ -128,6 +133,7 @@ export function ZenModeModal() {
           <button
             type="button"
             onClick={() => void completeSessionNow()}
+            disabled={timerMode === 'stopwatch' && timerSecondsLeft < 60}
             aria-label="Concluir sessão agora"
             className="p-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
           >
