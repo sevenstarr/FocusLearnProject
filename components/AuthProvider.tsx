@@ -49,6 +49,12 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+function getAuthRedirectUrl(path: string): string {
+  const configuredBase = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, '');
+  const base = configuredBase || 'https://focuslearnproject.vercel.app';
+  return new URL(path, `${base}/`).toString();
+}
+
 function mapSupabaseUser(
   user: SupabaseUser | null | undefined,
   session: Session | null | undefined
@@ -473,7 +479,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               full_name: name,
               name,
             },
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: getAuthRedirectUrl('/auth/callback'),
           },
         });
         if (error) {
@@ -515,7 +521,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const { error } = await client.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth/callback?next=/recuperar-senha&flow=recovery`,
+          redirectTo: getAuthRedirectUrl('/auth/callback?next=/recuperar-senha&flow=recovery'),
         });
         if (error) {
           return mapSupabaseAuthError(error);
