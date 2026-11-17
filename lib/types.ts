@@ -50,7 +50,7 @@ export interface QuickTask {
   subjectId: string;
 }
 
-export type PomodoroMode = 'pomodoro25' | 'ultra50' | 'shortBreak' | 'longBreak';
+export type PomodoroMode = 'pomodoro25' | 'ultra50' | 'shortBreak' | 'longBreak' | 'stopwatch';
 
 export interface PomodoroSession {
   id: string;

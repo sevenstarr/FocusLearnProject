@@ -22,6 +22,7 @@ import { PomodoroMode } from '@/lib/types';
 import { AmbientSoundType } from '@/lib/audio';
 
 const MODE_TABS: { id: PomodoroMode; label: string }[] = [
+  { id: 'stopwatch', label: 'Cronômetro' },
   { id: 'pomodoro25', label: 'Pomodoro (25m)' },
   { id: 'ultra50', label: 'Ultra Foco (50m)' },
   { id: 'shortBreak', label: 'Pausa Curta (5m)' },
@@ -65,11 +66,14 @@ export function PomodoroView() {
 
   const mins = Math.floor(timerSecondsLeft / 60);
   const secs = timerSecondsLeft % 60;
-  const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  const hours = Math.floor(timerSecondsLeft / 3600);
+  const formatted = timerMode === 'stopwatch'
+    ? `${String(hours).padStart(2, '0')}:${String(Math.floor(timerSecondsLeft / 60) % 60).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+    : `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 
   const radius = 120;
   const circumference = 2 * Math.PI * radius;
-  const progress = timerTotalSeconds > 0 ? timerSecondsLeft / timerTotalSeconds : 1;
+  const progress = timerMode === 'stopwatch' ? 1 : timerTotalSeconds > 0 ? timerSecondsLeft / timerTotalSeconds : 1;
   const dashOffset = circumference * (1 - progress);
 
   return (
@@ -129,7 +133,7 @@ export function PomodoroView() {
         <div className="lg:col-span-8 flex flex-col gap-6">
           <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col items-center">
             {/* Mode Tabs */}
-            <div className="w-full max-w-xl grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl mb-6">
+            <div className="w-full max-w-2xl grid grid-cols-2 sm:grid-cols-5 gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl mb-6">
               {MODE_TABS.map((tab) => (
                 <button
                   key={tab.id}
@@ -177,13 +181,13 @@ export function PomodoroView() {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Tempo Restante
+                  {timerMode === 'stopwatch' ? 'Tempo estudado' : 'Tempo restante'}
                 </span>
                 <span className="font-mono text-5xl sm:text-6xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tight my-1 select-none">
                   {formatted}
                 </span>
                 <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                  {timerRunning ? 'Cronômetro ativo' : 'Aguardando início'}
+                  {timerRunning ? 'Contando tempo' : timerMode === 'stopwatch' && timerSecondsLeft > 0 ? 'Pausado' : 'Aguardando início'}
                 </span>
               </div>
             </div>
@@ -193,7 +197,7 @@ export function PomodoroView() {
               <button
                 type="button"
                 onClick={resetTimer}
-                aria-label="Reiniciar ciclo"
+                aria-label={timerMode === 'stopwatch' ? 'Zerar cronômetro' : 'Reiniciar ciclo'}
                 className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-5 h-5" />
@@ -205,7 +209,7 @@ export function PomodoroView() {
                 className="flex-1 min-w-[160px] py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
               >
                 {timerRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                <span>{timerRunning ? 'Pausar Foco' : 'Iniciar Foco'}</span>
+                <span>{timerRunning ? 'Pausar' : timerMode === 'stopwatch' ? 'Iniciar cronômetro' : 'Iniciar Foco'}</span>
               </button>
 
               <button
@@ -220,6 +224,7 @@ export function PomodoroView() {
               <button
                 type="button"
                 onClick={() => void completeSessionNow()}
+                disabled={timerMode === 'stopwatch' && timerSecondsLeft < 60}
                 className="w-full sm:w-auto px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer"
               >
                 <CheckCheck className="w-4 h-4" />

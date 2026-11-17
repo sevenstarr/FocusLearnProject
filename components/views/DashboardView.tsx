@@ -120,11 +120,14 @@ export function DashboardView() {
 
   const minsLeft = Math.floor(timerSecondsLeft / 60);
   const secsLeft = timerSecondsLeft % 60;
-  const formattedClock = `${String(minsLeft).padStart(2, '0')}:${String(secsLeft).padStart(2, '0')}`;
+  const hoursElapsed = Math.floor(timerSecondsLeft / 3600);
+  const formattedClock = timerMode === 'stopwatch'
+    ? `${String(hoursElapsed).padStart(2, '0')}:${String(Math.floor(timerSecondsLeft / 60) % 60).padStart(2, '0')}:${String(secsLeft).padStart(2, '0')}`
+    : `${String(minsLeft).padStart(2, '0')}:${String(secsLeft).padStart(2, '0')}`;
   const ringRadius = 44;
   const ringCircumference = 2 * Math.PI * ringRadius;
   const ringOffset =
-    ringCircumference * (1 - (timerTotalSeconds > 0 ? timerSecondsLeft / timerTotalSeconds : 1));
+    ringCircumference * (1 - (timerMode === 'stopwatch' ? 1 : timerTotalSeconds > 0 ? timerSecondsLeft / timerTotalSeconds : 1));
 
   const handleAddQuickTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -440,14 +443,25 @@ export function DashboardView() {
           <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col items-center">
             <div className="w-full flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Pomodoro Rápido
+                {timerMode === 'stopwatch' ? 'Cronômetro de estudo' : 'Pomodoro Rápido'}
               </span>
               <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
                 {timerRunning ? 'Em foco' : 'Pronto'}
               </span>
             </div>
 
-            <div className="w-full grid grid-cols-2 gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg mb-4">
+            <div className="w-full grid grid-cols-3 gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg mb-4">
+              <button
+                type="button"
+                onClick={() => switchTimerMode('stopwatch')}
+                className={`py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                  timerMode === 'stopwatch'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
+              >
+                Cronômetro
+              </button>
               <button
                 type="button"
                 onClick={() => switchTimerMode('pomodoro25')}
@@ -500,7 +514,9 @@ export function DashboardView() {
                 <span className="font-mono text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
                   {formattedClock}
                 </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">Restante</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {timerMode === 'stopwatch' ? 'Tempo estudado' : 'Restante'}
+                </span>
               </div>
             </div>
 
@@ -508,7 +524,7 @@ export function DashboardView() {
               <button
                 type="button"
                 onClick={resetTimer}
-                aria-label="Reiniciar timer"
+                aria-label={timerMode === 'stopwatch' ? 'Zerar cronômetro' : 'Reiniciar timer'}
                 className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
@@ -519,11 +535,12 @@ export function DashboardView() {
                 className="flex-1 py-2.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer"
               >
                 {timerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                <span>{timerRunning ? 'Pausar' : 'Iniciar Foco'}</span>
+                <span>{timerRunning ? 'Pausar' : timerMode === 'stopwatch' ? 'Iniciar cronômetro' : 'Iniciar Foco'}</span>
               </button>
               <button
                 type="button"
                 onClick={() => void completeSessionNow()}
+                disabled={timerMode === 'stopwatch' && timerSecondsLeft < 60}
                 title="Registrar sessão concluída"
                 aria-label="Registrar sessão concluída"
                 className="p-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
