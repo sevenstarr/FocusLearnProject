@@ -416,105 +416,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGoogle = useCallback(async (): Promise<AuthResult> => {
-    const client = await ensureClient();
-    if (!client) {
-      return {
-        ok: false,
-        needsProviderSetup: true,
-        message:
-          'Configure NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY nos Secrets para habilitar o login com Google via Supabase Auth.',
-      };
-    }
-
-    try {
-      const redirectTo = `${window.location.origin}/auth/callback`;
-      const { data, error } = await client.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo,
-          skipBrowserRedirect: true,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
-          },
-        },
-      });
-
-      if (error || !data?.url) {
-        return mapSupabaseAuthError(
-          error || new Error('URL de autenticação do Google indisponível.')
-        );
-      }
-
-      const width = 520;
-      const height = 660;
-      const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - width) / 2));
-      const top = Math.max(0, Math.round(window.screenY + (window.outerHeight - height) / 2));
-
-      const popup = window.open(
-        data.url,
-        'focuslearn_supabase_google',
-        `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=yes,status=no`
-      );
-
-      if (!popup || popup.closed) {
-        const isInIframe = window.self !== window.top;
-        if (!isInIframe) {
-          window.location.assign(data.url);
-          return { ok: true, message: 'Redirecionando para o login do Google...' };
-        }
-        return {
-          ok: false,
-          message:
-            'O navegador bloqueou a janela pop-up de login do Google. Permita pop-ups para este site e tente novamente.',
-        };
-      }
-
-      return await new Promise<AuthResult>((resolve) => {
-        let settled = false;
-        let closeGraceTimer: ReturnType<typeof setTimeout> | null = null;
-        let pollTimer: ReturnType<typeof setInterval> | null = null;
-        let timeoutTimer: ReturnType<typeof setTimeout> | null = null;
-
-        const finish = (result: AuthResult) => {
-          if (settled) return;
-          settled = true;
-          if (pendingOAuthResolverRef.current === finish) {
-            pendingOAuthResolverRef.current = null;
-            pendingOAuthPopupRef.current = null;
-          }
-          if (closeGraceTimer) clearTimeout(closeGraceTimer);
-          if (pollTimer) clearInterval(pollTimer);
-          if (timeoutTimer) clearTimeout(timeoutTimer);
-          resolve(result);
-        };
-
-        pendingOAuthResolverRef.current = finish;
-        pendingOAuthPopupRef.current = popup;
-
-        pollTimer = setInterval(() => {
-          if (popup.closed && !closeGraceTimer) {
-            closeGraceTimer = setTimeout(() => {
-              finish({
-                ok: false,
-                message:
-                  'A janela de autenticação do Google foi fechada antes da conclusão.',
-              });
-            }, 900);
-          }
-        }, 400);
-
-        timeoutTimer = setTimeout(() => {
-          finish({
-            ok: false,
-            message: 'Tempo limite excedido ao aguardar o login do Google.',
-          });
-        }, 120_000);
-      });
-    } catch (err) {
-      return mapSupabaseAuthError(err);
-    }
-  }, [ensureClient]);
+    return {
+      ok: false,
+      message: 'O acesso com Google está temporariamente indisponível. Entre com e-mail e senha.',
+    };
+  }, []);
 
   const signInWithEmail = useCallback(
     async (email: string, password: string): Promise<AuthResult> => {
