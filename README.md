@@ -136,7 +136,7 @@ npm install
 ### 3. Aplicar a Migration no Supabase
 
 1. No painel do seu projeto Supabase, abra **SQL Editor** (ou use a Supabase CLI com `supabase db push`).
-2. Execute em ordem `supabase/migrations/20261116000000_initial_schema.sql`, `supabase/migrations/20261116010000_focus_shop.sql`, `supabase/migrations/20261116020000_tutorials_seen.sql` e `supabase/migrations/20261116030000_repair_focus_start_session_rpc.sql`. A segunda migration cria o ledger, o inventário e as funções seguras da loja. A terceira adiciona o progresso dos tutoriais ao perfil para sincronização entre dispositivos. A quarta recria a função de início de sessão e atualiza o cache de schema do PostgREST.
+2. Execute as migrations em ordem: `20261116000000_initial_schema.sql`, `20261116010000_focus_shop.sql`, `20261116020000_tutorials_seen.sql`, `20261116030000_repair_focus_start_session_rpc.sql` e `20261116040000_subject_assessments.sql`. A segunda cria o ledger, o inventário e as funções da loja; a terceira adiciona o progresso dos tutoriais; a quarta corrige a função de início de sessão; a quinta adiciona avaliações e regras por matéria e recarrega o cache do PostgREST.
 
 ### Créditos e loja de cosméticos
 

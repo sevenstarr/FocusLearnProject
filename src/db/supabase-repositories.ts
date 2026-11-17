@@ -280,6 +280,16 @@ function throwSupabaseError(
   }
 
   if (
+    context.toLowerCase().includes('subject') &&
+    (code === 'PGRST204' || code === '42703' || lower.includes('schema cache') || lower.includes('column'))
+  ) {
+    throw new Error(
+      'O banco ainda não recebeu a migração das avaliações. Execute supabase/migrations/20261116040000_subject_assessments.sql no SQL Editor do Supabase e aguarde o recarregamento do schema.',
+      { cause: err }
+    );
+  }
+
+  if (
     code === '42501' ||
     lower.includes('row-level security') ||
     lower.includes('permission denied') ||
