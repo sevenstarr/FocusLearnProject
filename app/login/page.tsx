@@ -20,7 +20,7 @@ import { ToastBanner } from '@/components/ToastBanner';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signInWithGoogle, signInWithEmail } = useAuth();
+  const { signInWithEmail } = useAuth();
   const { theme, toggleTheme, showToast } = useFocus();
 
   const [email, setEmail] = useState('');
@@ -29,19 +29,6 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  const handleGoogleLogin = async () => {
-    setErrorMsg(null);
-    setSubmitting(true);
-    const res = await signInWithGoogle();
-    setSubmitting(false);
-    if (res.ok) {
-      showToast('Bem-vindo(a)!', res.message, 'success');
-      router.push('/');
-    } else {
-      setErrorMsg(res.message);
-    }
-  };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,19 +103,9 @@ export default function LoginPage() {
                 Acesse seu painel, acompanhe suas metas e retome seus blocos de foco sincronizados na nuvem.
               </p>
 
-              {/* Primary Google Sign-In */}
-              <div className="mt-6">
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={() => void handleGoogleLogin()}
-                  className="w-full min-h-[48px] py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2.5 cursor-pointer"
-                >
-                  <span className="w-5 h-5 rounded-full bg-white text-blue-600 font-bold text-xs flex items-center justify-center">
-                    G
-                  </span>
-                  <span>Entrar com Google Estudantil</span>
-                </button>
+              {/* Google Sign-In is temporarily unavailable while the cloud issue is resolved. */}
+              <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                O acesso com Google está temporariamente indisponível. Entre com e-mail e senha.
               </div>
 
               <div className="relative my-6">
