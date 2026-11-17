@@ -36,10 +36,30 @@ export interface Subject {
   name: string;
   professor: string;
   schedule: string;
-  p1: number;
-  p2: number;
+  assessments: Assessment[];
+  gradeMax: number;
+  gradingMethod: GradingMethod;
+  approvalRules: ApprovalRules;
   hoursStudied: number;
   status: 'active' | 'completed' | 'archived';
+}
+
+export type GradingMethod = 'sum' | 'normalized' | 'weighted';
+
+export interface Assessment {
+  id: string;
+  name: string;
+  score: number;
+  maxScore: number;
+  weight: number;
+}
+
+export interface ApprovalRules {
+  directThreshold: number;
+  finalEligibilityThreshold: number;
+  finalTarget: number;
+  finalMaxScore: number;
+  finalWeight: number;
 }
 
 export interface QuickTask {
