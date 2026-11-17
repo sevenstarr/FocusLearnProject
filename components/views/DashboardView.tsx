@@ -511,7 +511,7 @@ export function DashboardView() {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-mono text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
+                <span className="font-mono text-xl font-bold text-slate-900 dark:text-white tabular-nums">
                   {formattedClock}
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400">

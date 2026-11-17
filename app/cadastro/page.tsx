@@ -26,7 +26,7 @@ import { ToastBanner } from '@/components/ToastBanner';
 
 export default function CadastroPage() {
   const router = useRouter();
-  const { signInWithGoogle, signUpWithEmail } = useAuth();
+  const { signUpWithEmail } = useAuth();
   const { theme, toggleTheme, updateUserProfile, showToast } = useFocus();
 
   const [fullName, setFullName] = useState('');
@@ -49,22 +49,6 @@ export default function CadastroPage() {
   }, [password]);
 
   const passwordsMatch = !confirmPassword || password === confirmPassword;
-
-  const handleGoogleSignup = async () => {
-    setErrorMsg(null);
-    setSubmitting(true);
-    const res = await signInWithGoogle();
-    setSubmitting(false);
-    if (res.ok) {
-      if (course) {
-        await updateUserProfile({ course });
-      }
-      showToast('Conta conectada!', res.message, 'success');
-      router.push('/');
-    } else {
-      setErrorMsg(res.message);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,18 +138,8 @@ export default function CadastroPage() {
                 Organize matérias, cronometre ciclos de estudo e sincronize tudo em tempo real.
               </p>
 
-              <div className="mt-6">
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={() => void handleGoogleSignup()}
-                  className="w-full min-h-[46px] py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2.5 cursor-pointer"
-                >
-                  <span className="w-5 h-5 rounded-full bg-white text-blue-600 font-bold text-xs flex items-center justify-center">
-                    G
-                  </span>
-                  <span>Cadastrar rapidamente com Google</span>
-                </button>
+              <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                O cadastro com Google está temporariamente indisponível. Crie sua conta com e-mail e senha.
               </div>
 
               <div className="relative my-6">
@@ -174,7 +148,7 @@ export default function CadastroPage() {
                 </div>
                 <div className="relative flex justify-center text-xs">
                   <span className="bg-white dark:bg-slate-900 px-3 text-slate-500 dark:text-slate-400 font-medium">
-                    ou preencha seus dados acadêmicos
+                    preencha seus dados acadêmicos
                   </span>
                 </div>
               </div>

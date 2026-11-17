@@ -245,7 +245,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function loadRuntimeConfig() {
       try {
         const res = await fetch('/api/auth/config', { cache: 'no-store' });
-        if (!res.ok) return;
+        if (!res.ok) {
+          if (active) setAuthReady(true);
+          return;
+        }
         const json = (await res.json()) as {
           url?: string | null;
           anonKey?: string | null;

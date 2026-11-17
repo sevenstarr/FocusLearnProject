@@ -38,7 +38,7 @@ export default function LoginPage() {
     setSubmitting(false);
     if (res.ok) {
       showToast('Acesso liberado', res.message, 'success');
-      router.push('/');
+      router.push('/dashboard');
     } else {
       setErrorMsg(res.message);
     }
