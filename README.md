@@ -16,7 +16,7 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 ### Autenticação e Contas (Supabase Auth)
 - **Login com Google OAuth** via **Supabase Auth** (`signInWithOAuth` com PKCE + callback em `/auth/callback`) e fluxos completos de **E-mail/Senha**, **Cadastro** (`/cadastro`) e **Recuperação de Senha** (`/recuperar-senha`).
 - Verificação de identidade no backend via `supabase.auth.getUser(token)` (`Authorization: Bearer <access_token>`) em todas as rotas `/api/*`.
-- Fallback automático em `localStorage` no modo visitante quando não autenticado.
+- Modo visitante em `/preview`, acessível sem conta; matérias, tarefas, sessões, calendário, notas e metas ficam em `localStorage` neste navegador.
 
 ### Módulos Integrados no Painel Principal (`/`)
 1. **Visão Geral (Dashboard)**: Indicadores dinâmicos de desempenho, mapa de calor de frequência dos últimos 30 dias, gráfico semanal de carga de estudo, widget de Pomodoro rápido sincronizado e lista de micro-tarefas.
