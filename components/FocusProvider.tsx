@@ -38,7 +38,18 @@ export interface ToastState {
   tone: 'success' | 'error' | 'info';
 }
 
+export interface PendingOfflineMutation {
+  id: string;
+  url: string;
+  method: 'PATCH' | 'DELETE';
+  body?: string;
+  createdAt: number;
+  status: 'pending' | 'conflict';
+  error?: string;
+}
+
 const LOCAL_STORAGE_KEY = 'focuslearn_local_state_v3';
+const OFFLINE_QUEUE_KEY = 'focuslearn_offline_queue_v1';
 const TUTORIAL_PROGRESS_STORAGE_KEY = 'focuslearn_tutorial_progress_v1';
 const TUTORIAL_SECTIONS: NavSection[] = [
   'visao-geral',
@@ -48,6 +59,7 @@ const TUTORIAL_SECTIONS: NavSection[] = [
   'planejador-semanal',
   'estatisticas-metas',
   'anotacoes',
+  'estudos-inteligentes',
   'comunidade',
   'configuracoes-ajuda',
 ];
@@ -99,6 +111,10 @@ interface FocusContextValue {
   setSearchQuery: (q: string) => void;
   cloudSynced: boolean;
   loadingData: boolean;
+  pendingMutations: PendingOfflineMutation[];
+  syncPendingMutations: () => Promise<void>;
+  retryPendingMutation: (id: string) => void;
+  discardPendingMutation: (id: string) => void;
   shop: ShopState;
   refreshShop: () => Promise<void>;
   buyShopItem: (itemId: string) => Promise<void>;
@@ -191,9 +207,12 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
   const [activeSection, setActiveSection] = useState<NavSection>('visao-geral');
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingData, setLoadingData] = useState(true);
+  const [pendingMutations, setPendingMutations] = useState<PendingOfflineMutation[]>([]);
+  const [queueLoadedFor, setQueueLoadedFor] = useState('');
   const [shop, setShop] = useState<ShopState>({ balance: 0, items: [], transactions: [], owned: [], activeSession: null });
   const [sessionRunId, setSessionRunId] = useState<string | null>(null);
   const sessionActionRef = useRef(false);
+  const syncLock = useRef(false);
 
   const localUid = 'local-preview';
   const [profile, setProfile] = useState<UserProfile>(() => createDefaultProfile(localUid));
@@ -252,14 +271,30 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
       if (!token) {
         throw new Error('Sessão expirada. Faça login novamente.');
       }
-      const res = await fetch(input, {
-        ...init,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-          ...(init?.headers || {}),
-        },
-      });
+      const method = (init?.method || 'GET').toUpperCase();
+      let res: Response;
+      try {
+        res = await fetch(input, {
+          ...init,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            ...(init?.headers || {}),
+          },
+        });
+      } catch (error) {
+        if ((method === 'PATCH' || method === 'DELETE') && input.startsWith('/api/') && !input.includes('/api/goals/') && error instanceof TypeError) {
+          const mutation: PendingOfflineMutation = {
+            id: crypto.randomUUID(), url: input, method,
+            body: typeof init?.body === 'string' ? init.body : undefined,
+            createdAt: Date.now(), status: 'pending',
+          };
+          setPendingMutations((current) => [...current, mutation]);
+          showToast('Alteração salva offline', 'Ela será sincronizada quando a conexão voltar.', 'info');
+          return { queued: true };
+        }
+        throw error;
+      }
       if (!res.ok) {
         let errMessage = 'Falha ao sincronizar com o servidor.';
         try {
@@ -272,8 +307,94 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
       }
       return res.json();
     },
-    [user, getAccessToken]
+    [user, getAccessToken, showToast]
   );
+
+  useEffect(() => {
+    if (!authReady) return;
+    const key = `${OFFLINE_QUEUE_KEY}:${user?.uid || 'local-preview'}`;
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+    try {
+      const parsed: unknown = JSON.parse(localStorage.getItem(key) || '[]');
+      setPendingMutations(Array.isArray(parsed) ? parsed : []);
+    } catch { setPendingMutations([]); }
+    setQueueLoadedFor(user?.uid || 'local-preview');
+    });
+    return () => { active = false; };
+  }, [authReady, user?.uid]);
+
+  useEffect(() => {
+    if (!authReady || queueLoadedFor !== (user?.uid || 'local-preview')) return;
+    const key = `${OFFLINE_QUEUE_KEY}:${user?.uid || 'local-preview'}`;
+    try { localStorage.setItem(key, JSON.stringify(pendingMutations)); } catch { /* storage may be full */ }
+  }, [authReady, pendingMutations, queueLoadedFor, user?.uid]);
+
+  const syncPendingMutations = useCallback(async () => {
+    if (!user || !cloudSynced || queueLoadedFor !== user.uid || !navigator.onLine || syncLock.current) return;
+    syncLock.current = true;
+    try {
+      const token = await getAccessToken();
+      if (!token) return;
+      for (const mutation of pendingMutations) {
+        if (mutation.status === 'conflict') continue;
+        try {
+          const target = new URL(mutation.url, window.location.origin);
+          if (target.origin !== window.location.origin || !target.pathname.startsWith('/api/')) {
+            setPendingMutations((current) => current.map((item) => item.id === mutation.id
+              ? { ...item, status: 'conflict', error: 'Destino inválido para sincronização.' }
+              : item));
+            continue;
+          }
+          const response = await fetch(mutation.url, {
+            method: mutation.method,
+            headers: { Authorization: `Bearer ${token}`, ...(mutation.body ? { 'Content-Type': 'application/json' } : {}) },
+            ...(mutation.body ? { body: mutation.body } : {}),
+          });
+          if (response.ok) {
+            setPendingMutations((current) => current.filter((item) => item.id !== mutation.id));
+          } else if ([400, 404, 409, 410, 422].includes(response.status)) {
+            const payload = await response.json().catch(() => ({}));
+            setPendingMutations((current) => current.map((item) => item.id === mutation.id
+              ? { ...item, status: 'conflict', error: String(payload.error || `Conflito HTTP ${response.status}`) }
+              : item));
+            const latestResponse = await fetch('/api/workspace', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+            if (latestResponse.ok) {
+              const latest = await latestResponse.json();
+              if (latest.profile) { setProfile(latest.profile); setTheme(latest.profile.theme === 'dark' ? 'dark' : 'light'); }
+              if (Array.isArray(latest.subjects)) setSubjects(latest.subjects);
+              if (Array.isArray(latest.tasks)) setTasks(latest.tasks);
+              if (Array.isArray(latest.sessions)) setSessions(latest.sessions);
+              if (Array.isArray(latest.schedule)) setSchedule(latest.schedule);
+              if (Array.isArray(latest.notes)) setNotes(latest.notes);
+              if (Array.isArray(latest.goals)) setGoals(latest.goals);
+            }
+          } else {
+            break;
+          }
+        } catch { break; }
+      }
+    } finally { syncLock.current = false; }
+  }, [user, cloudSynced, getAccessToken, pendingMutations, queueLoadedFor]);
+
+  const discardPendingMutation = useCallback((id: string) => {
+    setPendingMutations((current) => current.filter((item) => item.id !== id));
+  }, []);
+
+  const retryPendingMutation = useCallback((id: string) => {
+    setPendingMutations((current) => current.map((item) => item.id === id
+      ? { ...item, status: 'pending', error: undefined }
+      : item));
+  }, []);
+
+  useEffect(() => {
+    if (!cloudSynced || !pendingMutations.some((item) => item.status === 'pending')) return;
+    const syncWhenOnline = () => { void syncPendingMutations(); };
+    window.addEventListener('online', syncWhenOnline);
+    if (navigator.onLine) syncWhenOnline();
+    return () => window.removeEventListener('online', syncWhenOnline);
+  }, [cloudSynced, pendingMutations, syncPendingMutations]);
 
   const refreshShop = useCallback(async () => {
     if (!cloudSynced) {
@@ -298,13 +419,16 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!authReady) return;
     if (!cloudSynced) {
-      setShop({ balance: 0, items: [], transactions: [], owned: [], activeSession: null });
-      setSessionRunId(null);
-      setTimerRunning(false);
-      document.documentElement.dataset.cosmeticTheme = '';
-      return;
+      const resetTimeout = window.setTimeout(() => {
+        setShop({ balance: 0, items: [], transactions: [], owned: [], activeSession: null });
+        setSessionRunId(null);
+        setTimerRunning(false);
+        document.documentElement.dataset.cosmeticTheme = '';
+      }, 0);
+      return () => window.clearTimeout(resetTimeout);
     }
-    void refreshShop().catch(() => {});
+    const refreshTimeout = window.setTimeout(() => { void refreshShop().catch(() => {}); }, 0);
+    return () => window.clearTimeout(refreshTimeout);
   }, [authReady, cloudSynced, refreshShop]);
 
   useEffect(() => {
@@ -352,13 +476,11 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
     };
   }, [authReady, user]);
 
-  // Persist local preview state when unauthenticated
+  // Keep guest state separate from account snapshots on shared devices.
   useEffect(() => {
     if (!authReady || (user && user.emailVerified)) return;
     try {
-      localStorage.setItem(
-        LOCAL_STORAGE_KEY,
-        JSON.stringify({
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
           profile: { ...profile, theme },
           subjects,
           tasks,
@@ -367,12 +489,20 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
           notes,
           goals,
           communityMessages,
-        })
-      );
+        }));
     } catch {
       // Ignore storage quota issues
     }
   }, [authReady, user, profile, theme, subjects, tasks, sessions, schedule, notes, goals, communityMessages]);
+
+  useEffect(() => {
+    if (!authReady || loadingData || !user?.emailVerified) return;
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}:${user.uid}`, JSON.stringify({
+        profile: { ...profile, theme }, subjects, tasks, sessions, schedule, notes, goals, communityMessages,
+      }));
+    } catch { /* storage may be full */ }
+  }, [authReady, loadingData, user, profile, theme, subjects, tasks, sessions, schedule, notes, goals, communityMessages]);
 
   // Bootstrap & load workspace from PostgreSQL API when authenticated
   useEffect(() => {
@@ -418,11 +548,28 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
         if (Array.isArray(data.goals)) setGoals(data.goals);
       } catch (err) {
         if (!active) return;
-        showToast(
-          'Erro ao carregar dados',
-          err instanceof Error ? err.message : 'Não foi possível carregar sua conta agora.',
-          'error'
-        );
+        try {
+          const cached: unknown = JSON.parse(localStorage.getItem(`${LOCAL_STORAGE_KEY}:${user!.uid}`) || 'null');
+          if (cached && typeof cached === 'object') {
+            const snapshot = cached as Record<string, unknown>;
+            if (snapshot.profile && typeof snapshot.profile === 'object') {
+              const cachedProfile = snapshot.profile as UserProfile;
+              setProfile(cachedProfile);
+              if (cachedProfile.theme === 'dark' || cachedProfile.theme === 'light') setTheme(cachedProfile.theme);
+            }
+            if (Array.isArray(snapshot.subjects)) setSubjects(snapshot.subjects as Subject[]);
+            if (Array.isArray(snapshot.tasks)) setTasks(snapshot.tasks as QuickTask[]);
+            if (Array.isArray(snapshot.sessions)) setSessions(snapshot.sessions as PomodoroSession[]);
+            if (Array.isArray(snapshot.schedule)) setSchedule(snapshot.schedule as ScheduleBlock[]);
+            if (Array.isArray(snapshot.notes)) setNotes(snapshot.notes as StudyNote[]);
+            if (Array.isArray(snapshot.goals)) setGoals(snapshot.goals as SemesterGoal[]);
+            showToast('Modo offline', 'Exibindo a última cópia salva neste dispositivo. Alterações seguras serão sincronizadas ao reconectar.', 'info');
+          } else {
+            showToast('Erro ao carregar dados', err instanceof Error ? err.message : 'Não foi possível carregar sua conta agora.', 'error');
+          }
+        } catch {
+          showToast('Erro ao carregar dados', err instanceof Error ? err.message : 'Não foi possível carregar sua conta agora.', 'error');
+        }
       } finally {
         if (active) setLoadingData(false);
       }
@@ -816,6 +963,8 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
         });
         if (res.subject) {
           setSubjects((prev) => prev.map((s) => (s.id === id ? res.subject : s)));
+        } else if (res.queued) {
+          setSubjects((prev) => prev.map((s) => (s.id === id ? { ...s, ...next } : s)));
         }
       } catch (err) {
         showToast(
@@ -1062,6 +1211,8 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
         });
         if (res.note) {
           setNotes((prev) => prev.map((n) => (n.id === id ? res.note : n)));
+        } else if (res.queued) {
+          setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, ...payload, updatedAtMs: Date.now() } : n)));
         }
       } catch (err) {
         showToast(
@@ -1273,6 +1424,10 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
         setSearchQuery,
         cloudSynced,
         loadingData,
+        pendingMutations,
+        syncPendingMutations,
+        retryPendingMutation,
+        discardPendingMutation,
         shop,
         refreshShop,
         buyShopItem,

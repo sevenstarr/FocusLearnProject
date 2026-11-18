@@ -2,11 +2,15 @@
 
 import React, { useMemo, useState } from 'react';
 import Markdown from 'react-markdown';
-import { FileText, Plus, Trash2, Edit3, Eye, Save, X } from 'lucide-react';
+import { FileText, Plus, Trash2, Edit3, Eye, Save, X, Sparkles, ChevronRight } from 'lucide-react';
 import { useFocus } from '@/components/FocusProvider';
+import { useAuth } from '@/components/AuthProvider';
+
+type QuizQuestion = { question: string; options: string[]; answer: number; explanation: string };
 
 export function NotesView() {
-  const { notes, subjects, searchQuery, addNote, updateNote, deleteNote } = useFocus();
+  const { notes, subjects, searchQuery, addNote, updateNote, deleteNote, showToast } = useFocus();
+  const { user, getAccessToken } = useAuth();
 
   const [selectedId, setSelectedId] = useState<string>(notes[0]?.id || '');
   const [editing, setEditing] = useState(false);
@@ -18,6 +22,35 @@ export function NotesView() {
   const [newSubjectId, setNewSubjectId] = useState(subjects[0]?.id || '');
   const [newTags, setNewTags] = useState('');
   const [newContent, setNewContent] = useState('');
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [quizChoice, setQuizChoice] = useState<number | null>(null);
+  const [quizLoading, setQuizLoading] = useState(false);
+
+  const generateQuiz = async () => {
+    if (!activeNote || !user?.emailVerified) {
+      showToast('Entre na sua conta', 'A geração de quiz exige uma conta conectada.', 'info');
+      return;
+    }
+    setQuizLoading(true);
+    try {
+      const token = await getAccessToken();
+      const response = await fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ title: activeNote.title, content: activeNote.content, count: 5 }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Falha ao gerar quiz.');
+      setQuizQuestions(payload.questions);
+      setQuizIndex(0);
+      setQuizChoice(null);
+    } catch (error) {
+      showToast('Quiz indisponível', error instanceof Error ? error.message : 'Tente novamente.', 'error');
+    } finally {
+      setQuizLoading(false);
+    }
+  };
 
   const filteredNotes = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -96,6 +129,27 @@ export function NotesView() {
           <span>Nova Nota</span>
         </button>
       </div>
+
+      {activeNote && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-violet-200 bg-violet-50/70 px-4 py-3 dark:border-violet-900 dark:bg-violet-950/30">
+        <div><p className="text-sm font-semibold text-violet-950 dark:text-violet-100">Pratique com esta anotação</p><p className="text-xs text-violet-800/80 dark:text-violet-200/80">Gere perguntas com Gemini. Ao iniciar, o título e o conteúdo desta nota serão enviados ao Google para gerar o quiz.</p></div>
+        <button type="button" onClick={() => void generateQuiz()} disabled={quizLoading || !user?.emailVerified} title={!user?.emailVerified ? 'Entre na conta para usar a geração de quiz' : undefined} className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"><Sparkles className="h-4 w-4" />{quizLoading ? 'Gerando…' : 'Gerar quiz'}</button>
+      </div>}
+
+      {quizQuestions.length > 0 && <section className="rounded-2xl border border-violet-200 bg-white p-5 dark:border-violet-900 dark:bg-slate-900" aria-live="polite">
+        {(() => {
+          const question = quizQuestions[quizIndex];
+          return <>
+            <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold text-violet-700 dark:text-violet-300">Pergunta {quizIndex + 1} de {quizQuestions.length}</p><button type="button" onClick={() => setQuizQuestions([])} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Fechar quiz"><X className="h-4 w-4" /></button></div>
+            <h2 className="mt-2 text-base font-bold">{question.question}</h2>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">{question.options.map((option, index) => {
+              const chosen = quizChoice === index;
+              const correct = quizChoice !== null && index === question.answer;
+              return <button key={`${quizIndex}-${index}`} type="button" disabled={quizChoice !== null} onClick={() => setQuizChoice(index)} className={`rounded-xl border p-3 text-left text-sm transition-colors ${correct ? 'border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100' : chosen ? 'border-red-400 bg-red-50 text-red-900 dark:bg-red-950/30 dark:text-red-100' : 'border-slate-200 hover:border-violet-400 dark:border-slate-700'}`}>{option}</button>;
+            })}</div>
+            {quizChoice !== null && <div className="mt-3 rounded-xl bg-slate-50 p-3 text-sm dark:bg-slate-800"><p className="font-semibold">{quizChoice === question.answer ? 'Resposta correta' : 'Resposta incorreta'}</p><p className="mt-1 text-slate-600 dark:text-slate-300">{question.explanation}</p><button type="button" onClick={() => { setQuizIndex((current) => (current + 1) % quizQuestions.length); setQuizChoice(null); }} className="mt-3 inline-flex items-center gap-1 font-semibold text-violet-700 dark:text-violet-300">Próxima <ChevronRight className="h-4 w-4" /></button></div>}
+          </>;
+        })()}
+      </section>}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left List */}

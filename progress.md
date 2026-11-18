@@ -7,7 +7,7 @@ Documento de contexto técnico para continuidade por outros agentes e desenvolve
 ## 1. Visão Geral do Projeto
 
 - **Nome**: FocusLearn (`metadata.json`)
-- **Objetivo**: Plataforma web inteligente de estudos e produtividade acadêmica em português (`pt-BR`), convertida de 4 protótipos HTML estáticos (`/public/assets/aistudio/*.html`) para **Next.js 15 (App Router)** com autenticação **Supabase Auth** (Google OAuth + E-mail/Senha) e persistência relacional em **Supabase PostgreSQL** (com fallback local Drizzle/Cloud SQL).
+- **Objetivo**: Plataforma web inteligente de estudos e produtividade acadêmica em português (`pt-BR`), convertida de 4 protótipos HTML estáticos (`/public/assets/aistudio/*.html`) para **Next.js 15 (App Router)** com autenticação **Supabase Auth** (Google OAuth + E-mail/Senha) e persistência relacional em **Supabase PostgreSQL**. O modo sem conta usa armazenamento local no navegador; Drizzle/Cloud SQL é legado e não autentica as rotas do produto.
 - **Design System**: Tailwind CSS v4 (`@import "tailwindcss";`, variante `dark` baseada na classe `.dark` em `<html>`), fontes `Plus Jakarta Sans`, `DM Sans` e `JetBrains Mono`, ícones via `lucide-react` e animações com `motion/react`.
 
 ---
@@ -59,8 +59,8 @@ Gerenciado por `components/FocusLearnShell.tsx` e `components/FocusProvider.tsx`
 - **Gateway de Banco (`src/db/gateway.ts`)**:
   - Todas as rotas `/app/api/*` importam exclusivamente de `src/db/gateway.ts`.
   - Quando `SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` estão configurados (ex.: Vercel / `.env.local`), **todas as operações rodam diretamente no Supabase**.
-  - Caso ainda não estejam definidos (ex.: preview interno do AI Studio), o gateway utiliza o PostgreSQL Cloud SQL local (`drizzle-orm` + `pg`) para manter a aplicação funcional.
-- **Cloud SQL PostgreSQL & Drizzle (fallback local no AI Studio)**:
+  - Sem credenciais Supabase, as rotas autenticadas respondem `401`; o modo sem conta usa `localStorage` no navegador. A integração Drizzle/Cloud SQL não é um backend alternativo autenticado e é mantida como legado/ferramenta.
+- **Cloud SQL PostgreSQL & Drizzle (legado)**:
   - Instância `moonlit-rock-j5v9p` / `ai-studio-55559ac6` (`us-west2`), `src/db/schema.ts`, `src/db/drizzle.config.ts`, `drizzle/0000_shocking_hiroim.sql` e `src/db/index.ts` com `idleTimeoutMillis: 10000`, `keepAlive: true` e tratamento silencioso de desconexões ociosas em *scale-to-zero*.
 
 ### 2.4. API Routes (`/app/api/*`)

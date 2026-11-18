@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { CalendarDays, Plus, Trash2, X } from 'lucide-react';
+import { CalendarDays, Plus, Trash2, X, Download } from 'lucide-react';
 import { useFocus } from '@/components/FocusProvider';
 import { ScheduleType } from '@/lib/types';
 
@@ -22,8 +22,42 @@ const TYPE_LABELS: Record<ScheduleType, string> = {
   prova: 'Prova',
 };
 
+function escapeIcs(value: string) {
+  return value.replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+}
+
+function exportCalendar(blocks: ReturnType<typeof useFocus>['schedule']) {
+  const today = new Date();
+  const mondayOffset = (today.getDay() + 6) % 7;
+  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - mondayOffset);
+  const format = (date: Date, hour: number) => {
+    const value = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour);
+    return `${value.getFullYear()}${String(value.getMonth() + 1).padStart(2, '0')}${String(value.getDate()).padStart(2, '0')}T${String(value.getHours()).padStart(2, '0')}0000`;
+  };
+  const events = blocks.map((block) => {
+    const date = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + block.dayIndex);
+    return [
+      'BEGIN:VEVENT',
+      `UID:${block.id}@focuslearn`,
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`,
+      `DTSTART;TZID=America/Sao_Paulo:${format(date, block.startHour)}`,
+      `DTEND;TZID=America/Sao_Paulo:${format(date, block.endHour)}`,
+      `SUMMARY:${escapeIcs(block.title)}`,
+      `DESCRIPTION:${escapeIcs(`${block.type} · ${block.subjectName || 'Estudo Geral'}`)}`,
+      'END:VEVENT',
+    ].join('\r\n');
+  });
+  const content = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FocusLearn//Planner//PT-BR', 'CALSCALE:GREGORIAN', 'X-WR-TIMEZONE:America/Sao_Paulo', ...events, 'END:VCALENDAR'].join('\r\n');
+  const url = URL.createObjectURL(new Blob([content], { type: 'text/calendar;charset=utf-8' }));
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = 'focuslearn-semana.ics';
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 export function PlannerView() {
-  const { schedule, subjects, addScheduleBlock, deleteScheduleBlock } = useFocus();
+  const { schedule, subjects, addScheduleBlock, deleteScheduleBlock, showToast } = useFocus();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [title, setTitle] = useState('');
@@ -34,6 +68,49 @@ export function PlannerView() {
   const [subjectId, setSubjectId] = useState(subjects[0]?.id || '');
 
   const [filterType, setFilterType] = useState<'all' | ScheduleType>('all');
+  const [importBusy, setImportBusy] = useState(false);
+
+  const importCalendar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (file.size > 1_048_576) {
+      showToast('Arquivo muito grande', 'Importe um arquivo .ics de até 1 MB.', 'error');
+      return;
+    }
+    setImportBusy(true);
+    try {
+      const text = (await file.text()).replace(/\r?\n[ \t]/g, '');
+      const events = [...text.matchAll(/BEGIN:VEVENT([\s\S]*?)END:VEVENT/g)].slice(0, 40);
+      const unescape = (value: string) => value.replace(/\\n/gi, ' ').replace(/\\([,;\\])/g, '$1');
+      let imported = 0;
+      const seen = new Set<string>();
+      for (const match of events) {
+        const lines = match[1].split(/\r?\n/);
+        const valueFor = (key: string) => lines.find((line) => line.startsWith(`${key}:`) || line.startsWith(`${key};`))?.split(':').slice(1).join(':').trim();
+        const start = valueFor('DTSTART')?.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})/);
+        const end = valueFor('DTEND')?.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})/);
+        const rawTitle = valueFor('SUMMARY');
+        if (!start || !end || !rawTitle) continue;
+        const day = new Date(Number(start[1]), Number(start[2]) - 1, Number(start[3]));
+        if (start[1] !== end[1] || start[2] !== end[2] || start[3] !== end[3]) continue;
+        const dayIndex = (day.getDay() + 6) % 7;
+        const startHour = Number(start[4]);
+        const endHour = Number(end[4]) + (Number(end[5]) > 0 ? 1 : 0);
+        if (startHour < 8 || startHour > 20 || endHour <= startHour || endHour > 22) continue;
+        const title = unescape(rawTitle).slice(0, 120);
+        const type: ScheduleType = /prova|exame|avalia[cç][aã]o/i.test(title) ? 'prova' : 'aula';
+        const duplicateKey = `${dayIndex}:${startHour}:${endHour}:${title.toLowerCase()}`;
+        if (seen.has(duplicateKey) || schedule.some((block) => block.dayIndex === dayIndex && block.startHour === startHour && block.endHour === endHour && block.title.toLowerCase() === title.toLowerCase())) continue;
+        seen.add(duplicateKey);
+        await addScheduleBlock({ title, dayIndex, startHour, endHour, type, subjectId: '', subjectName: 'Importado do calendário' });
+        imported += 1;
+      }
+      showToast('Importação concluída', `${imported} evento(s) importado(s) para a grade semanal${events.length >= 40 ? '. O limite de 40 eventos por arquivo foi aplicado' : ''}.`, imported ? 'success' : 'info');
+    } catch {
+      showToast('Arquivo inválido', 'Não foi possível ler este calendário .ics.', 'error');
+    } finally { setImportBusy(false); }
+  };
 
   const visibleBlocks = useMemo(
     () => (filterType === 'all' ? schedule : schedule.filter((b) => b.type === filterType)),
@@ -80,14 +157,21 @@ export function PlannerView() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => openSlotModal(0, 14)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Nova Sessão</span>
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <label className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 ${importBusy ? 'pointer-events-none opacity-50' : ''}`}>
+            <input type="file" accept=".ics,text/calendar" onChange={(event) => void importCalendar(event)} className="sr-only" />
+            <CalendarDays className="h-4 w-4" /><span>{importBusy ? 'Importando…' : 'Importar .ics'}</span>
+          </label>
+          <button type="button" onClick={() => exportCalendar(schedule)} disabled={!schedule.length} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"><Download className="h-4 w-4" /><span>Exportar .ics</span></button>
+          <button
+            type="button"
+            onClick={() => openSlotModal(0, 14)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Nova Sessão</span>
+          </button>
+        </div>
       </div>
 
       {/* Type Filter */}

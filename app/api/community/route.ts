@@ -6,6 +6,7 @@ import {
   listCommunityMessages,
 } from '@/src/db/gateway.ts';
 import type { CommunityChannel } from '@/lib/types';
+import { readJsonBody, RequestBodyError } from '@/src/lib/request-body.ts';
 
 const VALID_CHANNELS: CommunityChannel[] = ['calculo', 'algoritmos', 'geral'];
 
@@ -41,17 +42,17 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = await req.json();
+    const body = await readJsonBody(req, 8_192) as Record<string, unknown>;
     const text = typeof body?.text === 'string' ? body.text.trim() : '';
-    if (!text) {
-      return NextResponse.json({ error: 'Message text is required.' }, { status: 400 });
+    if (!text || text.length > 1_000) {
+      return NextResponse.json({ error: 'Message text must contain 1 to 1,000 characters.' }, { status: 400 });
     }
-    const channel = parseChannel(body?.channel ?? null);
+    const channel = parseChannel(typeof body?.channel === 'string' ? body.channel : null);
 
     const userRow = await getOrCreateUser(
       decoded.uid,
       decoded.email || 'estudante@universidade.edu.br',
-      decoded.name
+      typeof decoded.name === 'string' ? decoded.name : undefined
     );
 
     const message = await createCommunityMessageRow({
@@ -64,6 +65,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message }, { status: 201 });
   } catch (error: unknown) {
+    if (error instanceof RequestBodyError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     const message =
       error instanceof Error ? error.message : 'Failed to post community message.';
     return NextResponse.json({ error: message }, { status: 500 });
