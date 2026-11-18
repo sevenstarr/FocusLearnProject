@@ -39,13 +39,18 @@ export default function RecuperarSenhaPage() {
   const isClean = !/[<>{}\\]/.test(email);
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-    setRecoveryFlow(
-      searchParams.get('flow') === 'recovery' ||
-        searchParams.get('type') === 'recovery' ||
-        hashParams.get('type') === 'recovery'
-    );
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      const searchParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      setRecoveryFlow(
+        searchParams.get('flow') === 'recovery' ||
+          searchParams.get('type') === 'recovery' ||
+          hashParams.get('type') === 'recovery'
+      );
+    });
+    return () => { active = false; };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

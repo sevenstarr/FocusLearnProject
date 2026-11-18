@@ -24,6 +24,7 @@ import {
   ShoppingBag,
   Coins,
   CircleHelp,
+  BrainCircuit,
 } from 'lucide-react';
 import { useFocus } from '@/components/FocusProvider';
 import { useAuth } from '@/components/AuthProvider';
@@ -43,6 +44,7 @@ import { CommunityView } from '@/components/views/CommunityView';
 import { SettingsProfileView } from '@/components/views/SettingsProfileView';
 import { ShopView } from '@/components/views/ShopView';
 import { ModuleTutorialModal } from '@/components/ModuleTutorialModal';
+import { StudyToolsView } from '@/components/views/StudyToolsView';
 
 const NAV_ITEMS: {
   id: NavSection;
@@ -57,6 +59,7 @@ const NAV_ITEMS: {
   { id: 'planejador-semanal', label: 'Planejador Semanal', shortLabel: 'Agenda', Icon: CalendarDays },
   { id: 'estatisticas-metas', label: 'Estatísticas & Metas', shortLabel: 'Metas', Icon: BarChart3 },
   { id: 'anotacoes', label: 'Anotações & Cadernos', shortLabel: 'Notas', Icon: FileText },
+  { id: 'estudos-inteligentes', label: 'Estudos Inteligentes', shortLabel: 'Estudos', Icon: BrainCircuit },
   { id: 'comunidade', label: 'Comunidade & Chat', shortLabel: 'Chat', Icon: MessageSquare },
 ];
 
@@ -86,7 +89,9 @@ export function FocusLearnShell() {
 
   useEffect(() => {
     if (loadingData || profile.tutorialsSeen?.[activeSection]) return;
-    setTutorialSection(activeSection);
+    let active = true;
+    queueMicrotask(() => { if (active) setTutorialSection(activeSection); });
+    return () => { active = false; };
   }, [activeSection, loadingData, profile.tutorialsSeen]);
 
   const closeTutorial = useCallback(() => {
@@ -420,6 +425,7 @@ export function FocusLearnShell() {
             {activeSection === 'planejador-semanal' && <PlannerView />}
             {activeSection === 'estatisticas-metas' && <StatsGoalsView />}
             {activeSection === 'anotacoes' && <NotesView />}
+            {activeSection === 'estudos-inteligentes' && <StudyToolsView />}
             {activeSection === 'comunidade' && <CommunityView />}
             {activeSection === 'configuracoes-ajuda' && <SettingsProfileView />}
           </motion.div>

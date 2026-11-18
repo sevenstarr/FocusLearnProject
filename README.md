@@ -5,7 +5,7 @@
   </picture>
 </p>
 
-Plataforma inteligente de estudos e produtividade acadêmica construída com **Next.js 15 (App Router)**, **React 19**, **TypeScript**, **Tailwind CSS v4**, **Supabase (Auth + PostgreSQL)** e **Drizzle ORM**.
+Plataforma inteligente de estudos e produtividade acadêmica construída com **Next.js 15 (App Router)**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **Supabase (Auth + PostgreSQL)**. Drizzle permanece no repositório para ferramentas e compatibilidade com o schema legado.
 
 O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro com sintetizador de som ambiente, planejador semanal, cadernos em Markdown, metas semestrais e salas de estudo da comunidade — com persistência relacional no Supabase PostgreSQL via API Routes protegidas por tokens JWT do **Supabase Auth** e modo de visualização local (`localStorage`) para uso imediato.
 
@@ -18,15 +18,19 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 - Verificação de identidade no backend via `supabase.auth.getUser(token)` (`Authorization: Bearer <access_token>`) em todas as rotas `/api/*`.
 - Fallback automático em `localStorage` no modo visitante quando não autenticado.
 
-### 8 Módulos Integrados no Painel Principal (`/`)
+### Módulos Integrados no Painel Principal (`/`)
 1. **Visão Geral (Dashboard)**: Indicadores dinâmicos de desempenho, mapa de calor de frequência dos últimos 30 dias, gráfico semanal de carga de estudo, widget de Pomodoro rápido sincronizado e lista de micro-tarefas.
 2. **Matérias & Cursos**: CRUD completo de disciplinas, avaliações personalizáveis com escala e método de cálculo configuráveis, critérios de aprovação e prova final ajustáveis, simulador vinculado a uma matéria ou independente e atalho de 1 clique para iniciar uma sessão Pomodoro.
 3. **Cronômetro Pomodoro & Modo Zen**: Timer global (`25m`, `50m`, `5m`, `15m`) vinculado à disciplina selecionada, registro transacional das sessões concluídas com incremento automático de horas da matéria, modo tela cheia sem distrações (saída com `Escape`) e sintetizador de áudio ambiente via **Web Audio API** (`Chuva`, `Lo-Fi`, `Ruído Branco`, `Biblioteca`) com controle de volume e aviso sonoro ao finalizar.
-4. **Planejador Semanal**: Grade interativa de 7 dias (`SEG`–`DOM`) por horário (`08:00`–`20:00`) com agendamento direto ao clicar em células vazias, criação/remoção de blocos e filtros por categoria (`Aula`, `Revisão`, `Prova`, `Pausa`).
+4. **Planejador Semanal**: Grade interativa de 7 dias (`SEG`–`DOM`) por horário (`08:00`–`20:00`) com agendamento direto ao clicar em células vazias, criação/remoção de blocos, filtros por categoria e importação/exportação `.ics`.
 5. **Estatísticas & Metas**: Distribuição de horas estudadas por disciplina, gerenciamento de metas semestrais (com incremento de progresso e trava ao concluir) e exportação para impressão/PDF.
 6. **Anotações & Cadernos**: Layout em dois painéis com busca, filtro por tags, editor Markdown e pré-visualização renderizada em tempo real.
 7. **Comunidade & Chat**: Canais (`#calculo`, `#algoritmos`, `#geral`) persistidos no PostgreSQL com envio e exclusão das próprias mensagens.
-8. **Configurações & Perfil**: Edição de perfil acadêmico, alternância de tema **Claro / Escuro** persistida, gerenciamento de sessão e opção de restauração dos dados locais.
+8. **Estudos Inteligentes**: distribuição sugerida do tempo por desempenho/horas estudadas, cartões de revisão espaçada e quizzes gerados a partir de anotações com Gemini.
+9. **Comunidade & Salas de Foco**: canais de mensagens, salas compartilhadas com meta e presença atualizada periodicamente.
+10. **Configurações & Perfil**: Edição de perfil acadêmico, alternância de tema **Claro / Escuro** persistida, gerenciamento de sessão e opção de restauração dos dados locais.
+
+Edições e remoções feitas durante uma falha de rede ficam em uma fila local vinculada à conta e são reenviadas ao reconectar. Respostas de conflito podem ser tentadas novamente ou descartadas nas configurações. Criações e incrementos de metas exigem conexão ativa.
 
 ---
 
@@ -34,7 +38,7 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 
 - **Framework**: [Next.js 15](https://nextjs.org/) (App Router) & [React 19](https://react.dev/)
 - **Linguagem**: [TypeScript 5](https://www.typescriptlang.org/)
-- **Banco de Dados & Autenticação**: **Supabase** (`@supabase/supabase-js` para Auth + PostgreSQL) com fallback local PostgreSQL + [Drizzle ORM](https://orm.drizzle.team/)
+- **Banco de Dados & Autenticação**: **Supabase** (`@supabase/supabase-js` para Auth + PostgreSQL). Os utilitários Drizzle/Cloud SQL são legados e não são um backend alternativo autenticado da aplicação.
 - **Estilização**: [Tailwind CSS v4](https://tailwindcss.com/) + `tw-animate-css`
 - **Animações e Ícones**: [Motion](https://motion.dev/) (`motion/react`) & [Lucide React](https://lucide.dev/)
 - **Markdown**: [`react-markdown`](https://github.com/remarkjs/react-markdown)
@@ -67,7 +71,7 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 ├── src/
 │   ├── db/
 │   │   ├── drizzle.config.ts      # Configuração do Drizzle Kit (admin)
-│   │   ├── gateway.ts             # Roteador automático (Supabase quando configurado, senão PostgreSQL local)
+│   │   ├── gateway.ts             # Acesso a dados Supabase e compatibilidade Drizzle legada
 │   │   ├── index.ts               # Pool PostgreSQL (Object Method) + instância Drizzle
 │   │   ├── repositories.ts        # Repositório Drizzle ORM (PostgreSQL)
 │   │   ├── schema.ts              # Definição das 8 tabelas PostgreSQL e relações
@@ -103,7 +107,7 @@ O FocusLearn centraliza o acompanhamento de disciplinas, cronômetro Pomodoro co
 
 ## Modelo de Dados e Migrations (Supabase / PostgreSQL)
 
-As migrations SQL versionadas ficam em `supabase/migrations/` (prontas para `supabase db push` ou SQL Editor do Supabase, já com RLS habilitado) e em `drizzle/`:
+`supabase/migrations/` é a fonte oficial para o banco ativo e deve ser aplicada em ordem via Supabase CLI ou SQL Editor. Os arquivos em `drizzle/` são legado e não devem ser usados como segunda fonte de verdade para produção.
 
 - `users` — Perfil acadêmico, preferências, streak e flag `seeded` (`uid` único indexado)
 - `subjects` — Disciplinas, avaliações e critérios acadêmicos em JSONB, nota máxima, método de cálculo e `hours_studied` (FK `owner_id -> users.uid`)
@@ -114,6 +118,7 @@ As migrations SQL versionadas ficam em `supabase/migrations/` (prontas para `sup
 - `study_notes` — Cadernos em Markdown com tags em `jsonb` (FK `owner_id -> users.uid`)
 - `semester_goals` — Metas semestrais com status `active` / `completed` (FK `owner_id -> users.uid`)
 - `community_messages` — Mensagens por canal da comunidade (FK `author_id -> users.uid`)
+- `study_rooms`, `study_room_presence` — Salas de foco, metas e presença atualizada periodicamente por usuário
 
 Todas as chaves estrangeiras possuem `ON DELETE CASCADE` e índices nas colunas de consulta frequente.
 
@@ -135,8 +140,8 @@ npm install
 
 ### 3. Aplicar a Migration no Supabase
 
-1. No painel do seu projeto Supabase, abra **SQL Editor** (ou use a Supabase CLI com `supabase db push`).
-2. Execute as migrations em ordem: `20261116000000_initial_schema.sql`, `20261116010000_focus_shop.sql`, `20261116020000_tutorials_seen.sql`, `20261116030000_repair_focus_start_session_rpc.sql` e `20261116040000_subject_assessments.sql`. A segunda cria o ledger, o inventário e as funções da loja; a terceira adiciona o progresso dos tutoriais; a quarta corrige a função de início de sessão; a quinta adiciona avaliações e regras por matéria e recarrega o cache do PostgREST.
+1. No painel do seu projeto Supabase, abra **SQL Editor** (ou use a Supabase CLI).
+2. Execute todas as migrations em ordem de nome: `20261116000000_initial_schema.sql`, `20261116010000_focus_shop.sql`, `20261116020000_tutorials_seen.sql`, `20261116030000_repair_focus_start_session_rpc.sql`, `20261116040000_subject_assessments.sql`, `20261118010000_study_rooms.sql` e `20261118020000_quiz_generation_limits.sql`.
 
 ### Créditos e loja de cosméticos
 
@@ -155,11 +160,13 @@ O catálogo inicial oferece os temas Maré (10), Bosque (40) e Nebulosa (100), a
    NEXT_PUBLIC_SUPABASE_ANON_KEY="SUA_ANON_KEY"
    SUPABASE_SERVICE_ROLE_KEY="SUA_SERVICE_ROLE_KEY"
    ```
-   > Quando `NEXT_PUBLIC_SUPABASE_URL` (ou `SUPABASE_URL`) e `SUPABASE_SERVICE_ROLE_KEY` estão definidos, todas as rotas `/api/*` usam o **Supabase** automaticamente.
+   > As rotas de conta, dados, salas e quizzes exigem Supabase Auth e as chaves do Supabase. Sem conta, o painel oferece um modo local armazenado no navegador; esse modo não usa PostgreSQL. As credenciais `SQL_*` habilitam somente ferramentas Drizzle legadas, não autenticação local.
 
 2. No painel do **Supabase → Authentication → Providers → Google**, ative o provedor Google informando seu Client ID / Client Secret do Google Cloud Console.
 3. No **Supabase → Authentication → URL Configuration**, adicione suas URLs de redirect permitidas (ex.: `https://focus-learn-project.vercel.app/auth/callback` e `http://localhost:3000/auth/callback`).
 4. No **Google Cloud Console → Credentials (OAuth Client)**, adicione em **Authorized redirect URIs**: `https://<SEU_PROJECT_REF>.supabase.co/auth/v1/callback`.
+
+Configure também `GEMINI_API_KEY` no servidor para habilitar quizzes. Quando o usuário inicia a geração, o título e o conteúdo da anotação selecionada são enviados ao Google Gemini.
 
 ### 5. Iniciar em desenvolvimento
 
@@ -171,6 +178,10 @@ Acesse `http://localhost:3000` no navegador.
 
 ---
 
+## Qualidade e CI
+
+O workflow do GitHub executa lint, TypeScript e build em pushes e pull requests para `main`. As migrations Supabase são a fonte oficial do banco ativo; altere o schema por novos arquivos em `supabase/migrations/` e aplique em ambiente de teste antes de produção.
+
 ## Scripts Disponíveis
 
 | Comando | Descrição |
@@ -179,8 +190,9 @@ Acesse `http://localhost:3000` no navegador.
 | `npm run build` | Compila a aplicação para produção (`output: "standalone"`) |
 | `npm run start` | Executa a build de produção |
 | `npm run lint` | Executa ESLint no código do projeto |
+| `npm run typecheck` | Executa a verificação de tipos TypeScript |
 | `npm run db:generate` | Gera arquivos de migration SQL em `drizzle/` via Drizzle Kit |
-| `npm run db:push` | Sincroniza o schema `src/db/schema.ts` no PostgreSQL |
+| `npm run db:push` | Ferramenta legada Drizzle; não usar para o banco Supabase de produção |
 | `npm run clean` | Limpa artefatos de cache do Next.js |
 
 ---

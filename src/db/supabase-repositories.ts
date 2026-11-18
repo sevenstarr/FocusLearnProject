@@ -953,13 +953,13 @@ export async function listCommunityMessagesSupabase(
     .from('community_messages')
     .select('*')
     .eq('channel', channel)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: false })
     .limit(100);
 
   if (error) {
     throwSupabaseError('listCommunityMessages', 'Failed to fetch community messages.', error);
   }
-  return ((data || []) as DbCommunityRow[]).map(mapCommunityRow);
+  return ((data || []) as DbCommunityRow[]).map(mapCommunityRow).reverse();
 }
 
 export async function createCommunityMessageRowSupabase(input: {

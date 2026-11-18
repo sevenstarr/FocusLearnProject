@@ -10,6 +10,7 @@ const TUTORIAL_SECTIONS = new Set([
   'planejador-semanal',
   'estatisticas-metas',
   'anotacoes',
+  'estudos-inteligentes',
   'comunidade',
   'configuracoes-ajuda',
 ]);

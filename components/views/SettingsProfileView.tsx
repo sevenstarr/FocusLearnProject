@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Sun, Moon, LogIn, LogOut, UserPlus, KeyRound, RotateCcw } from 'lucide-react';
+import { Sun, Moon, LogIn, LogOut, UserPlus, KeyRound, RotateCcw, RefreshCw, CircleAlert, Trash2 } from 'lucide-react';
 import { useFocus } from '@/components/FocusProvider';
 import { useAuth } from '@/components/AuthProvider';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -17,6 +17,10 @@ export function SettingsProfileView() {
     cloudSynced,
     resetLocalDemo,
     showToast,
+    pendingMutations,
+    syncPendingMutations,
+    retryPendingMutation,
+    discardPendingMutation,
   } = useFocus();
   const { user, signInWithGoogle, signOutUser } = useAuth();
 
@@ -99,6 +103,14 @@ export function SettingsProfileView() {
           </button>
         )}
       </section>
+
+      {pendingMutations.length > 0 && <section className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 dark:border-amber-900 dark:bg-amber-950/20">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div><h2 className="flex items-center gap-2 font-bold"><CircleAlert className="h-5 w-5 text-amber-600" />Sincronização pendente</h2><p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{pendingMutations.length} alteração(ões) de edição/remoção aguardando. Conflitos ficam listados para você descartar ou tentar de novo.</p></div>
+          <button type="button" onClick={() => void syncPendingMutations()} className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-700"><RefreshCw className="h-3.5 w-3.5" />Sincronizar agora</button>
+        </div>
+        <ul className="mt-4 flex flex-col gap-2">{pendingMutations.map((mutation) => <li key={mutation.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white/80 p-3 text-xs dark:bg-slate-900/70"><div><span className="font-mono font-semibold">{mutation.method}</span><span className="ml-2 text-slate-600 dark:text-slate-300">{mutation.url}</span>{mutation.status === 'conflict' && <p className="mt-1 text-red-600 dark:text-red-400">Conflito: {mutation.error || 'O registro mudou no servidor.'}</p>}</div><div className="flex gap-2"><button type="button" onClick={() => mutation.status === 'conflict' ? retryPendingMutation(mutation.id) : void syncPendingMutations()} className="rounded-md border border-slate-200 px-2.5 py-1.5 dark:border-slate-700">Tentar de novo</button><button type="button" onClick={() => discardPendingMutation(mutation.id)} aria-label="Descartar alteração pendente" className="rounded-md border border-slate-200 p-1.5 text-red-600 dark:border-slate-700"><Trash2 className="h-3.5 w-3.5" /></button></div></li>)}</ul>
+      </section>}
 
       <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
         <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 pb-3 border-b border-slate-100 dark:border-slate-800 mb-5">

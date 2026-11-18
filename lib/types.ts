@@ -7,6 +7,7 @@ export type NavSection =
   | 'planejador-semanal'
   | 'estatisticas-metas'
   | 'anotacoes'
+  | 'estudos-inteligentes'
   | 'comunidade'
   | 'loja'
   | 'configuracoes-ajuda';

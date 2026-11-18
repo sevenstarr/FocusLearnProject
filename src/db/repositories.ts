@@ -523,10 +523,10 @@ export async function listCommunityMessages(channel: CommunityChannel): Promise<
       .select()
       .from(communityMessages)
       .where(eq(communityMessages.channel, channel))
-      .orderBy(asc(communityMessages.createdAt))
+      .orderBy(desc(communityMessages.createdAt))
       .limit(100);
 
-    return rows.map(mapCommunityRow);
+    return rows.map(mapCommunityRow).reverse();
   } catch (error) {
     console.error('Database query failed (listCommunityMessages):', error);
     throw new Error('Failed to fetch community messages.', { cause: error });

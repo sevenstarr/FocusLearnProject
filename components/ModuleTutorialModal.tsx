@@ -45,11 +45,11 @@ const TUTORIALS: Record<NavSection, { title: string; intro: string; steps: Tutor
   },
   'planejador-semanal': {
     title: 'Planejador Semanal',
-    intro: 'Monte uma grade semanal para visualizar seus compromissos de estudo.',
+    intro: 'Monte uma grade semanal, importe eventos .ics e exporte seus horários para outros calendários.',
     steps: [
       { title: 'Adicione um bloco', description: 'Clique em “Nova Sessão” ou em um horário vazio para agendar uma atividade.' },
       { title: 'Defina os detalhes', description: 'Informe título, dia, horário, categoria e, se quiser, associe uma matéria.' },
-      { title: 'Revise sua semana', description: 'Use os filtros por categoria para destacar aulas, revisões, provas ou pausas. Remova blocos quando seus planos mudarem.' },
+      { title: 'Revise sua semana', description: 'Use os filtros por categoria, importe calendários .ics de até 40 eventos ou exporte sua grade para outro aplicativo.' },
     ],
   },
   'estatisticas-metas': {
@@ -67,14 +67,23 @@ const TUTORIALS: Record<NavSection, { title: string; intro: string; steps: Tutor
     steps: [
       { title: 'Crie uma anotação', description: 'Use “Nova Nota” para definir título e, opcionalmente, associar uma matéria.' },
       { title: 'Escreva em Markdown', description: 'Formate o conteúdo com títulos e listas. A pré-visualização mostra como o texto ficará.' },
-      { title: 'Encontre depois', description: 'Use a busca e as tags para localizar cadernos, e salve suas alterações ao editar.' },
+      { title: 'Pratique o conteúdo', description: 'Além da busca e das tags, gere um quiz com Gemini a partir da nota selecionada; o conteúdo será enviado ao Google após sua ação.' },
+    ],
+  },
+  'estudos-inteligentes': {
+    title: 'Estudos Inteligentes',
+    intro: 'Monte um plano de foco e pratique recuperação ativa com revisões espaçadas.',
+    steps: [
+      { title: 'Priorize matérias', description: 'O plano sugere mais tempo para matérias com menor desempenho e menos horas estudadas.' },
+      { title: 'Crie cartões', description: 'Escreva perguntas e respostas curtas para revisar conceitos importantes.' },
+      { title: 'Revise no intervalo certo', description: 'Avalie como foi lembrar cada resposta. O intervalo cresce quando a lembrança fica fácil.' },
     ],
   },
   comunidade: {
     title: 'Comunidade & Chat',
-    intro: 'Converse e troque ideias nos canais de estudo.',
+    intro: 'Converse nos canais de estudo ou encontre uma sala de foco com metas compartilhadas.',
     steps: [
-      { title: 'Escolha um canal', description: 'Entre no canal relacionado ao assunto ou use o canal geral para conversas abertas.' },
+      { title: 'Escolha um canal ou sala', description: 'Entre no canal relacionado ao assunto, crie uma sala de foco ou participe de uma sala ativa para acompanhar a meta do grupo.' },
       { title: 'Envie uma mensagem', description: 'Escreva no campo de mensagem e envie para participar da conversa.' },
       { title: 'Gerencie suas mensagens', description: 'Você pode remover as próprias mensagens quando precisar corrigir ou retirar algo.' },
     ],
