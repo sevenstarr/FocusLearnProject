@@ -94,7 +94,16 @@ Após a revisão, foram aplicadas mudanças no clone local:
 
 ### Achados ainda não verificados ou pendentes
 
-- **Navegação redundante no login:** o link “Ir ao Painel” aponta para `/`; sem sessão, essa rota volta a `/login`. Não bloqueia o login, mas a ação não leva a um destino diferente. O botão permanece visível no topo.
-- **Modo local sem conta não acessível pela navegação observada:** embora haja armazenamento local e texto da política sobre uso sem conta, a rota inicial leva ao login e `/dashboard` exige usuário. Confirmar se o produto deve oferecer um fluxo visitante; não foi possível testar dados locais do painel sem autenticação.
+- As falhas de navegação e acesso ao modo local identificadas no QA pós-merge foram corrigidas no clone local; detalhes e verificações estão na seção seguinte.
 - Supabase, migrations, login/cadastro reais, persistência entre usuários, filas offline, salas compartilhadas e Gemini não foram exercitados: não havia credenciais locais para esses serviços. O comportamento autenticado requer uma configuração de ambiente e banco disponíveis.
 - O repositório não tem script de testes automatizados; esta bateria cobriu lint, TypeScript, build, smoke HTTP e navegação manual no navegador.
+
+## QA da produção e correções locais pós-merge — 18/11/2026
+
+- O deploy de produção do commit `07c290b0d69f7c0c446cb16534ff3a8af58ef255` estava `READY` no Vercel. No DevTools conectado, `/login` carregou sem mensagens no console e os recursos da página retornaram `200`. A integração do navegador reiniciou e só mostrou uma página em branco; não consegui acessar a janela física do Chrome que o usuário tinha aberto.
+- Requests HTTP ao alias de produção: `GET /`, `/login`, `/cadastro`, `/recuperar-senha`, `/privacidade`, `/termos`, `/dashboard`, `/api/auth/config` responderam `200`; endpoints de dados `/api/workspace`, `/api/rooms`, `/api/community` sem sessão responderam `401`; `GET /api/quiz` respondeu `405`; `POST /api/quiz`, `/api/rooms` e `/api/community` sem sessão responderam `401`.
+- Logs Vercel: nenhum grupo de erros de runtime nas últimas 24 horas; nenhum registro de erro, fatal ou aviso nos últimos 30 minutos. O conector Supabase retornou `USER_NOT_LOGGED_IN` / “not connected”, então não foi possível consultar logs, migrations aplicadas ou advisories do banco.
+- **Corrigido — navegação sem destino:** o login tinha “Painel Principal” e “Ir ao Painel” apontando para `/`, que redireciona o visitante de volta para `/login`. Removi o link redundante e substituí a ação do cabeçalho por “Experimentar sem conta”.
+- **Corrigido — modo visitante inacessível:** o app já armazenava dados de visitante em `localStorage`, mas protegia `/dashboard` e não oferecia outra rota para abrir o painel local. Adicionei `/preview`, com aviso de armazenamento local e retorno fácil ao login; usuários autenticados são redirecionados ao dashboard.
+- O README agora documenta `/preview` e os dados que permanecem neste navegador. `npm run lint`, `npm run typecheck`, `npm run build` e `git diff --check` passaram. A build lista `/preview`; smoke local retornou `200` para `/login`, `/preview` e `/dashboard`.
+- A hidratação e interação do novo fluxo visitante ainda precisam de verificação manual em um navegador conectado. A sessão de Chrome disponível não era a janela já aberta pelo usuário; não acessei nem alterei outra janela depois da correção.
